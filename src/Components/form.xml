@@ -1,0 +1,60 @@
+ <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+              <label htmlFor="name">Name</label>
+              <input className="border-1" type="text" name="name" value={formData.name} onChange={handleChange} required />
+
+              <label htmlFor="category">Category</label>
+              {/* <input className="border-1" type="text" name="category" value={formData.category} onChange={handleChange} /> */}
+              <select
+                className="border-1"
+                id="medicine-form"
+                name="category"
+                value={formData.category}  // Bind the state value
+                onChange={handleChange}  // Update state when selection changes
+                required
+              >
+                <option value="">Select Category</option>  {/* Default placeholder */}
+                <option value="Tablet">Tablet</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Suspension">Suspension</option>
+                <option value="Drops">Drops</option>
+                <option value="Injection">Injection</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Cream">Cream</option>
+                <option value="Gel">Gel</option>
+                <option value="Powder">Powder</option>
+                <option value="Suppository">Suppository</option>
+                <option value="Inhaler">Inhaler</option>
+                <option value="Patch">Patch</option>
+                <option value="Lozenge">Lozenge</option>
+                <option value="Spray">Spray</option>
+              </select>
+
+              <label htmlFor="manufacturer">Manufacturer</label>
+              <input className="border-1" type="text" name="manufacturer" value={formData.manufacturer} onChange={handleChange} required />
+
+
+              <label htmlFor="supplierName">Supplier Name</label>
+              <input className="border-1" type="text" name="supplierName" value={formData.supplierName} onChange={handleChange} required />
+
+              <label htmlFor="batchNumber">Batch Number</label>
+              <input className="border-1" type="text" name="batchNumber" value={formData.batchNumber} onChange={handleChange} required />
+
+              <label htmlFor="manufacturingDate">Manufacturing Date</label>
+              <input placeholder="DD/MM/YY" pattern="\d{2}/\d{2}/\d{2}" required className="border-1" type="date" name="manufacturingDate" value={formData.manufacturingDate} onChange={handleChange} />
+
+              <label htmlFor="expiryDate">Expiry Date</label>
+              <input placeholder="DD/MM/YY" pattern="\d{2}/\d{2}/\d{2}" required className="border-1" type="date" name="expiryDate" value={formData.expiryDate} onChange={handleChange} />
+
+              <label htmlFor="stock">Stock</label>
+              <input className="border-1" type="number" name="stock" value={formData.stock} onChange={handleChange} required />
+
+              <label htmlFor="price">Price</label>
+              <input className="border-1" type="text" name="price" value={formData.price} onChange={handleChange} required />
+
+              <input
+                className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                type="submit"
+                value="Submit"
+              />
+            </form>

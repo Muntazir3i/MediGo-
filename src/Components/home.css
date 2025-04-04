@@ -1,0 +1,20 @@
+
+
+#inventory-container{
+    height: 90vh;
+    width: 55%;
+    overflow: scroll;
+    background-color: #fff;
+}
+
+
+#cart-container{
+    height: 90vh;
+    width: 50%;
+    overflow: scroll;
+}
+
+#main-top-container{
+    background-color: #fcfcfc;
+}
+
