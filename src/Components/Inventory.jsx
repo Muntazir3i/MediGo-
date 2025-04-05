@@ -229,7 +229,7 @@ function Inventory() {
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="text-sm">
-                                                <span className="text-muted-foreground mr-1">Purchases:</span>
+                                                <span className="text-muted-foregroundz mr-1">Purchases:</span>
                                                 {data.purchases.length}
                                             </div>
                                         </div>

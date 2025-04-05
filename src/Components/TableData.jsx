@@ -24,11 +24,11 @@ function TableData({ medicines, handleDelete, handleEditClick, isOpen, setIsOpen
         {medicines.length > 0 ? (
             medicines.map((med) => (
                 <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">{med.name}</td>
-                    <td className="px-6 py-4">{med.category}</td>
-                    <td className="px-6 py-4">{med.supplier}</td>
-                    <td className="px-6 py-4">{med.batchNumber}</td>
-                    <td className="px-6 py-4">{med.expiryDate}</td>
+                    <td className="px-6 py-4 text-black">{med.name}</td>
+                    <td className="px-6 py-4 text-black">{med.category}</td>
+                    <td className="px-6 py-4 text-black">{med.supplier}</td>
+                    <td className="px-6 py-4 text-black">{med.batchNumber}</td>
+                    <td className="px-6 py-4 text-black">{med.expiryDate}</td>
                     <td className={`${Number(med.stock) > 0 ? 'text-green-600 px-6 py-4 font-bold ' : 'text-red-600 px-6 py-4 font-bold'}`}>{med.stock}</td>
                     <td className="px-6 py-4">Rs {med.mrp}</td>
                     <td className="flex gap-4 px-6 py-4">
