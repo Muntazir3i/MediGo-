@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from './ui/button.jsx'
 import { showAllBills } from '@/services/medicineService.js';
+import { getMedicines } from '../services/medicineService.js';
+
 import {
   Card,
   CardContent,
@@ -54,8 +56,25 @@ function DashBoard() {
   const [date, setDate] = useState(today);
   const [allbills, setAllBills] = useState([])
   const [filteredBill, setFilteredBill] = useState([])
+  const [medicines, setMedicines] = useState([]);
+
+  useEffect(() => {
+    fetchMedicines();
+}, []);
+
+useEffect(()=>{
+  console.log(medicines);
+})
 
 
+  const fetchMedicines = async () => {
+    try {
+        const response = await getMedicines();
+        setMedicines(response.data);
+    } catch (error) {
+        console.error('Error fetching the medicine:', error);
+    }
+};
 
 
 
@@ -109,7 +128,7 @@ function DashBoard() {
       <Tabs defaultValue="sales" >
         <TabsList>
           <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="out-of-stock">Out Of Stock</TabsTrigger>
+          <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
           <TabsTrigger value="expiry">Expiry</TabsTrigger>
         </TabsList>
         <TabsContent value="sales">
@@ -322,8 +341,49 @@ function DashBoard() {
             </tbody>
           </table>
         </TabsContent>
-        <TabsContent value="out-of-stock">
-          <h1 className="text-3xl font-bold mb-8">Out Of Stock</h1>
+        <TabsContent value="low-stock">
+          <h1 className="text-3xl font-bold mb-8">Low Stock</h1>
+          <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+    <thead className="bg-gray-50">
+        <tr>
+            <th className="px-6 py-4">Name</th>
+            <th className="px-6 py-4">Category</th>
+            <th className="px-6 py-4">Supplier</th>
+            <th className="px-6 py-4">Batch Number</th>
+            <th className="px-6 py-4">EXP Date</th>
+            <th className="px-6 py-4">Stock</th>
+            <th className="px-6 py-4">Price</th>
+            <th className="px-6 py-4"></th>
+        </tr>
+    </thead>
+    <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+  {medicines.length > 0 ? (
+    medicines
+      .filter((med) => med.stock <=2 )
+      .map((med) => (
+        <tr key={med.id} className="hover:bg-gray-50">
+          <td className="px-6 py-4 text-black font-bold">{med.name}</td>
+          <td className="px-6 py-4 text-black font-light">{med.category}</td>
+          <td className="px-6 py-4 text-black font-light">{med.supplier}</td>
+          <td className="px-6 py-4 text-black font-light">{med.batchNumber}</td>
+          <td className="px-6 py-4 text-black font-bold">{med.expiryDate}</td>
+          <td className={`${Number(med.stock) > 0 ? 'text-green-600' : 'text-red-600'} px-6 py-4 font-bold`}>
+            {med.stock}
+          </td>
+          <td className="px-6 py-4 text-black font-extrabold">Rs {med.mrp}</td>
+          <td className="flex gap-4 px-6 py-4">
+            <button onClick={() => handleDelete(med.id)} className="text-red-600 hover:text-red-800">Delete</button>
+            <Button variant="outline" onClick={() => handleEditClick(med)}>Edit</Button>
+          </td>
+        </tr>
+      ))
+  ) : (
+    <tr>
+      <td colSpan="10" className="px-6 py-4 text-center">No Medicines Found</td>
+    </tr>
+  )}
+</tbody>
+</table>
         </TabsContent>
       </Tabs>
 
