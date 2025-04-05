@@ -248,10 +248,10 @@ function Inventory() {
                                         <tbody className="divide-y divide-gray-100 border-t border-gray-100">
                                             {data.purchases.map((purchase) => (
                                                 <tr key={purchase.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4">{purchase.billNumber}</td>
-                                                    <td className="px-6 py-4">{purchase.billDate}</td>
-                                                    <td className="px-6 py-4">{purchase.products.length}</td>
-                                                    <td className="px-6 py-4">{Number(purchase.total).toFixed(2)}</td>
+                                                    <td className="px-6 py-4 text-black">{purchase.billNumber}</td>
+                                                    <td className="px-6 py-4 text-black">{purchase.billDate}</td>
+                                                    <td className="px-6 py-4 text-black">{purchase.products.length}</td>
+                                                    <td className="px-6 py-4 text-black">{Number(purchase.total).toFixed(2)}</td>
                                                     <td className="px-6 py-4">
                                                         <Dialog>
                                                             <DialogTrigger asChild>
