@@ -235,12 +235,12 @@ function DashBoard() {
               {filteredBill.length > 0 ? (
                 filteredBill.map((med) => (
                   <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-1">{med.id}</td>
-                    <td className="px-2 py-1">{med.name}</td>
-                    <td className="px-2 py-1">{med.status}</td>
-                    <td className="px-2 py-1">{med.date}</td>
-                    <td className="px-2 py-1">{med.time}</td>
-                    <td className="px-2 py-1">₹ {med.total.toFixed(2)}</td>
+                    <td className="px-2 py-1 text-black">{med.id}</td>
+                    <td className="px-2 py-1 text-black font-bold">{med.name}</td>
+                    <td className="px-2 py-1 text-black">{med.status}</td>
+                    <td className="px-2 py-1 text-black font-black">{med.date}</td>
+                    <td className="px-2 py-1 text-black">{med.time}</td>
+                    <td className="px-2 py-1 text-black font-bold">₹ {med.total.toFixed(2)}</td>
                     <td className="px-2 py-1">
 
                       <DropdownMenu>

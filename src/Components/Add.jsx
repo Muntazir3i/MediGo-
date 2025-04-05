@@ -113,8 +113,6 @@ function Add() {
     );
   };
 
-
-
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -331,7 +329,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="text"
-                            className="border p-1 w-full text-black"
+                            className="border p-1 w-full text-black font-bold"
                             value={item.name}
                             onChange={(e) => handleInputChange(item.id, "name", e.target.value)}
                           />
