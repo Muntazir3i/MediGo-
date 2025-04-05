@@ -24,13 +24,13 @@ function TableData({ medicines, handleDelete, handleEditClick, isOpen, setIsOpen
         {medicines.length > 0 ? (
             medicines.map((med) => (
                 <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-black">{med.name}</td>
-                    <td className="px-6 py-4 text-black">{med.category}</td>
-                    <td className="px-6 py-4 text-black">{med.supplier}</td>
-                    <td className="px-6 py-4 text-black">{med.batchNumber}</td>
-                    <td className="px-6 py-4 text-black">{med.expiryDate}</td>
+                    <td className="px-6 py-4 text-black font-bold">{med.name}</td>
+                    <td className="px-6 py-4 text-black font-light">{med.category}</td>
+                    <td className="px-6 py-4 text-black font-light">{med.supplier}</td>
+                    <td className="px-6 py-4 text-black font-light">{med.batchNumber}</td>
+                    <td className="px-6 py-4 text-black font-bold">{med.expiryDate}</td>
                     <td className={`${Number(med.stock) > 0 ? 'text-green-600 px-6 py-4 font-bold ' : 'text-red-600 px-6 py-4 font-bold'}`}>{med.stock}</td>
-                    <td className="px-6 py-4 text-black">Rs {med.mrp}</td>
+                    <td className="px-6 py-4 text-black font-extrabold">Rs {med.mrp}</td>
                     <td className="flex gap-4 px-6 py-4">
                         <button onClick={() => handleDelete(med.id)} className="text-red-600 hover:text-red-800">Delete</button>
                         <Button variant="outline" onClick={() => handleEditClick(med)}>Edit</Button>
