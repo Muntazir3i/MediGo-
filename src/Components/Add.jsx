@@ -180,7 +180,7 @@ function Add() {
         products: validProducts,
         totalAmount: totalAmount.toFixed(2),
         totalGst: totalGst.toFixed(2),
-        total: totalAmount + totalGst
+        total: Math.round(totalAmount + totalGst)
       };
 
       const [purchaseResponse, medicineResponse] = await Promise.all([
@@ -438,7 +438,7 @@ function Add() {
                 <hr />
                 <div id="all-total" className='flex justify-between'>
                   <p className='font-bold'>Total Amount</p>
-                  <p className='font-bold'>Rs {(totalAmount + totalGst).toFixed(2)}</p>
+                  <p className='font-bold'>Rs {Math.round((totalAmount + totalGst).toFixed(2))}</p>
                 </div>
               </div>
             </div>

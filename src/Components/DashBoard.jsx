@@ -128,7 +128,7 @@ useEffect(()=>{
       <Tabs defaultValue="sales" >
         <TabsList>
           <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
+          <TabsTrigger value="stock-info">Stock Info</TabsTrigger>
           <TabsTrigger value="expiry">Expiry</TabsTrigger>
         </TabsList>
         <TabsContent value="sales">
@@ -341,8 +341,14 @@ useEffect(()=>{
             </tbody>
           </table>
         </TabsContent>
-        <TabsContent value="low-stock">
-          <h1 className="text-3xl font-bold mb-8">Low Stock</h1>
+        <TabsContent value="stock-info">
+        <Tabs defaultValue="low-stock">
+  <TabsList>
+    <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
+    <TabsTrigger value="out-of-stock">Out Of Stock</TabsTrigger>
+  </TabsList>
+  <TabsContent value="low-stock">
+  <h1 className="text-3xl font-bold mb-8">Low Stock</h1>
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
     <thead className="bg-gray-50">
         <tr>
@@ -384,6 +390,10 @@ useEffect(()=>{
   )}
 </tbody>
 </table>
+    </TabsContent>
+  <TabsContent value="out-of-stock">Change your password here.</TabsContent>
+</Tabs>
+
         </TabsContent>
       </Tabs>
 
