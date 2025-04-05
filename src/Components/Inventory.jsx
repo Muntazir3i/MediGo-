@@ -213,7 +213,7 @@ function Inventory() {
 
     return (
         <main className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
-            <h1 className="text-5xl mb-3">All Products</h1>
+           
             <Tabs defaultValue="all-product" >
                 <TabsList >
                     <TabsTrigger value="all-product">All Product</TabsTrigger>
@@ -221,6 +221,8 @@ function Inventory() {
                     <TabsTrigger value="all-payments">All Payments</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all-product">
+                <h1 className="text-5xl mb-3">All Products</h1>
+            <h2 className=' text-3xl mb-3'>Total Items <span className='font-bold'>{medicines.length}</span></h2>
                     <Input className='mb-2 bg-white' placeholder="Search Medicines" onChange={handleSearchChange} />
                     <TableData
                         medicines={filterMedicine}
@@ -235,6 +237,8 @@ function Inventory() {
                     />
                 </TabsContent>
                 <TabsContent value="all-purchase">
+                <h1 className="text-5xl mb-3">All Purchases</h1>
+            
                     <Input className='mb-2 bg-white' placeholder="Search Purchases" onChange={handleSearchChange} />
                     {Object.entries(groupedPurchases).map(([supplierName, data]) => (
                         <Accordion type="single" collapsible key={supplierName}>
@@ -355,6 +359,7 @@ function Inventory() {
                     ))}
                 </TabsContent>
                 <TabsContent value="all-payments">
+                <h1 className="text-5xl mb-3">All Payments</h1>
                     <Input className='mb-2 bg-white' placeholder="Search Payments" onChange={handleSearchChange} />
                     {filteredPayment.map((item) => (
                         <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
