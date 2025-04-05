@@ -179,16 +179,34 @@ function Inventory() {
     };
 
 
+    // const groupedPurchases = filteredPurchase.reduce((acc, purchase) => {
+    //     if (!acc[purchase.supplierName]) {
+    //         acc[purchase.supplierName] = {
+    //             supplierGstin: purchase.supplierGstin,
+    //             purchases: [],
+    //         };
+    //     }
+    //     acc[purchase.supplierName].purchases.push(purchase);
+    //     return acc;
+    // }, {});
+
     const groupedPurchases = filteredPurchase.reduce((acc, purchase) => {
         if (!acc[purchase.supplierName]) {
-            acc[purchase.supplierName] = {
-                supplierGstin: purchase.supplierGstin,
-                purchases: [],
-            };
+          acc[purchase.supplierName] = {
+            supplierGstin: purchase.supplierGstin,
+            supplierDrugLn: purchase.supplierDrugLn, // you were using this in JSX
+            purchases: [],
+            totalAmount: 0,
+          };
         }
+      
         acc[purchase.supplierName].purchases.push(purchase);
+        acc[purchase.supplierName].totalAmount += Number(purchase.total || 0);
+      
         return acc;
-    }, {});
+      }, {});
+      
+
 
 
 
@@ -227,10 +245,13 @@ function Inventory() {
                                             <h3 className="font-medium">{supplierName}</h3>
                                             <p className="text-sm text-muted-foreground">{data.supplierDrugLn}</p>
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-sm">
-                                                <span className="text-muted-foregroundz mr-1">Purchases:</span>
-                                                {data.purchases.length}
+                                        <div className="">
+                                            <div className="text-sm flex gap-2">
+                                                <span className="text-muted-foregroundz mr-1">Purchases: {data.purchases.length}</span>
+                                                
+                                                <span className="text-muted-foregroundz mr-1">Balance: Rs <span className='font-bold'>{data.totalAmount.toFixed(2)}</span></span>
+                                                
+
                                             </div>
                                         </div>
                                     </div>
@@ -336,27 +357,27 @@ function Inventory() {
                 <TabsContent value="all-payments">
                     <Input className='mb-2 bg-white' placeholder="Search Payments" onChange={handleSearchChange} />
                     {filteredPayment.map((item) => (
-                                    <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                            
-                                                
-                                                <th className="px-6 py-4">Supplier Name</th>
-                                                <th className="px-6 py-4">Receipt Date</th>
-                                                <th className="px-6 py-4">Receipt Number</th>
-                                                <th className="px-6 py-4">Amount Paid</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                                                <tr key={item.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4">{item.supplierName}</td>
-                                                    <td className="px-6 py-4">{item.receiptDate}</td>
-                                                    <td className="px-6 py-4">{item.receiptNumber}</td>
-                                                    <td className="px-6 py-4">{`Rs ${Number(item.amountPaid)}`}</td>
-                                                </tr>
-                                        </tbody>
-                                    </table>
-                          
+                        <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+                            <thead className="bg-gray-50">
+                                <tr>
+
+
+                                    <th className="px-6 py-4">Supplier Name</th>
+                                    <th className="px-6 py-4">Receipt Date</th>
+                                    <th className="px-6 py-4">Receipt Number</th>
+                                    <th className="px-6 py-4">Amount Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                                <tr key={item.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4">{item.supplierName}</td>
+                                    <td className="px-6 py-4">{item.receiptDate}</td>
+                                    <td className="px-6 py-4">{item.receiptNumber}</td>
+                                    <td className="px-6 py-4">{`Rs ${Number(item.amountPaid)}`}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
                     ))}
                 </TabsContent>
 
