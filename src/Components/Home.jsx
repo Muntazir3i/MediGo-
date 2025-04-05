@@ -282,11 +282,11 @@ function Home() {
               {filterMedicine.length > 0 ? (
                 filterMedicine.map((med) => (
                   <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-1">{med.name}</td>
-                    <td className="px-2 py-1">{med.category}</td>
-                    <td className="px-2 py-1">{med.expiryDate}</td>
+                    <td className="px-2 py-1 text-black font-black">{med.name}</td>
+                    <td className="px-2 py-1 text-black font-light">{med.category}</td>
+                    <td className="px-2 py-1 text-black font-bold">{med.expiryDate}</td>
                     <td className={`${Number(med.stock) > 0 ? 'text-green-600 px-2 py-1 font-bold ' : 'text-red-600 px-2 py-1 font-bold'}`}>{med.stock}</td>
-                    <td className="px-2 py-1">₹ {Number(med.mrp).toFixed(2)}</td>
+                    <td className="px-2 py-1 text-black font-bold">₹ {Number(med.mrp).toFixed(2)}</td>
                     <td className="flex gap-4 px-2 py-1">
                       {Number(med.stock) > 0 ?
                         <Button onClick={() => onAddClick(med)}>Add to cart</Button>
@@ -319,9 +319,9 @@ function Home() {
               {cart.length > 0 ? (
                 cart.map((med) => (
                   <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-1">{med.name}</td>
-                    <td className="px-2 py-1">{med.category}</td>
-                    <td className="px-2 py-1">
+                    <td className="px-2 py-1 text-black font-bold">{med.name}</td>
+                    <td className="px-2 py-1 text-black font-light">{med.category}</td>
+                    <td className="px-2 py-1 text-black">
                       <div className="flex items-center space-x-1">
                         <button className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colo₹ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-6 w-6'
                           onClick={() => decreaseQty(med.id)}>-</button>
@@ -330,8 +330,8 @@ function Home() {
                           onClick={() => increaseQty(med.id)}>+</button>
                       </div>
                     </td>
-                    <td className="px-2 py-1">₹ {Number(med.mrp).toFixed(2)}</td>
-                    <td className="px-2 py-1">₹ {(Number(med.mrp) * med.qty).toFixed(2)}</td>
+                    <td className="px-2 py-1 text-black font-light">₹ {Number(med.mrp).toFixed(2)}</td>
+                    <td className="px-2 py-1 text-black font-bold ">₹ {(Number(med.mrp) * med.qty).toFixed(2)}</td>
                     <td className="flex gap-4 px-2 py-1">
                       <button onClick={() => onDeleteClick(med.id)} className="text-red-600 hover:text-red-800">Delete</button>
                     </td>
