@@ -322,6 +322,9 @@ function DashBoard() {
             </tbody>
           </table>
         </TabsContent>
+        <TabsContent value="out-of-stock">
+          <h1 className="text-3xl font-bold mb-8">Out Of Stock</h1>
+        </TabsContent>
       </Tabs>
 
     </main>
