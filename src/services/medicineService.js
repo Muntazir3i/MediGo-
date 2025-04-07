@@ -4,7 +4,26 @@ const API_BASE_URL = 'http://localhost:8000/api/medicines'
 const API_BASE_URL_BILL = 'http://localhost:8000/api/bills'
 const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
 const API_BASE_URL_PAYMENT = 'http://localhost:8000/api/payment'
+const API_BASE_URL_SUPPLIER = 'http://localhost:8000/api/addSupplier'
 
+
+//get all suppliers
+
+export const getSupplier = async()=>{
+    const response = await axios.get(`${API_BASE_URL_SUPPLIER}/all-supplier`);
+    return response
+}
+
+//add supplier
+
+export const addNewSupplier = async(supplierData) => {
+   try {
+     const response = await axios.post(`${API_BASE_URL_SUPPLIER}/add-supplier`, supplierData);
+     return response
+   } catch (error) {
+    console.log('Error adding Supplier',error);
+   }
+}
 
 //get all medicine
 export const getMedicines = async()=>{

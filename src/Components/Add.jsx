@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewSupplier } from '../services/medicineService.js';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -62,6 +62,26 @@ function Add() {
     drugLn:'',
     supplierBalance:''
   })
+
+  const showData =async  (e) =>{
+    e.preventDefault();
+    let newSupplier = {...addSupplier}
+    setAddSupplier(newSupplier);
+    try {
+      const response = await addNewSupplier(newSupplier);
+      console.log(response);
+      setAddSupplier({
+        supplierName:'',
+        phoneNumber:'',
+        email:'',
+        address:'',
+        drugLn:'',
+        supplierBalance:''
+      })
+    } catch (error) {
+      console.error('Error Adding Supplier to the database', error)
+    }
+  }
 
   const showPayment = async (e) => {
     e.preventDefault();
@@ -142,10 +162,7 @@ function Add() {
     ))
   }
 
-  const showData = (e) =>{
-    e.preventDefault();
-    console.log(addSupplier);
-  }
+
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this medicine?")) {
