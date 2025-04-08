@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMedicines, deleteMedicine, updateMedicine, getPurchase, getPayments } from '../services/medicineService.js';
 import { Input } from "./ui/input";
+import { Badge } from './ui/badge.jsx';
 import './inventory.css'
 import TableData from './TableData.jsx';
 import { Button } from "./ui/button.jsx"
@@ -192,20 +193,20 @@ function Inventory() {
 
     const groupedPurchases = filteredPurchase.reduce((acc, purchase) => {
         if (!acc[purchase.supplierName]) {
-          acc[purchase.supplierName] = {
-            supplierGstin: purchase.supplierGstin,
-            supplierDrugLn: purchase.supplierDrugLn, // you were using this in JSX
-            purchases: [],
-            totalAmount: 0,
-          };
+            acc[purchase.supplierName] = {
+                supplierGstin: purchase.supplierGstin,
+                supplierDrugLn: purchase.supplierDrugLn, // you were using this in JSX
+                purchases: [],
+                totalAmount: 0,
+            };
         }
-      
+
         acc[purchase.supplierName].purchases.push(purchase);
         acc[purchase.supplierName].totalAmount += Number(purchase.total || 0);
-      
+
         return acc;
-      }, {});
-      
+    }, {});
+
 
 
 
@@ -213,7 +214,7 @@ function Inventory() {
 
     return (
         <main className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
-           
+
             <Tabs defaultValue="all-product" >
                 <TabsList >
                     <TabsTrigger value="all-product">All Product</TabsTrigger>
@@ -221,8 +222,8 @@ function Inventory() {
                     <TabsTrigger value="all-payments">All Payments</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all-product">
-                <h1 className="text-5xl mb-3">All Products</h1>
-            <h2 className=' text-3xl mb-3'>Total Items <span className='font-bold'>{medicines.length}</span></h2>
+                    <h1 className="text-5xl mb-3">All Products</h1>
+                    <h2 className=' text-3xl mb-3'>Total Items <span className='font-bold'>{medicines.length}</span></h2>
                     <Input className='mb-2 bg-white' placeholder="Search Medicines" onChange={handleSearchChange} />
                     <TableData
                         medicines={filterMedicine}
@@ -237,8 +238,8 @@ function Inventory() {
                     />
                 </TabsContent>
                 <TabsContent value="all-purchase">
-                <h1 className="text-5xl mb-3">All Purchases</h1>
-            
+                    <h1 className="text-5xl mb-3">All Purchases</h1>
+
                     <Input className='mb-2 bg-white' placeholder="Search Purchases" onChange={handleSearchChange} />
                     {Object.entries(groupedPurchases).map(([supplierName, data]) => (
                         <Accordion type="single" collapsible key={supplierName}>
@@ -252,9 +253,9 @@ function Inventory() {
                                         <div className="">
                                             <div className="text-sm flex gap-2">
                                                 <span className="text-muted-foregroundz mr-1">Purchases: {data.purchases.length}</span>
-                                                
+
                                                 <span className="text-muted-foregroundz mr-1">Balance: Rs <span className='font-bold'>{data.totalAmount.toFixed(2)}</span></span>
-                                                
+
 
                                             </div>
                                         </div>
@@ -267,6 +268,7 @@ function Inventory() {
                                                 <th className="px-6 py-4">BILL NO.</th>
                                                 <th className="px-6 py-4">BILL DATE</th>
                                                 <th className="px-6 py-4">PRODUCTS</th>
+                                                <th className="px-6 py-4">TYPE</th>
                                                 <th className="px-6 py-4">TOTAL</th>
                                             </tr>
                                         </thead>
@@ -276,6 +278,7 @@ function Inventory() {
                                                     <td className="px-6 py-4 text-black">{purchase.billNumber}</td>
                                                     <td className="px-6 py-4 text-black">{purchase.billDate}</td>
                                                     <td className="px-6 py-4 text-black">{purchase.products.length}</td>
+                                                    <td className="px-6 py-4 text-black"><Badge className='text-lg' variant="destructive">{purchase.type}</Badge></td>
                                                     <td className="px-6 py-4 text-black">{Number(purchase.total).toFixed(2)}</td>
                                                     <td className="px-6 py-4">
                                                         <Dialog>
@@ -359,7 +362,7 @@ function Inventory() {
                     ))}
                 </TabsContent>
                 <TabsContent value="all-payments">
-                <h1 className="text-5xl mb-3">All Payments</h1>
+                    <h1 className="text-5xl mb-3">All Payments</h1>
                     <Input className='mb-2 bg-white' placeholder="Search Payments" onChange={handleSearchChange} />
                     {filteredPayment.map((item) => (
                         <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
@@ -367,9 +370,10 @@ function Inventory() {
                                 <tr>
 
 
-                                    <th className="px-6 py-4">Supplier Name</th>
-                                    <th className="px-6 py-4">Receipt Date</th>
-                                    <th className="px-6 py-4">Receipt Number</th>
+                                    <th className="px-6 py-4">SUPPLIER NAME</th>
+                                    <th className="px-6 py-4">RECEIPT DATE</th>
+                                    <th className="px-6 py-4">RECEIPT NO.</th>
+                                    <th className="px-6 py-4">TYPE</th>
                                     <th className="px-6 py-4">Amount Paid</th>
                                 </tr>
                             </thead>
@@ -378,6 +382,12 @@ function Inventory() {
                                     <td className="px-6 py-4">{item.supplierName}</td>
                                     <td className="px-6 py-4">{item.receiptDate}</td>
                                     <td className="px-6 py-4">{item.receiptNumber}</td>
+                                    <td className="px-6 py-4">
+                                    <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
+                                       {item.type}
+                                    </Badge>
+                                    </td>
+                                 
                                     <td className="px-6 py-4">{`Rs ${Number(item.amountPaid)}`}</td>
                                 </tr>
                             </tbody>

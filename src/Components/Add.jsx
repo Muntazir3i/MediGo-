@@ -85,7 +85,7 @@ function Add() {
 
   const showPayment = async (e) => {
     e.preventDefault();
-    let newPayment = { ...payments, id: Date.now() }
+    let newPayment = { ...payments, id: Date.now(),type:'Payment' }
     setPayments(newPayment);
     try {
       const response = await addPayment(newPayment);
@@ -197,7 +197,8 @@ function Add() {
         products: validProducts,
         totalAmount: totalAmount.toFixed(2),
         totalGst: totalGst.toFixed(2),
-        total: Math.round(totalAmount + totalGst)
+        total: Math.round(totalAmount + totalGst),
+        type: 'Bill'
       };
 
       const [purchaseResponse, medicineResponse] = await Promise.all([
