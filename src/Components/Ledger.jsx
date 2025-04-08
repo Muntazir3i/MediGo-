@@ -1,21 +1,32 @@
 import React from 'react'
 import { useState, useEffect } from 'react';
-import { getSupplier } from '@/services/medicineService.js';
+import { getSupplier, getPurchase } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
+import { Badge } from './ui/badge.jsx';
 
 
 const Ledger = () => {
 
   const [allSupplier, setAllSupplier] = useState([])
+  const [allPurchases, setAllPurchases] = useState([])
+  const [filteredBill, setFilteredBill] = useState([])
 
   useEffect(() => {
     fetchAllSupplier()
   }, [])
 
+  useEffect(() => {
+    fetchPurchases()
+  }, [])
 
-  console.log(allSupplier);
+  console.log(allPurchases);
 
+  const showNameFn = (name)=>{
+    setFilteredBill([]);
+    setFilteredBill(allPurchases.filter((item)=>item.supplierName === name));
+  }
 
+  console.log(filteredBill);
 
   const fetchAllSupplier = async () => {
     try {
@@ -23,6 +34,15 @@ const Ledger = () => {
       setAllSupplier(response.data)
     } catch (error) {
       console.error('Error fetching the Supplier:', error);
+    }
+  }
+
+  const fetchPurchases = async () => {
+    try {
+      const response = await getPurchase();
+      setAllPurchases(response.data);
+    } catch (error) {
+      console.error('Error fetching the Bills:', error);
     }
   }
 
@@ -60,7 +80,7 @@ const Ledger = () => {
                     <tr key={supplier} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-black font-bold">{supplier.supplierName}</td>
                       <td className="px-6 py-4 text-black font-light">₹ {supplier.supplierBalance}</td>
-                      <td className=""><Button>View Transactions</Button></td>
+                      <td className=""><Button onClick={()=>showNameFn(supplier.supplierName)}>View Transactions</Button></td>
                     </tr>
                   ))
                 ) : (
@@ -101,6 +121,45 @@ const Ledger = () => {
 
 
           </div>
+        </div>
+
+        <div className='border-gray-300 border w-[100%] mt-5 h-[50vh] rounded-lg p-3  overflow-auto'>
+          <h2 className='text-2xl font-bold mb-2'>Transaction History</h2>
+         <p className='font-light text-lg'>Showing all transactions</p>
+         <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4">BILL DATE</th>
+                  <th className="px-6 py-4">SUPPLIER</th>
+                  <th className="px-6 py-4">TYPE</th>
+                  <th className="px-6 py-4">BILL NO.</th>
+                  <th className="px-6 py-4">AMOUNT</th>
+
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                {filteredBill.length > 0 ? (
+                  filteredBill.map((bill) => (
+                    <tr key={bill} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-black font-bold">{bill.date}</td>
+                      <td className="px-6 py-4 text-black font-light">{bill.supplierName}</td>
+                     {bill.type === 'Bill' ?  <td className="px-6 py-4 text-black font-light"><Badge className='text-lg' variant="destructive">{bill.type}</Badge></td> :      <td className="px-6 py-4">
+                                    <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
+                                       {bill.type}
+                                    </Badge>
+                                    </td> }
+                      <td className="px-6 py-4 text-black font-light">{bill.invoice}</td>
+                      <td className="px-6 py-4 text-black">₹ {Number(bill.total).toFixed(2)}</td>
+                      
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="10" className="px-6 py-4 text-center">No Supplier Found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
         </div>
 
       </main>

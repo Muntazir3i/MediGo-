@@ -254,7 +254,16 @@ function Inventory() {
                                             <div className="text-sm flex gap-2">
                                                 <span className="text-muted-foregroundz mr-1">Purchases: {data.purchases.length}</span>
 
-                                                <span className="text-muted-foregroundz mr-1">Balance: Rs <span className='font-bold'>{data.totalAmount.toFixed(2)}</span></span>
+                                                <span className="text-muted-foregroundz mr-1">
+                                                    Balance: Rs{" "}
+                                                    <span className="font-bold">
+                                                        {data.purchases
+                                                            .filter((p) => p.type === "Bill")
+                                                            .reduce((acc, curr) => acc + Number(curr.total), 0)
+                                                            .toFixed(2)}
+                                                    </span>
+                                                </span>
+
 
 
                                             </div>
@@ -270,92 +279,103 @@ function Inventory() {
                                                 <th className="px-6 py-4">PRODUCTS</th>
                                                 <th className="px-6 py-4">TYPE</th>
                                                 <th className="px-6 py-4">TOTAL</th>
+                                                <th className="px-6 py-4">ACTIONS</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                                            {data.purchases.map((purchase) => (
-                                                <tr key={purchase.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-black">{purchase.billNumber}</td>
-                                                    <td className="px-6 py-4 text-black">{purchase.billDate}</td>
-                                                    <td className="px-6 py-4 text-black">{purchase.products.length}</td>
-                                                    <td className="px-6 py-4 text-black"><Badge className='text-lg' variant="destructive">{purchase.type}</Badge></td>
-                                                    <td className="px-6 py-4 text-black">{Number(purchase.total).toFixed(2)}</td>
-                                                    <td className="px-6 py-4">
-                                                        <Dialog>
-                                                            <DialogTrigger asChild>
-                                                                <Button variant="outline">View Details</Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="sm:max-w-[1400px]">
-                                                                <DialogHeader>
-                                                                    <DialogTitle>{supplierName}</DialogTitle>
-                                                                    <DialogDescription className='flex justify-between'>
-                                                                        <p>Bill No.: {purchase.billNumber} </p>
-                                                                        <p>DRUG L/N: {purchase.supplierDrugLn} </p>
-                                                                        <p>Contact: {purchase.supplierContact}</p>
-                                                                        <p>Bill Date: {purchase.billDate}</p>
-                                                                    </DialogDescription>
-                                                                </DialogHeader>
+                                            {data.purchases
+                                                .filter((purchase) => purchase.type === "Bill")
+                                                .map((purchase) => (
+                                                    <tr key={purchase.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 text-black">{purchase.invoice}</td>
+                                                        <td className="px-6 py-4 text-black">{purchase.date}</td>
+                                                        <td className="px-6 py-4 text-black">
+                                                            {purchase.products ? purchase.products.length : "-"}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-black">
+                                                            <Badge className="text-lg" variant="destructive">
+                                                                {purchase.type}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-black">
+                                                            {Number(purchase.total).toFixed(2)}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <Dialog>
+                                                                <DialogTrigger asChild>
+                                                                    <Button variant="outline">View Details</Button>
+                                                                </DialogTrigger>
+                                                                <DialogContent className="sm:max-w-[1400px]">
+                                                                    <DialogHeader>
+                                                                        <DialogTitle>{purchase.supplierName}</DialogTitle>
+                                                                        <DialogDescription className="flex justify-between">
+                                                                            <p>Bill No.: {purchase.invoice}</p>
+                                                                            <p>DRUG L/N: {purchase.supplierDrugLn}</p>
+                                                                            <p>Contact: {purchase.supplierContact}</p>
+                                                                            <p>Bill Date: {purchase.date}</p>
+                                                                        </DialogDescription>
+                                                                    </DialogHeader>
 
-                                                                <Table>
-                                                                    <TableHeader>
-                                                                        <TableRow>
-                                                                            <TableHead className="w-[100px]">Name</TableHead>
-                                                                            <TableHead>Category</TableHead>
-                                                                            <TableHead>EXP</TableHead>
-                                                                            <TableHead>QTY</TableHead>
-                                                                            <TableHead>BATCH NO.</TableHead>
-                                                                            <TableHead>Unite Price</TableHead>
-                                                                            <TableHead>PRICE</TableHead>
-                                                                            <TableHead>Discount</TableHead>
-                                                                            <TableHead>GST %</TableHead>
-
-                                                                        </TableRow>
-                                                                    </TableHeader>
-                                                                    <TableBody>
-                                                                        {purchase.products.map((item) => (
+                                                                    <Table>
+                                                                        <TableHeader>
                                                                             <TableRow>
-                                                                                <TableCell className="font-medium">{item.name}</TableCell>
-                                                                                <TableCell>{item.category}</TableCell>
-                                                                                <TableCell>{item.expiryDate}</TableCell>
-                                                                                <TableCell>{item.stock}</TableCell>
-                                                                                <TableCell>{item.batchNumber}</TableCell>
-                                                                                <TableCell>{item.unitPrice}</TableCell>
-                                                                                <TableCell>{item.mrp}</TableCell>
-                                                                                <TableCell>{item.discount}</TableCell>
-                                                                                <TableCell>{item.gstPercentage}</TableCell>
-
-                                                                                {/* <TableCell className="text-right">{(Number(item.mrp) * item.qty).toFixed(2)}</TableCell> */}
+                                                                                <TableHead className="w-[100px]">Name</TableHead>
+                                                                                <TableHead>Category</TableHead>
+                                                                                <TableHead>EXP</TableHead>
+                                                                                <TableHead>QTY</TableHead>
+                                                                                <TableHead>BATCH NO.</TableHead>
+                                                                                <TableHead>Unite Price</TableHead>
+                                                                                <TableHead>PRICE</TableHead>
+                                                                                <TableHead>Discount</TableHead>
+                                                                                <TableHead>GST %</TableHead>
                                                                             </TableRow>
-                                                                        ))}
+                                                                        </TableHeader>
+                                                                        <TableBody>
+                                                                            {purchase.products.map((item, idx) => (
+                                                                                <TableRow key={idx}>
+                                                                                    <TableCell className="font-medium">{item.name}</TableCell>
+                                                                                    <TableCell>{item.category}</TableCell>
+                                                                                    <TableCell>{item.expiryDate}</TableCell>
+                                                                                    <TableCell>{item.stock}</TableCell>
+                                                                                    <TableCell>{item.batchNumber}</TableCell>
+                                                                                    <TableCell>{item.unitPrice}</TableCell>
+                                                                                    <TableCell>{item.mrp}</TableCell>
+                                                                                    <TableCell>{item.discount}</TableCell>
+                                                                                    <TableCell>{item.gstPercentage}</TableCell>
+                                                                                </TableRow>
+                                                                            ))}
+                                                                        </TableBody>
+                                                                        <TableFooter>
+                                                                            <TableRow>
+                                                                                <TableCell colSpan={3}>Sub Total</TableCell>
+                                                                                <TableCell colSpan={6} className="text-right text-2xl font-extrabold">
+                                                                                    {Number(purchase.totalAmount).toFixed(2)}
+                                                                                </TableCell>
+                                                                            </TableRow>
+                                                                            <TableRow>
+                                                                                <TableCell colSpan={3}>Sub Gst</TableCell>
+                                                                                <TableCell colSpan={6} className="text-right text-2xl font-extrabold">
+                                                                                    {Number(purchase.totalGst).toFixed(2)}
+                                                                                </TableCell>
+                                                                            </TableRow>
+                                                                            <TableRow>
+                                                                                <TableCell colSpan={3}>Total</TableCell>
+                                                                                <TableCell colSpan={6} className="text-right text-2xl font-extrabold">
+                                                                                    {Number(purchase.total).toFixed(2)}
+                                                                                </TableCell>
+                                                                            </TableRow>
+                                                                        </TableFooter>
+                                                                    </Table>
 
-
-                                                                    </TableBody>
-                                                                    <TableFooter>
-                                                                        <TableRow>
-                                                                            <TableCell colSpan={3}>Sub Total</TableCell>
-                                                                            <TableCell colSpan={6} className="text-right text-2xl font-extrabold">{Number(purchase.totalAmount).toFixed(2)}</TableCell>
-                                                                        </TableRow>
-                                                                        <TableRow>
-                                                                            <TableCell colSpan={3}>Sub Gst</TableCell>
-                                                                            <TableCell colSpan={6} className="text-right text-2xl font-extrabold">{Number(purchase.totalGst).toFixed(2)}</TableCell>
-                                                                        </TableRow>
-                                                                        <TableRow>
-                                                                            <TableCell colSpan={3}>Total</TableCell>
-                                                                            <TableCell colSpan={6} className="text-right text-2xl font-extrabold">{Number(purchase.total).toFixed(2)}</TableCell>
-                                                                        </TableRow>
-                                                                    </TableFooter>
-                                                                </Table>
-
-                                                                <DialogFooter>
-                                                                    {/* <Button type="submit">Save changes</Button> */}
-                                                                </DialogFooter>
-                                                            </DialogContent>
-                                                        </Dialog>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                                    <DialogFooter />
+                                                                </DialogContent>
+                                                            </Dialog>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                         </tbody>
                                     </table>
+
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
@@ -380,15 +400,15 @@ function Inventory() {
                             <tbody className="divide-y divide-gray-100 border-t border-gray-100">
                                 <tr key={item.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4">{item.supplierName}</td>
-                                    <td className="px-6 py-4">{item.receiptDate}</td>
-                                    <td className="px-6 py-4">{item.receiptNumber}</td>
+                                    <td className="px-6 py-4">{item.date}</td>
+                                    <td className="px-6 py-4">{item.invoice}</td>
                                     <td className="px-6 py-4">
-                                    <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
-                                       {item.type}
-                                    </Badge>
+                                        <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
+                                            {item.type}
+                                        </Badge>
                                     </td>
-                                 
-                                    <td className="px-6 py-4">{`Rs ${Number(item.amountPaid)}`}</td>
+
+                                    <td className="px-6 py-4">{`Rs ${Number(item.total)}`}</td>
                                 </tr>
                             </tbody>
                         </table>

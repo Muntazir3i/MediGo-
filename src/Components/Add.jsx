@@ -24,8 +24,8 @@ import {
 function Add() {
 
   const [formData, setFormData] = useState({
-    billNumber: '',
-    billDate: '',
+    invoice: '',
+    date: '',
     supplierName: '',
     supplierDrugLn: '',
     supplierContact: '',
@@ -47,11 +47,11 @@ function Add() {
   ])
 
   const [payments, setPayments] = useState({
-    receiptDate: '',
-    receiptNumber: '',
+    date: '',
+    invoice: '',
     supplierName: '',
     drugLicenseNumber: '',
-    amountPaid: ''
+    total: ''
   })
 
   const [addSupplier,setAddSupplier] = useState({
@@ -88,14 +88,14 @@ function Add() {
     let newPayment = { ...payments, id: Date.now(),type:'Payment' }
     setPayments(newPayment);
     try {
-      const response = await addPayment(newPayment);
+      const response = await addPurchase(newPayment);
       console.log(response);
       setPayments({
-        receiptDate: '',
-        receiptNumber: '',
+        date: '',
+        invoice: '',
         supplierName: '',
         drugLicenseNumber: '',
-        amountPaid: ''
+        total: ''
       })
 
     } catch (error) {
@@ -173,7 +173,7 @@ function Add() {
 
 
   const handleBothActions = async () => {
-    if (!formData.billNumber.trim() || !formData.billDate.trim()) {
+    if (!formData.invoice.trim() || !formData.date.trim()) {
       alert("Bill Number and Bill Date are required.");
       return;
     }
@@ -213,8 +213,8 @@ function Add() {
 
       // Reset state
       setFormData({
-        billNumber: '',
-        billDate: '',
+        invoice: '',
+        date: '',
         supplierName: '',
         supplierGstin: '',
         supplierContact: '',
@@ -292,13 +292,13 @@ function Add() {
               <div id="bill-details-inner-container" className='flex mt-2 justify-between'>
 
                 <div className='w-[49%]'>
-                  <Label htmlFor='billNumber'>Bill / Inv Number</Label>
-                  <Input name='billNumber' value={formData.billNumber} className='border-black' type='text' onChange={handleChange} required></Input>
+                  <Label htmlFor='invoice'>Bill / Inv Number</Label>
+                  <Input name='invoice' value={formData.invoice} className='border-black' type='text' onChange={handleChange} required></Input>
                 </div>
 
                 <div className='w-[49%]'>
-                  <Label htmlFor='billDate'>Bill Date</Label>
-                  <Input name='billDate' value={formData.billDate} className='border-black' type='date' onChange={handleChange}></Input>
+                  <Label htmlFor='date'>Bill Date</Label>
+                  <Input name='date' value={formData.date} className='border-black' type='date' onChange={handleChange}></Input>
                 </div>
               </div>
             </div>
@@ -505,11 +505,11 @@ function Add() {
         <TabsContent value='add-payment'>
           <div>
             <form className="flex flex-col gap-3" >
-              <label htmlFor="receiptDate">Receipt Date</label>
-              <input className="border-1" type="date" name="receiptDate" value={payments.receiptDate} onChange={handleChangePayment} required />
+              <label htmlFor="date">Receipt Date</label>
+              <input className="border-1" type="date" name="date" value={payments.date} onChange={handleChangePayment} required />
 
-              <label htmlFor="receiptNumber">Receipt Number</label>
-              <input className="border-1" type="tel" name="receiptNumber" value={payments.receiptNumber} onChange={handleChangePayment} required />
+              <label htmlFor="invoice">Receipt Number</label>
+              <input className="border-1" type="tel" name="invoice" value={payments.invoice} onChange={handleChangePayment} required />
 
               <label htmlFor="supplierName">Supplier Name</label>
               <input className="border-1" type="email" name="supplierName" value={payments.supplierName} onChange={handleChangePayment} required />
@@ -517,8 +517,8 @@ function Add() {
               <label htmlFor="drugLicenseNumber">Drug License Number</label>
               <input className="border-1" type="text" name="drugLicenseNumber" value={payments.drugLicenseNumber} onChange={handleChangePayment} required />
 
-              <label htmlFor="amountPaid">Amount Paid</label>
-              <input className="border-1" type="number" name="amountPaid" value={payments.amountPaid} onChange={handleChangePayment} required />
+              <label htmlFor="total">Amount Paid</label>
+              <input className="border-1" type="number" name="total" value={payments.total} onChange={handleChangePayment} required />
 
 
               <input
