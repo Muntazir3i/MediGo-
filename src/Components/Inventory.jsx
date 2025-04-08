@@ -252,10 +252,10 @@ function Inventory() {
                                         </div>
                                         <div className="">
                                             <div className="text-sm flex gap-2">
-                                                <span className="text-muted-foregroundz mr-1">Purchases: {data.purchases.length}</span>
+                                                <span className="text-muted-foregroundz mr-1">Purchases: {data.purchases.filter((p)=>p.type === 'Bill').length}</span>
 
                                                 <span className="text-muted-foregroundz mr-1">
-                                                    Balance: Rs{" "}
+                                                    Total: Rs{" "}
                                                     <span className="font-bold">
                                                         {data.purchases
                                                             .filter((p) => p.type === "Bill")
@@ -384,36 +384,41 @@ function Inventory() {
                 <TabsContent value="all-payments">
                     <h1 className="text-5xl mb-3">All Payments</h1>
                     <Input className='mb-2 bg-white' placeholder="Search Payments" onChange={handleSearchChange} />
-                    {filteredPayment.map((item) => (
-                        <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                            <thead className="bg-gray-50">
-                                <tr>
+                    {allPurchases
+                        .filter((item) => item.type === "Payment")
+                        .map((item) => (
+                            <table
+                                key={item.id}
+                                className="w-full border-collapse bg-white text-left text-sm text-gray-500 mb-4"
+                            >
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-4">SUPPLIER NAME</th>
+                                        <th className="px-6 py-4">RECEIPT DATE</th>
+                                        <th className="px-6 py-4">RECEIPT NO.</th>
+                                        <th className="px-6 py-4">TYPE</th>
+                                        <th className="px-6 py-4">Amount Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                                    <tr className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">{item.supplierName}</td>
+                                        <td className="px-6 py-4">{item.date}</td>
+                                        <td className="px-6 py-4">{item.invoice}</td>
+                                        <td className="px-6 py-4">
+                                            <Badge
+                                                variant="outline"
+                                                className="text-lg bg-green-100 text-green-800 hover:bg-green-100"
+                                            >
+                                                {item.type}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-6 py-4">{`Rs ${Number(item.total).toFixed(2)}`}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        ))}
 
-
-                                    <th className="px-6 py-4">SUPPLIER NAME</th>
-                                    <th className="px-6 py-4">RECEIPT DATE</th>
-                                    <th className="px-6 py-4">RECEIPT NO.</th>
-                                    <th className="px-6 py-4">TYPE</th>
-                                    <th className="px-6 py-4">Amount Paid</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                                <tr key={item.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">{item.supplierName}</td>
-                                    <td className="px-6 py-4">{item.date}</td>
-                                    <td className="px-6 py-4">{item.invoice}</td>
-                                    <td className="px-6 py-4">
-                                        <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
-                                            {item.type}
-                                        </Badge>
-                                    </td>
-
-                                    <td className="px-6 py-4">{`Rs ${Number(item.total)}`}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                    ))}
                 </TabsContent>
 
             </Tabs>

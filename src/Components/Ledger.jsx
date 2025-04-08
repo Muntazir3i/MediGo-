@@ -149,7 +149,7 @@ const Ledger = () => {
                                     </Badge>
                                     </td> }
                       <td className="px-6 py-4 text-black font-light">{bill.invoice}</td>
-                      <td className="px-6 py-4 text-black">₹ {Number(bill.total).toFixed(2)}</td>
+                      {bill.type === "Bill" ? <td className="px-6 py-4 text-red-500 font-bold">+₹ {Number(bill.total).toFixed(2)}</td> : <td className="px-6 py-4 text-green-800 font-bold">-₹ {Number(bill.total).toFixed(2)}</td>}
                       
                     </tr>
                   ))
