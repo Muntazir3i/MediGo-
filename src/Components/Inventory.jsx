@@ -324,8 +324,8 @@ function Inventory() {
                                                                                 <TableHead>EXP</TableHead>
                                                                                 <TableHead>QTY</TableHead>
                                                                                 <TableHead>BATCH NO.</TableHead>
-                                                                                <TableHead>Unite Price</TableHead>
-                                                                                <TableHead>PRICE</TableHead>
+                                                                                <TableHead>RATE</TableHead>
+                                                                                <TableHead>MRP</TableHead>
                                                                                 <TableHead>Discount</TableHead>
                                                                                 <TableHead>GST %</TableHead>
                                                                             </TableRow>
