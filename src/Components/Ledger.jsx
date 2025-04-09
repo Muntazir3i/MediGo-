@@ -130,15 +130,15 @@ const Ledger = () => {
               <p className='text-2xl font-bold'>{allSupplier.length}</p>
             </div>
 
-            <div className='flex justify-between mt-3'>
+            {/* <div className='flex justify-between mt-3'>
               <p className='text-2xl'>Total Outstanding::</p>
               <p className='text-2xl font-bold'>₹ {totalBalance}</p>
-            </div>
+            </div> */}
 
-            <div className='flex justify-between mt-3'>
+            {/* <div className='flex justify-between mt-3'>
               <p className='text-2xl'>Average Balance:</p>
               <p className='text-2xl font-bold'>₹ {averageBalance.toFixed(2)}</p>
-            </div>
+            </div> */}
 
 
 
