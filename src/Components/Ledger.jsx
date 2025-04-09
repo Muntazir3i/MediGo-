@@ -155,9 +155,9 @@ const Ledger = () => {
                 <th className="px-6 py-4">BILL DATE</th>
                 <th className="px-6 py-4">SUPPLIER</th>
                 <th className="px-6 py-4">TYPE</th>
-                <th className="px-6 py-4">BILL NO.</th>
+                <th className="px-6 py-4">INVOICE</th>
                 <th className="px-6 py-4">AMOUNT</th>
-                <th className="px-6 py-4">PREV BAL</th>
+                <th className="px-6 py-4">BAL</th>
 
               </tr>
             </thead>
@@ -188,7 +188,7 @@ const Ledger = () => {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td className="px-6 py-4 text-black font-bold">₹ {Number(balance).toFixed(2)}</td>
+                <td className="px-6 py-4 text-black font-bold">₹ {Math.round(Number(balance).toFixed(2))}</td>
               </tr>
             </tbody>
           </table>
