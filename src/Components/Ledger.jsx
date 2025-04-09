@@ -21,6 +21,17 @@ const Ledger = () => {
 
   console.log(allPurchases);
 
+  const totalBills = filteredBill
+    .filter(entry => entry.type === "Bill")
+    .reduce((sum, entry) => sum + Number(entry.total), 0);
+
+    const totalPayments = filteredBill
+    .filter(entry => entry.type === "Payment")
+    .reduce((sum, entry) => sum + Number(entry.total), 0);
+
+    const balance = totalBills - totalPayments;
+
+
   const showNameFn = (name)=>{
     setFilteredBill([]);
     setFilteredBill(allPurchases.filter((item)=>item.supplierName === name));
@@ -79,7 +90,7 @@ const Ledger = () => {
                   allSupplier.map((supplier) => (
                     <tr key={supplier} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-black font-bold">{supplier.supplierName}</td>
-                      <td className="px-6 py-4 text-black font-light">₹ {supplier.supplierBalance}</td>
+                      <td className="px-6 py-4 text-black font-light">₹ {totalBalance}</td>
                       <td className=""><Button onClick={()=>showNameFn(supplier.supplierName)}>View Transactions</Button></td>
                     </tr>
                   ))
@@ -150,14 +161,23 @@ const Ledger = () => {
                                     </td> }
                       <td className="px-6 py-4 text-black font-light">{bill.invoice}</td>
                       {bill.type === "Bill" ? <td className="px-6 py-4 text-red-500 font-bold">+₹ {Number(bill.total).toFixed(2)}</td> : <td className="px-6 py-4 text-green-800 font-bold">-₹ {Number(bill.total).toFixed(2)}</td>}
-                      
+                     
                     </tr>
-                  ))
+                  )
+                  )
                 ) : (
                   <tr>
                     <td colSpan="10" className="px-6 py-4 text-center">No Supplier Found</td>
                   </tr>
                 )}
+                <tr>
+                <td className='font-bold'>TOTAL BALANCE</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td className="px-6 py-4 text-black font-bold">₹ {Number(balance).toFixed(2)}</td>
+                </tr>
               </tbody>
             </table>
         </div>
