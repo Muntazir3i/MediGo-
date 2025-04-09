@@ -10,6 +10,7 @@ const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([])
   const [allPurchases, setAllPurchases] = useState([])
   const [filteredBill, setFilteredBill] = useState([])
+  const [filteredSupplier, setFilteredSupplier] = useState(null)
 
   useEffect(() => {
     fetchAllSupplier()
@@ -21,23 +22,31 @@ const Ledger = () => {
 
   console.log(allPurchases);
 
+
+
   const totalBills = filteredBill
     .filter(entry => entry.type === "Bill")
     .reduce((sum, entry) => sum + Number(entry.total), 0);
 
-    const totalPayments = filteredBill
+  const totalPayments = filteredBill
     .filter(entry => entry.type === "Payment")
     .reduce((sum, entry) => sum + Number(entry.total), 0);
+  
+  
 
-    const balance = totalBills - totalPayments;
+  const balance = (Number(filteredSupplier) + totalBills) - totalPayments;
 
 
-  const showNameFn = (name)=>{
+  const showNameFn = (name) => {
     setFilteredBill([]);
-    setFilteredBill(allPurchases.filter((item)=>item.supplierName === name));
+    setFilteredSupplier(null);
+    setFilteredSupplier(allSupplier.filter((item)=>item.supplierName === name)[0].supplierBalance);
+    setFilteredBill(allPurchases.filter((item) => item.supplierName === name));
   }
 
   console.log(filteredBill);
+  console.log(filteredSupplier);
+  // console.log();
 
   const fetchAllSupplier = async () => {
     try {
@@ -80,7 +89,7 @@ const Ledger = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-4">Supplier Name</th>
-                  <th className="px-6 py-4">Balance</th>
+                  {/* <th className="px-6 py-4">Balance</th> */}
                   <th className="px-6 py-4">Actions</th>
 
                 </tr>
@@ -90,8 +99,11 @@ const Ledger = () => {
                   allSupplier.map((supplier) => (
                     <tr key={supplier} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-black font-bold">{supplier.supplierName}</td>
-                      <td className="px-6 py-4 text-black font-light">₹ {totalBalance}</td>
-                      <td className=""><Button onClick={()=>showNameFn(supplier.supplierName)}>View Transactions</Button></td>
+                      {/* <td className="px-6 py-4 text-black font-light">
+                        {balance !== 0 && balance ? `₹ ${Number(balance).toFixed(2)}` : '–'}
+                      </td> */}
+
+                      <td className=""><Button onClick={() => showNameFn(supplier.supplierName)}>View Transactions</Button></td>
                     </tr>
                   ))
                 ) : (
@@ -136,50 +148,50 @@ const Ledger = () => {
 
         <div className='border-gray-300 border w-[100%] mt-5 h-[50vh] rounded-lg p-3  overflow-auto'>
           <h2 className='text-2xl font-bold mb-2'>Transaction History</h2>
-         <p className='font-light text-lg'>Showing all transactions</p>
-         <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4">BILL DATE</th>
-                  <th className="px-6 py-4">SUPPLIER</th>
-                  <th className="px-6 py-4">TYPE</th>
-                  <th className="px-6 py-4">BILL NO.</th>
-                  <th className="px-6 py-4">AMOUNT</th>
+          <p className='font-light text-lg'>Showing all transactions</p>
+          <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4">BILL DATE</th>
+                <th className="px-6 py-4">SUPPLIER</th>
+                <th className="px-6 py-4">TYPE</th>
+                <th className="px-6 py-4">BILL NO.</th>
+                <th className="px-6 py-4">AMOUNT</th>
+                <th className="px-6 py-4">PREV BAL</th>
 
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                {filteredBill.length > 0 ? (
-                  filteredBill.map((bill) => (
-                    <tr key={bill} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-black font-bold">{bill.date}</td>
-                      <td className="px-6 py-4 text-black font-light">{bill.supplierName}</td>
-                     {bill.type === 'Bill' ?  <td className="px-6 py-4 text-black font-light"><Badge className='text-lg' variant="destructive">{bill.type}</Badge></td> :      <td className="px-6 py-4">
-                                    <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
-                                       {bill.type}
-                                    </Badge>
-                                    </td> }
-                      <td className="px-6 py-4 text-black font-light">{bill.invoice}</td>
-                      {bill.type === "Bill" ? <td className="px-6 py-4 text-red-500 font-bold">+₹ {Number(bill.total).toFixed(2)}</td> : <td className="px-6 py-4 text-green-800 font-bold">-₹ {Number(bill.total).toFixed(2)}</td>}
-                     
-                    </tr>
-                  )
-                  )
-                ) : (
-                  <tr>
-                    <td colSpan="10" className="px-6 py-4 text-center">No Supplier Found</td>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+              {filteredBill.length > 0 ? (
+                filteredBill.map((bill) => (
+                  <tr key={bill} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-black font-bold">{bill.date}</td>
+                    <td className="px-6 py-4 text-black font-light">{bill.supplierName}</td>
+                    {bill.type === 'Bill' ? <td className="px-6 py-4 text-black font-light"><Badge className='text-lg' variant="destructive">{bill.type}</Badge></td> : <td className="px-6 py-4">
+                      <Badge variant="outline" className="text-lg bg-green-100 text-green-800 hover:bg-green-100">
+                        {bill.type}
+                      </Badge>
+                    </td>}
+                    <td className="px-6 py-4 text-black font-light">{bill.invoice}</td>
+                    {bill.type === "Bill" ? <td className="px-6 py-4 text-red-500 font-bold">+₹ {Number(bill.total).toFixed(2)}</td> : <td className="px-6 py-4 text-green-800 font-bold">-₹ {Number(bill.total).toFixed(2)}</td>}
                   </tr>
-                )}
+                )
+                )
+              ) : (
                 <tr>
+                  <td colSpan="10" className="px-6 py-4 text-center">No Supplier Found</td>
+                </tr>
+              )}
+              <tr>
                 <td className='font-bold'>TOTAL BALANCE</td>
                 <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
                 <td className="px-6 py-4 text-black font-bold">₹ {Number(balance).toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
       </main>
