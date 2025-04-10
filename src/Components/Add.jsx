@@ -99,6 +99,25 @@ function Add() {
     }
   };
 
+  const handleAddPaymentSupplierSelect = (e) => {
+    const supplierName = e.target.value;
+    const supplier = allSupplier.find(s => s.supplierName === supplierName);
+
+    if (supplier) {
+      setPayments(prev => ({
+        ...prev,
+        supplierName: supplier.supplierName,
+        drugLicenseNumber: supplier.drugLn,
+      }));
+    } else {
+      setPayments(prev => ({
+        ...prev,
+        supplierName,
+        drugLicenseNumber:''
+      }));
+    }
+  };
+
   const showData =async  (e) =>{
     e.preventDefault();
     let newSupplier = {...addSupplier}
@@ -558,8 +577,23 @@ function Add() {
               <label htmlFor="invoice">Receipt Number</label>
               <input className="border-1" type="tel" name="invoice" value={payments.invoice} onChange={handleChangePayment} required />
 
-              <label htmlFor="supplierName">Supplier Name</label>
-              <input className="border-1" type="email" name="supplierName" value={payments.supplierName} onChange={handleChangePayment} required />
+              {/* <label htmlFor="supplierName">Supplier Name</label>
+              <input className="border-1" type="email" name="supplierName" value={payments.supplierName} onChange={handleChangePayment} required /> */}
+              <div className='w-[100%]'>
+              <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
+        <Input
+          list="supplierList"
+          className="border p-2 w-full border-black"
+          name="supplierName"
+          value={payments.supplierName}
+          onChange={handleAddPaymentSupplierSelect}
+        />
+        <datalist id="supplierList">
+          {allSupplier.map(s => (
+            <option key={s.id} value={s.supplierName} />
+          ))}
+        </datalist>
+        </div>
 
               <label htmlFor="drugLicenseNumber">Drug License Number</label>
               <input className="border-1" type="text" name="drugLicenseNumber" value={payments.drugLicenseNumber} onChange={handleChangePayment} required />
