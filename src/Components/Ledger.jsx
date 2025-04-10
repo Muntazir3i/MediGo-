@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { getSupplier, getPurchase } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
+import { Input } from './ui/input.jsx';
 
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
   const [allPurchases, setAllPurchases] = useState([]);
   const [filteredBill, setFilteredBill] = useState([]);
-  const [filteredSupplier, setFilteredSupplier] = useState(null);
+  const [filteredSupplier, setFilteredSupplier] = useState([]);
+  const [search, setSearch] = useState('');
+
+  const [selectedSupplierName, setSelectedSupplierName] = useState('');
+  const [selectedSupplierBalance, setSelectedSupplierBalance] = useState(0);
 
   useEffect(() => {
     fetchAllSupplier();
@@ -18,6 +23,7 @@ const Ledger = () => {
     try {
       const response = await getSupplier();
       setAllSupplier(response.data);
+      setFilteredSupplier(response.data);
     } catch (error) {
       console.error('Error fetching the Supplier:', error);
     }
@@ -32,15 +38,23 @@ const Ledger = () => {
     }
   };
 
+  const handleSearchChange = (e) => {
+    const keyword = e.target.value;
+    setSearch(keyword);
+    const filtered = allSupplier.filter((supplier) =>
+      supplier.supplierName.toLowerCase().includes(keyword.toLowerCase())
+    );
+    setFilteredSupplier(filtered);
+  };
+
   const showNameFn = (name) => {
-    setFilteredBill([]);
-    setFilteredSupplier(null);
+    setSelectedSupplierName(name);
     const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
     if (selectedSupplier) {
-      setFilteredSupplier(Number(selectedSupplier.supplierBalance));
+      setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
       const supplierBills = allPurchases
         .filter((item) => item.supplierName === name)
-        .sort((a, b) => new Date(a.date) - new Date(b.date)); // sort by date
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
       setFilteredBill(supplierBills);
     }
   };
@@ -54,9 +68,11 @@ const Ledger = () => {
   return (
     <main id='main-top-container' className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
       <h1 className="text-3xl font-bold mb-8">Supplier Ledger</h1>
+      
 
       <div className='h-[65vh] flex gap-4'>
         <div className='border-gray-300 border w-[65%] rounded-lg p-3 overflow-auto'>
+        <Input className='mb-2 bg-white' placeholder="Search Suppliers" value={search} onChange={handleSearchChange} />
           <h1 className="text-3xl mb-2">Supplier Balances</h1>
           <p className='font-light text-lg'>Current balances for all suppliers</p>
 
@@ -68,16 +84,18 @@ const Ledger = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-              {allSupplier.length > 0 ? (
-                allSupplier.map((supplier, index) => (
+              {filteredSupplier.length > 0 ? (
+                filteredSupplier.map((supplier, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-black font-bold">{supplier.supplierName}</td>
-                    <td className=""><Button onClick={() => showNameFn(supplier.supplierName)}>View Transactions</Button></td>
+                    <td className="px-6 py-4">
+                      <Button onClick={() => showNameFn(supplier.supplierName)}>View Transactions</Button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center">No Supplier Found</td>
+                  <td colSpan="2" className="px-6 py-4 text-center">No Supplier Found</td>
                 </tr>
               )}
             </tbody>
@@ -92,11 +110,19 @@ const Ledger = () => {
             <p className='text-2xl'>Total Suppliers:</p>
             <p className='text-2xl font-bold'>{allSupplier.length}</p>
           </div>
+          {/* <div className='flex justify-between mt-3'>
+            <p className='text-2xl'>Total Balance:</p>
+            <p className='text-2xl font-bold'>₹ {totalBalance.toFixed(2)}</p>
+          </div>
+          <div className='flex justify-between mt-3'>
+            <p className='text-2xl'>Avg. Balance:</p>
+            <p className='text-2xl font-bold'>₹ {averageBalance.toFixed(2)}</p>
+          </div> */}
         </div>
       </div>
 
       <div className='border-gray-300 border w-full mt-5 h-[50vh] rounded-lg p-3 overflow-auto'>
-        <h2 className='text-2xl font-bold mb-2'>Transaction History</h2>
+        <h2 className='text-2xl font-bold mb-2'>Transaction History {selectedSupplierName && `for ${selectedSupplierName}`}</h2>
         <p className='font-light text-lg'>Showing all transactions</p>
 
         <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
@@ -112,7 +138,7 @@ const Ledger = () => {
           </thead>
           <tbody className="divide-y divide-gray-100 border-t border-gray-100">
             {filteredBill.length > 0 ? (() => {
-              let runningBal = Number(filteredSupplier || 0);
+              let runningBal = selectedSupplierBalance;
               return filteredBill.map((bill, idx) => {
                 if (bill.type === 'Bill') {
                   runningBal += Number(bill.total);
@@ -143,7 +169,7 @@ const Ledger = () => {
               });
             })() : (
               <tr>
-                <td colSpan="10" className="px-6 py-4 text-center">No Supplier Found</td>
+                <td colSpan="6" className="px-6 py-4 text-center">No Transactions Found</td>
               </tr>
             )}
           </tbody>
