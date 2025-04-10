@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewSupplier } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier } from '../services/medicineService.js';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -62,6 +62,42 @@ function Add() {
     drugLn:'',
     supplierBalance:''
   })
+
+  const [allSupplier, setAllSupplier] = useState([]);
+
+  useEffect(() => {
+    fetchAllSupplier();
+  }, []);
+
+  const fetchAllSupplier = async () => {
+    try {
+      const response = await getSupplier();
+      setAllSupplier(response.data);
+    } catch (error) {
+      console.error('Error fetching the Supplier:', error);
+    }
+  };
+
+  const handleSupplierSelect = (e) => {
+    const supplierName = e.target.value;
+    const supplier = allSupplier.find(s => s.supplierName === supplierName);
+
+    if (supplier) {
+      setFormData(prev => ({
+        ...prev,
+        supplierName: supplier.supplierName,
+        supplierContact: supplier.phoneNumber,
+        supplierDrugLn: supplier.drugLn
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        supplierName,
+        supplierContact: '',
+        supplierDrugLn: ''
+      }));
+    }
+  };
 
   const showData =async  (e) =>{
     e.preventDefault();
@@ -307,10 +343,21 @@ function Add() {
               <h2 className='text-2xl'>Supplier Details</h2>
               <div id="supplier-details-inner-container" className='flex gap-2'>
 
-                <div className='w-[100%]'>
-                  <Label htmlFor='supplierName'>Supplier Name</Label>
-                  <Input name='supplierName' value={formData.supplierName} className='border-black' type='text' onChange={handleChange}></Input>
-                </div>
+              <div className='w-[100%]'>
+              <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
+        <Input
+          list="supplierList"
+          className="border p-2 w-full border-black"
+          name="supplierName"
+          value={formData.supplierName}
+          onChange={handleSupplierSelect}
+        />
+        <datalist id="supplierList">
+          {allSupplier.map(s => (
+            <option key={s.id} value={s.supplierName} />
+          ))}
+        </datalist>
+        </div>
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierDrugLn'>Supplier Drug L/N</Label>
