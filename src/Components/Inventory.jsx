@@ -406,9 +406,9 @@ function Inventory() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 border-t border-gray-100">
                                     <tr className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">{item.supplierName}</td>
-                                        <td className="px-6 py-4">{item.date}</td>
-                                        <td className="px-6 py-4">{item.invoice}</td>
+                                        <td className="px-6 py-4 text-black">{item.supplierName}</td>
+                                        <td className="px-6 py-4 text-black">{item.date}</td>
+                                        <td className="px-6 py-4 text-black">{item.invoice}</td>
                                         <td className="px-6 py-4">
                                             <Badge
                                                 variant="outline"
@@ -417,7 +417,7 @@ function Inventory() {
                                                 {item.type}
                                             </Badge>
                                         </td>
-                                        <td className="px-6 py-4">{`Rs ${Number(item.total).toFixed(2)}`}</td>
+                                        <td className="px-6 py-4 text-black font-bold">{`Rs ${Number(item.total).toFixed(2)}`}</td>
                                     </tr>
                                 </tbody>
                             </table>

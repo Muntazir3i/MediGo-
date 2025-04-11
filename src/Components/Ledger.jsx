@@ -86,12 +86,12 @@ const Ledger = () => {
   const averageBalance = allSupplier.length > 0 ? totalBalance / allSupplier.length : 0;
 
   return (
-    <main id='main-top-container' className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
+    <main id='main-top-container' className="h-[90vh] lg:h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
       <h1 className="text-3xl font-bold mb-8">Supplier Ledger</h1>
 
 
-      <div className='h-[65vh] flex gap-4'>
-        <div className='border-gray-300 border w-[65%] rounded-lg p-3 overflow-auto'>
+      <div className='h-[65vh] flex flex-col-reverse lg:flex-row gap-4 border'>
+        <div className='border-gray-300 border lg:w-[65%] rounded-lg p-3 overflow-auto'>
           <Input className='mb-2 bg-white' placeholder="Search Suppliers" value={search} onChange={handleSearchChange} />
           <h1 className="text-3xl mb-2">Supplier Balances</h1>
           <p className='font-light text-lg'>Current balances for all suppliers</p>
@@ -122,7 +122,7 @@ const Ledger = () => {
           </table>
         </div>
 
-        <div className='border-gray-300 border w-[35%] rounded-lg p-3'>
+        <div className='border-gray-300 border lg:w-[35%] rounded-lg p-3'>
           <h1 className="text-3xl mb-2">Summary</h1>
           <p className='font-light text-lg'>Total outstanding balances</p>
 
