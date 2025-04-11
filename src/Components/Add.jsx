@@ -329,7 +329,7 @@ function Add() {
 
 
   return (
-    <main className="h-screen min-w-0 flex-1 overflow-auto bg-white p-4">
+    <main className="h-[90vh] lg:h-screen min-w-0 flex-1 overflow-auto bg-white p-4">
       <h1 className="text-5xl mb-3">Add</h1>
       <Tabs defaultValue="add-purchase">
         <TabsList >
@@ -344,14 +344,14 @@ function Add() {
 
             <div id="bill-details-container" className='border-b-2 border-gray-400 py-2'>
               <h2 className='text-2xl'>Bill Details</h2>
-              <div id="bill-details-inner-container" className='flex mt-2 justify-between'>
+              <div id="bill-details-inner-container" className='flex flex-col gap-2 lg:gap-0 lg:flex-row mt-2 justify-between'>
 
-                <div className='w-[49%]'>
+                <div className='w-full lg:w-[49%]'>
                   <Label htmlFor='invoice'>Bill / Inv Number</Label>
                   <Input name='invoice' value={formData.invoice} className='border-black' type='text' onChange={handleChange} required></Input>
                 </div>
 
-                <div className='w-[49%]'>
+                <div className='w-full lg:w-[49%]'>
                   <Label htmlFor='date'>Bill Date</Label>
                   <Input name='date' value={formData.date} className='border-black' type='date' onChange={handleChange}></Input>
                 </div>
@@ -360,7 +360,7 @@ function Add() {
 
             <div id="supplier-details-container" className='border-b-2 border-gray-400 py-2'>
               <h2 className='text-2xl'>Supplier Details</h2>
-              <div id="supplier-details-inner-container" className='flex gap-2'>
+              <div id="supplier-details-inner-container" className='flex flex-col gap-4 lg:flex-row lg:gap-2  '>
 
               <div className='w-[100%]'>
               <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
@@ -393,9 +393,9 @@ function Add() {
             <div id="product-details-container" className='border-b-2 border-gray-400 py-2'>
               <h2 className="text-2xl mb-4">Product Details</h2>
               <div id="product-details-inner-container">
-                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                  <thead className="bg-gray-50">
-                    <tr>
+                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500 ">
+                  <thead className="bg-gray-50 ">
+                    <tr >
                       <th className="px-4 py-2 text-black">Product Name</th>
                       <th className="px-4 py-2 text-black">Category</th>
                       <th className="px-4 py-2 text-black">Batch Number</th>
@@ -409,7 +409,7 @@ function Add() {
                   </thead>
                   <tbody className="divide-y divide-gray-100 border-t border-gray-100">
                     {products.map((item) => (
-                      <tr key={item.id}>
+                      <tr key={item.id} >
                         <td className="px-4 py-2">
                           <Input
                             type="text"
