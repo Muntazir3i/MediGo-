@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8000/api/medicines'
-const API_BASE_URL_BILL = 'http://localhost:8000/api/bills'
-const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
-const API_BASE_URL_PAYMENT = 'http://localhost:8000/api/payment'
-const API_BASE_URL_SUPPLIER = 'http://localhost:8000/api/addSupplier'
+const API_BASE_URL = 'http://192.168.0.104:8000/api/medicines'
+const API_BASE_URL_BILL = 'http://192.168.0.104:8000:8000/api/bills'
+const API_BASE_URL_PURCHASE = 'http://192.168.0.104:8000/api/purchase'
+const API_BASE_URL_PAYMENT = 'http://192.168.0.104:8000/api/payment'
+const API_BASE_URL_SUPPLIER = 'http://192.168.0.104:8000/api/addSupplier'
 
 
 //get all suppliers

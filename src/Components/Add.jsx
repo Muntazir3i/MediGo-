@@ -392,9 +392,9 @@ function Add() {
 
             <div id="product-details-container" className='border-b-2 border-gray-400 py-2'>
               <h2 className="text-2xl mb-4">Product Details</h2>
-              <div id="product-details-inner-container">
-                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500 ">
-                  <thead className="bg-gray-50 ">
+              <div id="product-details-inner-container" className='border overflow-auto'>
+                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+                  <thead className="bg-gray-50 overflow-auto">
                     <tr >
                       <th className="px-4 py-2 text-black">Product Name</th>
                       <th className="px-4 py-2 text-black">Category</th>
@@ -407,13 +407,13 @@ function Add() {
                       <th className="px-4 py-2 text-black">GST %</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                  <tbody className="divide-y divide-gray-100 border-t border-gray-100 ">
                     {products.map((item) => (
-                      <tr key={item.id} >
+                      <tr key={item.id}  >
                         <td className="px-4 py-2">
                           <Input
                             type="text"
-                            className="border border-black p-1 w-full text-black font-bold"
+                            className="border border-black p-1 w-40 lg:w-full text-black font-bold"
                             value={item.name}
                             onChange={(e) => handleInputChange(item.id, "name", e.target.value)}
                           />
@@ -435,7 +435,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="text"
-                            className="border border-black p-1 w-full text-black"
+                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.batchNumber}
                             onChange={(e) => handleInputChange(item.id, "batchNumber", e.target.value)}
                           />
@@ -443,7 +443,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="date"
-                            className="border border-black p-1 w-ful text-black"
+                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.expiryDate}
                             onChange={(e) => handleInputChange(item.id, "expiryDate", e.target.value)}
                           />
@@ -451,7 +451,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="number"
-                            className="border border-black p-1 w-full text-black"
+                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.quantity}
                             onChange={(e) => handleInputChange(item.id, "stock", e.target.value)}
                           />
@@ -459,7 +459,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="number"
-                            className="border border-black p-1 w-full text-black"
+                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.unitPrice}
                             onChange={(e) => handleInputChange(item.id, "unitPrice", e.target.value)}
                           />
@@ -467,7 +467,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="number"
-                            className="border border-black p-1 w-full text-black"
+                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.mrp}
                             onChange={(e) => handleInputChange(item.id, "mrp", e.target.value)}
                           />
@@ -475,7 +475,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="number"
-                            className="border border-black p-1 w-full text-black"
+                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.discount}
                             onChange={(e) => handleInputChange(item.id, "discount", e.target.value)}
                           />
@@ -483,7 +483,7 @@ function Add() {
                         <td className="px-4 py-2">
                           <Input
                             type="number"
-                            className="border border-black p-1 w-full text-black"
+                            className="border border-black p-1 w-50 lg:w-full text-black"
                             value={item.gstPercentage}
                             onChange={(e) => handleInputChange(item.id, "gstPercentage", e.target.value)}
                           />
