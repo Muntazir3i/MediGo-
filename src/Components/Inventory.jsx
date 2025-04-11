@@ -213,7 +213,7 @@ function Inventory() {
 
 
     return (
-        <main className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
+        <main className="h-[90vh] min-w-0 flex-1 overflow-auto lg:h-screen bg-blue-50 p-4">
 
             <Tabs defaultValue="all-product" >
                 <TabsList >
@@ -225,6 +225,7 @@ function Inventory() {
                     <h1 className="text-5xl mb-3">All Products</h1>
                     <h2 className=' text-3xl mb-3'>Total Items <span className='font-bold'>{medicines.length}</span></h2>
                     <Input className='mb-2 bg-white' placeholder="Search Medicines" onChange={handleSearchChange} />
+                    <div className='overflow-auto'>
                     <TableData
                         medicines={filterMedicine}
                         handleDelete={handleDelete}
@@ -236,6 +237,7 @@ function Inventory() {
                         handleUpdate={handleUpdate}
                         formData={formData}
                     />
+                    </div>
                 </TabsContent>
                 <TabsContent value="all-purchase">
                     <h1 className="text-5xl mb-3">All Purchases</h1>
@@ -271,6 +273,7 @@ function Inventory() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent>
+                                    <div className='border border-red-400 overflow-auto'>
                                     <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
                                         <thead className="bg-gray-50">
                                             <tr>
@@ -375,13 +378,14 @@ function Inventory() {
                                                 ))}
                                         </tbody>
                                     </table>
+                                    </div> 
 
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
                     ))}
                 </TabsContent>
-                <TabsContent value="all-payments">
+                <TabsContent value="all-payments" className='overflow-auto'>
                     <h1 className="text-5xl mb-3">All Payments</h1>
                     <Input className='mb-2 bg-white' placeholder="Search Payments" onChange={handleSearchChange} />
                     {allPurchases
@@ -418,7 +422,6 @@ function Inventory() {
                                 </tbody>
                             </table>
                         ))}
-
                 </TabsContent>
 
             </Tabs>
