@@ -27,6 +27,16 @@ const SelectList = ({itemId,handleInputChange,selectedCategory}) => {
     <option value="Patch">Patch</option>
     <option value="Lozenge">Lozenge</option>
     <option value="Spray">Spray</option>
+    <option value="Test Kit">TEST KIT</option>
+    <option value="Diaper">DIAPER</option>
+    <option value="Sanitary Pads">SANITARY PADS</option>
+    <option value="Sanitizer">SANITIZER</option>
+    <option value="Granules">Granules</option>
+    <option value="Baby Food">BABY FOOD</option>
+    <option value="Lotion">LOTION</option>
+    <option value="Cosmetics">COSMETICS</option>
+    
+    
   </select>
   )
 }
