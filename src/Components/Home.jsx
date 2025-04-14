@@ -162,26 +162,31 @@ try {
   
 
 
-  const onDeleteClick = (id) => {
-    setCart((prevCart) => {
-      const itemInCart = prevCart.find((item) => item.id === id);
+  const onDeleteClick = async(id) => {
+ try {
+    let response = await increaseStock(id)
+     setCart((prevCart) => {
+       const itemInCart = prevCart.find((item) => item.id === id);
+   
+       if (!itemInCart) return prevCart; // If item not found in cart, do nothing
+   
+       return itemInCart.qty > 1
+         ? prevCart.map((item) =>
+             item.id === id ? { ...item, qty: item.qty - 1 } : item
+           )
+         : prevCart.filter((item) => item.id !== id);
+     });
+   
+     setMedicines((prevMedicines) =>
+       prevMedicines.map((medicine) =>
+         medicine.id === id
+           ? { ...medicine, stock: medicine.stock + 1 } // Always restore stock when removing from cart
+           : medicine
+       )
+     );
+ } catch (error) {
   
-      if (!itemInCart) return prevCart; // If item not found in cart, do nothing
-  
-      return itemInCart.qty > 1
-        ? prevCart.map((item) =>
-            item.id === id ? { ...item, qty: item.qty - 1 } : item
-          )
-        : prevCart.filter((item) => item.id !== id);
-    });
-  
-    setMedicines((prevMedicines) =>
-      prevMedicines.map((medicine) =>
-        medicine.id === id
-          ? { ...medicine, stock: medicine.stock + 1 } // Always restore stock when removing from cart
-          : medicine
-      )
-    );
+ }
   };
 
   const clearCart = () => {
