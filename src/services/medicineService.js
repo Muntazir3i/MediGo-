@@ -42,6 +42,29 @@ export const deleteMedicine = async (id) => {
     return await axios.delete(`${API_BASE_URL}/del-medi/${id}`);
   };
 
+  // decrease stock 
+  export const decreaseStock = async (id) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/dec-stock/${id}`);
+      return response.data;
+    } catch (error) {
+      console.log('Failed to decrease stock:', error);
+      throw error;
+    }
+  };
+
+  //increase stock 
+    // decrease stock 
+    export const increaseStock = async (id) => {
+        try {
+          const response = await axios.put(`${API_BASE_URL}/inc-stock/${id}`);
+          return response.data;
+        } catch (error) {
+          console.log('Failed to increase stock:', error);
+          throw error;
+        }
+      };
+
 
 // update medicine
 export const updateMedicine = async (id, updatedData) => {

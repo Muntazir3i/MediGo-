@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from './ui/input.jsx';
 // import { Label } from '@radix-ui/react-label.jsx';
-import { getMedicines, addBill } from '../services/medicineService.js';
+import { getMedicines, addBill, decreaseStock,increaseStock } from '../services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import {
   Dialog,
@@ -122,37 +122,44 @@ function Home() {
 
   // },[cart])
 
-  const onAddClick = (med) => {
-    setCart((prevCart) => {
-      const existingMed = prevCart.find((item) => item.id === med.id);
-
-      if (existingMed) {
-        // Prevent adding more than available stock
-        if (existingMed.qty >= (med.stock || 0)) return prevCart;
-
-        return prevCart.map((item) =>
-          item.id === med.id ? { ...item, qty: item.qty + 1 } : item
-        );
-      } else {
-        // Only add if stock is available
-        if ((med.stock || 0) > 0) {
-          return [...prevCart, { ...med, qty: 1 }];
+  const onAddClick = async(med) => {
+try {
+      let responce = await decreaseStock(med.id)
+      setCart((prevCart) => {
+        const existingMed = prevCart.find((item) => item.id === med.id);
+        console.log(existingMed);
+  
+        if (existingMed) {
+          // Prevent adding more than available stock
+          if (existingMed.qty >= (med.stock || 0)) return prevCart;
+  
+          return prevCart.map((item) =>
+            item.id === med.id ? { ...item, qty: item.qty + 1 } : item
+          );
         } else {
-          return prevCart; // No stock available, don't add
+          // Only add if stock is available
+          if ((med.stock || 0) > 0) {
+            return [...prevCart, { ...med, qty: 1 }];
+          } else {
+            return prevCart; // No stock available, don't add
+          }
         }
-      }
-    });
-
-    // Reduce stock in medicines
-    setMedicines((prevMedicines) =>
-      prevMedicines.map((medicine) =>
-        medicine.id === med.id && (medicine.stock || 0) > 0
-          ? { ...medicine, stock: medicine.stock - 1 }
-          : medicine
-      )
-    );
+      });
+  
+      // Reduce stock in medicines
+      setMedicines((prevMedicines) =>
+        prevMedicines.map((medicine) =>
+          medicine.id === med.id && (medicine.stock || 0) > 0
+            ? { ...medicine, stock: medicine.stock - 1 }
+            : medicine
+        )
+      );
+} catch (error) {
+  
+}
   };
-
+  
+  
 
 
   const onDeleteClick = (id) => {
@@ -181,67 +188,82 @@ function Home() {
     setCart([])
   }
 
-  // const increaseQty = (id) => {
-  //   setCart((prevCart) =>
-  //     prevCart.map((item) =>
-  //       item.id === id ? { ...item, qty: item.qty + 1 } : item
-  //     )
-  //   );
-  // };
-
-  // const decreaseQty = (id) => {
-  //   setCart((prevCart) =>
-  //     prevCart
-  //       .map((item) =>
-  //         item.id === id && item.qty > 1 ? { ...item, qty: item.qty - 1 } : item
-  //       )
-  //       .filter((item) => item.qty > 0) // Remove if qty becomes 0
-  //   );
-  // };
+ 
 
   const statusCheck = (e) => {
     setStatus(e.target.name)
   }
 
 
-  const increaseQty = (id) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id
-          ? { ...item, qty: Math.min(item.qty + 1, item.stock) } // Prevent exceeding stock
-          : item
-      )
-    );
+  // const increaseQty = (id) => {
+  //   setCart((prevCart) =>
+  //     prevCart.map((item) =>
+  //       item.id === id
+  //         ? { ...item, qty: Math.min(item.qty + 1, item.stock) } // Prevent exceeding stock
+  //         : item
+  //     )
+  //   );
 
-    // Reduce stock in medicines only if there's stock left
-    setMedicines((prevMedicines) =>
-      prevMedicines.map((medicine) =>
-        medicine.id === id && medicine.stock > 0
-          ? { ...medicine, stock: medicine.stock - 1 }
-          : medicine
-      )
-    );
-  };
+  //   // Reduce stock in medicines only if there's stock left
+  //   setMedicines((prevMedicines) =>
+  //     prevMedicines.map((medicine) =>
+  //       medicine.id === id && medicine.stock > 0
+  //         ? { ...medicine, stock: medicine.stock - 1 }
+  //         : medicine
+  //     )
+  //   );
+  // };
 
-
-
-  const decreaseQty = (id) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) =>
-          item.id === id && item.qty > 1 ? { ...item, qty: item.qty - 1 } : item
+  const increaseQty = async (id) => {
+    try {
+      
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === id
+            ? { ...item, qty: Math.min(item.qty + 1, item.stock) }
+            : item
         )
-        .filter((item) => item.qty > 0) // Remove if qty becomes 0
-    );
+      );
+      
+      const response = await decreaseStock(id); // response.stock
+      setMedicines((prevMedicines) =>
+        prevMedicines.map((medicine) =>
+          medicine.id === id
+            ? { ...medicine, stock: response.stock }
+            : medicine
+        )
+      );
+    } catch (error) {
+      console.error('Error increasing quantity:', error);
+      alert('Failed to increase quantity. Stock might be unavailable.');
+    }
+  };
+  
 
-    // Increase stock only if quantity was greater than 1
-    setMedicines((prevMedicines) =>
-      prevMedicines.map((medicine) =>
-        medicine.id === id && cart.find(item => item.id === id)?.qty > 1
-          ? { ...medicine, stock: medicine.stock + 1 }
-          : medicine
-      )
-    );
+
+
+  const decreaseQty = async(id) => {
+ try {
+  const response = await increaseStock(id); // response.stock
+     setCart((prevCart) =>
+       prevCart
+         .map((item) =>
+           item.id === id && item.qty > 1 ? { ...item, qty: item.qty - 1 } : item
+         )
+         .filter((item) => item.qty > 0) // Remove if qty becomes 0
+     );
+ 
+     // Increase stock only if quantity was greater than 1
+     setMedicines((prevMedicines) =>
+       prevMedicines.map((medicine) =>
+         medicine.id === id && cart.find(item => item.id === id)?.qty > 1
+           ? { ...medicine, stock: medicine.stock + 1 }
+           : medicine
+       )
+     );
+ } catch (error) {
+  
+ }
   };
 
 
@@ -258,7 +280,7 @@ function Home() {
     year: "2-digit",
   });
 
-  console.log(formattedDate);
+  // console.log(formattedDate);
 
 
   return (
