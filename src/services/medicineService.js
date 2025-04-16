@@ -147,6 +147,19 @@ export const addPurchase = async(purchaseData)=>{
     }
 }
 
+//find transactions 
+
+export const findSupplierTransaction = async (name) => {
+  try {
+    // Make the POST request and wait for the response
+    const response = await axios.post(`${API_BASE_URL_PURCHASE}/find-trans/${name}`);
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error("Error fetching supplier transactions:", error.message);
+    throw new Error("Failed to fetch supplier transactions. Please try again."); // Throw the error with a meaningful message
+  }
+};
+
 // get all payments
 
 export const getPayments = async()=>{

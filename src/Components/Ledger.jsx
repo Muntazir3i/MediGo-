@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSupplier, getPurchase } from '@/services/medicineService.js';
+import { getSupplier, getPurchase,findSupplierTransaction } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -67,15 +67,28 @@ const Ledger = () => {
     setFilteredSupplier(filtered);
   };
 
-  const showNameFn = (name) => {
-    setSelectedSupplierName(name);
-    const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
-    if (selectedSupplier) {
-      setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
-      const supplierBills = allPurchases
-        .filter((item) => item.supplierName === name)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-      setFilteredBill(supplierBills);
+
+  const showNameFn = async (name) => {
+    try {
+      // Set the selected supplier name
+      setSelectedSupplierName(name);
+  
+      // Find the selected supplier from the list of all suppliers
+      const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
+  
+      if (selectedSupplier) {
+        // Set the supplier's balance
+        setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
+  
+        // Fetch the supplier transactions from the server
+        const supplierBills = await findSupplierTransaction(name);
+  
+        // Set the filtered and sorted bills
+        setFilteredBill(supplierBills);
+      }
+    } catch (error) {
+      console.error("Error fetching supplier transactions:", error.message);
+      // Handle the error (e.g., show a toast or alert to the user)
     }
   };
 
