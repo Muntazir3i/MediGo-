@@ -160,6 +160,19 @@ export const findSupplierTransaction = async (name) => {
   }
 };
 
+//find payment by date
+
+export const findPaymentByDate = async (date) => {
+  try {
+    // Make the POST request to fetch payments by date
+    const response = await axios.post(`${API_BASE_URL_PURCHASE}/find-day-payment/${date}`);
+    return response.data; // Return the response data
+  } catch (error) {
+    console.error("Error fetching payments for the date:", error.message); // Log the error message
+    throw new Error("Failed to fetch payments for the specified date. Please try again."); // Throw a descriptive error
+  }
+};
+
 // get all payments
 
 export const getPayments = async()=>{

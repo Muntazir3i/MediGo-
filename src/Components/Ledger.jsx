@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSupplier, getPurchase,findSupplierTransaction } from '@/services/medicineService.js';
+import { getSupplier, getPurchase,findSupplierTransaction,findPaymentByDate } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -15,20 +15,24 @@ const Ledger = () => {
   const [selectedSupplierName, setSelectedSupplierName] = useState('');
   const [selectedSupplierBalance, setSelectedSupplierBalance] = useState(0);
 
-  const handleDateChange = (e) => {
-    const date = e.target.value;
-    setSelectedDate(date);
-
-    if (!date) {
-      setDailyPayments([]);
-      return;
-    }
-
-    const payments = allPurchases.filter(item =>
-      item.type === 'Payment' && item.date === date
-    );
-    setDailyPayments(payments);
+  const handleDateChange = async (e) => {
+    try {
+      const date = e.target.value; // Get the selected date from the event
+      setSelectedDate(date); // Update the selected date state
   
+      // If no date is selected, clear the dailyPayments state
+      if (!date) {
+        setDailyPayments([]);
+        return;
+      }
+  
+      // Fetch payments for the selected date
+      const payments = await findPaymentByDate(date);
+      setDailyPayments(payments); // Update the dailyPayments state with the retrieved payments
+    } catch (error) {
+      console.error("Error fetching payments by date:", error.message); // Log the error for debugging
+      // You can set an error state here or display an error message to the user
+    }
   };
 
   const totalDailyPayment = dailyPayments.reduce((sum, item) => sum + Number(item.total), 0);
