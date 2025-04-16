@@ -36,6 +36,11 @@ const SelectList = ({itemId,handleInputChange,selectedCategory}) => {
     <option value="Lotion">LOTION</option>
     <option value="Cosmetics">COSMETICS</option>
     <option value="Sachet">SACHET</option>
+    <option value="Mouth Wash">MOUTHWASH</option>
+    <option value="Soap">SOAP</option>
+    <option value="Cream">CREAM</option>
+    <option value="Oil">Oil</option>
+    <option value="Wipes">Wipes</option>
     
     
   </select>

@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_BASE_URL = 'http://192.168.0.104:8000/api/medicines'
-const API_BASE_URL_BILL = 'http://192.168.0.104:8000:8000/api/bills'
-const API_BASE_URL_PURCHASE = 'http://192.168.0.104:8000/api/purchase'
-const API_BASE_URL_PAYMENT = 'http://192.168.0.104:8000/api/payment'
-const API_BASE_URL_SUPPLIER = 'http://192.168.0.104:8000/api/addSupplier'
+const API_BASE_URL = 'http://localhost:8000/api/medicines'
+const API_BASE_URL_BILL = 'http://localhost:8000:8000/api/bills'
+const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
+const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
+const API_BASE_URL_SUPPLIER = 'http://localhost:8000/api/addSupplier'
 
 
 //get all suppliers
@@ -54,7 +54,6 @@ export const deleteMedicine = async (id) => {
   };
 
   //increase stock 
-    // decrease stock 
     export const increaseStock = async (id) => {
         try {
           const response = await axios.put(`${API_BASE_URL}/inc-stock/${id}`);
@@ -80,6 +79,29 @@ export const updateMedicine = async (id, updatedData) => {
       throw error;
     }
 };
+
+//fetch low stock 
+export const getLowStock = async()=>{
+  const response = await axios.get(`${API_BASE_URL}/low-stock`);
+  return response
+}
+
+//fetch out-of-stock
+
+export const getOutOfStock = async()=>{
+  const response = await axios.get(`${API_BASE_URL}/out-of-stock`);
+  return response
+}
+
+//fetch expity stock 
+export const getExpiry = async()=>{
+ try {
+   const response = await axios.get(`${API_BASE_URL}/expiry-stock`);
+   return response
+ } catch (error) {
+  console.log(error);
+ }
+}
 
 
 // add bill
