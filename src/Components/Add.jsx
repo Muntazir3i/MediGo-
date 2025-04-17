@@ -229,6 +229,23 @@ function Add() {
     ])
   }
 
+  const addProductExpiry = () => {
+    setExpiryProducts([
+      ...expiryProducts,
+      {
+        id: Date.now(),
+        name: "",
+        batchNumber: "",
+        expiryDate: "",
+        stock: 0,
+        unitPrice: 0,
+        mrp: 0,
+        discount: 0,
+        gstPercentage: 0,
+      },
+    ])
+  }
+
 
 
   const handleInputChange = (id, field, value) => {
@@ -292,6 +309,13 @@ function Add() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this medicine?")) {
       setProducts(products.filter((med) => med.id !== id));
+
+    }
+  };
+
+  const handleDeleteExpiry = async (id) => {
+    if (window.confirm("Are you sure you want to delete this medicine?")) {
+      setExpiryProducts(expiryProducts.filter((med) => med.id !== id));
 
     }
   };
@@ -373,7 +397,7 @@ function Add() {
     //   return;
     // }
 
-    const validProducts = products.filter(product =>
+    const validProducts = expiryProducts.filter(product =>
       product.name.trim() &&
       product.batchNumber.trim() &&
       product.expiryDate.trim() &&
@@ -388,34 +412,27 @@ function Add() {
     try {
       let allData = {
         id: Date.now(),
-        ...formData,
+        ...expiryFormData,
         products: validProducts,
         totalAmount: totalAmount.toFixed(2),
         totalGst: totalGst.toFixed(2),
         total: Math.round(totalAmount + totalGst),
-        type: 'Bill'
+        type: 'EXPIRY'
       };
-
-      const [purchaseResponse, medicineResponse] = await Promise.all([
-        addPurchase(allData),
-        addMedicines(validProducts)
-      ]);
-
-      console.log('Purchase Response:', purchaseResponse);
-      console.log('Medicine Response:', medicineResponse.data);
+      
+    console.log(allData);
 
       alert('Purchase and Medicine added successfully!');
 
       // Reset state
-      setFormData({
-        invoice: '',
+      setExpiryFormData({
         date: '',
         supplierName: '',
         supplierGstin: '',
         supplierContact: '',
       });
 
-      setProducts([
+      setExpiryProducts([
         {
           id: Date.now(),
           name: "",
@@ -467,6 +484,9 @@ function Add() {
 
   const totalAmount = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
   const totalGst = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
+
+  const totalAmountExpiry = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
+  const totalGstExpiry = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
 
 
   return (
@@ -769,7 +789,7 @@ function Add() {
 
                 <div className='w-full lg:w-[49%]'>
                   <Label htmlFor='date'>Bill Date</Label>
-                  <Input name='date' value={formData.date} className='border-black' type='date' onChange={handleChangeExpiry}></Input>
+                  <Input name='date' value={expiryFormData.date} className='border-black' type='date' onChange={handleChangeExpiry}></Input>
                 </div>
               </div>
             </div>
@@ -905,7 +925,7 @@ function Add() {
                           />
                         </td>
                         <td className="px-4 py-2">
-                          <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
+                          <button onClick={() =>handleDeleteExpiry(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
                         </td>
                       </tr>
                     ))}
@@ -914,7 +934,7 @@ function Add() {
 
                 <div className="mt-4 flex gap-4">
                   <button
-                    onClick={addProduct}
+                    onClick={addProductExpiry}
                     className="px-4 py-2 bg-blue-500 text-white rounded"
                   >
                     Add Product
@@ -929,22 +949,22 @@ function Add() {
               <div id="payment-details-inner-container">
                 <div id="sub-total-container" className='flex justify-between'>
                   <p>Subtotal</p>
-                  <p>Rs {totalAmount.toFixed(2)}</p>
+                  <p>Rs {totalAmountExpiry.toFixed(2)}</p>
                 </div>
                 <div id="gst-amount" className='flex justify-between'>
                   <p>Gst Amount</p>
-                  <p>Rs {totalGst.toFixed(2)}</p>
+                  <p>Rs {totalGstExpiry.toFixed(2)}</p>
                 </div>
                 <hr />
                 <div id="all-total" className='flex justify-between'>
                   <p className='font-bold'>Total Amount</p>
-                  <p className='font-bold'>Rs {Math.round((totalAmount + totalGst).toFixed(2))}</p>
+                  <p className='font-bold'>Rs {Math.round((totalAmountExpiry + totalGstExpiry).toFixed(2))}</p>
                 </div>
               </div>
             </div>
 
             <button
-              onClick={handleBothActions}
+              onClick={handleExpityData}
               className="px-4 py-2 bg-green-500 text-white rounded mt-2"
             >
               Save
