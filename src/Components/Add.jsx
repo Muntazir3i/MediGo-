@@ -32,6 +32,14 @@ function Add() {
     products: []
   });
 
+  const [expiryFormData,setExpiryFormData] = useState({
+    date:'',
+    supplierName: '',
+    supplierDrugLn: '',
+    supplierContact: '',
+    products: []
+  })
+
   
 
   const [products, setProducts] = useState([
