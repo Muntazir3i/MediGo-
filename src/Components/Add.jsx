@@ -239,10 +239,29 @@ function Add() {
     );
   };
 
+  //input change for expiry
+
+  const handleInputChangeExpiry = (id, field, value) => {
+    setExpiryProducts((prev) =>
+      prev.map((product) =>
+        product.id === id ? { ...product, [field]: value, supplier: expiryFormData.supplierName, } : product
+      )
+    );
+  };
+
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
+      ...prevData,
+      [name]: value.toUpperCase().replace(/\s+/g, ' ')
+      // products:products
+    }));
+  };
+
+  const handleChangeExpiry = (e) => {
+    const { name, value } = e.target;
+    setExpiryFormData((prevData) => ({
       ...prevData,
       [name]: value.toUpperCase().replace(/\s+/g, ' ')
       // products:products
@@ -345,6 +364,77 @@ function Add() {
       alert('Failed to process. Please check if the item already exists.');
     }
   };
+
+  //handle add expiry
+
+  const handleExpityData = async () => {
+    // if (!expiryFormData.invoice.trim() || !expiryFormData.date.trim()) {
+    //   alert("Bill Number and Bill Date are required.");
+    //   return;
+    // }
+
+    const validProducts = products.filter(product =>
+      product.name.trim() &&
+      product.batchNumber.trim() &&
+      product.expiryDate.trim() &&
+      product.stock > 0
+    );
+
+    if (validProducts.length === 0) {
+      alert("At least one valid product is required.");
+      return;
+    }
+
+    try {
+      let allData = {
+        id: Date.now(),
+        ...formData,
+        products: validProducts,
+        totalAmount: totalAmount.toFixed(2),
+        totalGst: totalGst.toFixed(2),
+        total: Math.round(totalAmount + totalGst),
+        type: 'Bill'
+      };
+
+      const [purchaseResponse, medicineResponse] = await Promise.all([
+        addPurchase(allData),
+        addMedicines(validProducts)
+      ]);
+
+      console.log('Purchase Response:', purchaseResponse);
+      console.log('Medicine Response:', medicineResponse.data);
+
+      alert('Purchase and Medicine added successfully!');
+
+      // Reset state
+      setFormData({
+        invoice: '',
+        date: '',
+        supplierName: '',
+        supplierGstin: '',
+        supplierContact: '',
+      });
+
+      setProducts([
+        {
+          id: Date.now(),
+          name: "",
+          batchNumber: "",
+          expiryDate: "",
+          stock: 0,
+          unitPrice: 0,
+          mrp: 0,
+          discount: 0,
+          gstPercentage: 0,
+        },
+      ]);
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to process. Please check if the item already exists.');
+    }
+  };
+
 
   //   try {
   //     // Ensure `products` is an array and correctly structured
@@ -679,7 +769,7 @@ function Add() {
 
                 <div className='w-full lg:w-[49%]'>
                   <Label htmlFor='date'>Bill Date</Label>
-                  <Input name='date' value={formData.date} className='border-black' type='date' onChange={handleChange}></Input>
+                  <Input name='date' value={formData.date} className='border-black' type='date' onChange={handleChangeExpiry}></Input>
                 </div>
               </div>
             </div>
@@ -734,14 +824,14 @@ function Add() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 border-t border-gray-100 ">
-                    {products.map((item) => (
+                    {expiryProducts.map((item) => (
                       <tr key={item.id}  >
                         <td className="px-4 py-2">
                           <Input
                             type="text"
                             className="border border-black p-1 w-40 lg:w-full text-black font-bold"
                             value={item.name}
-                            onChange={(e) => handleInputChange(item.id, "name", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "name", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -752,7 +842,7 @@ function Add() {
                             onChange={(e) => handleInputChange(item.id, "category", e.target.value)}
                           /> */}
                           <SelectList
-                            handleInputChange={handleInputChange}
+                            handleInputChangeExpiry={handleInputChangeExpiry}
                             itemId={item.id}
                             selectedCategory={item.category}
                           />
@@ -763,7 +853,7 @@ function Add() {
                             type="text"
                             className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.batchNumber}
-                            onChange={(e) => handleInputChange(item.id, "batchNumber", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "batchNumber", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -771,7 +861,7 @@ function Add() {
                             type="date"
                             className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.expiryDate}
-                            onChange={(e) => handleInputChange(item.id, "expiryDate", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "expiryDate", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -779,7 +869,7 @@ function Add() {
                             type="number"
                             className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.quantity}
-                            onChange={(e) => handleInputChange(item.id, "stock", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "stock", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -787,7 +877,7 @@ function Add() {
                             type="number"
                             className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.unitPrice}
-                            onChange={(e) => handleInputChange(item.id, "unitPrice", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "unitPrice", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -795,7 +885,7 @@ function Add() {
                             type="number"
                             className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.mrp}
-                            onChange={(e) => handleInputChange(item.id, "mrp", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "mrp", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -803,7 +893,7 @@ function Add() {
                             type="number"
                             className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.discount}
-                            onChange={(e) => handleInputChange(item.id, "discount", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "discount", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
@@ -811,7 +901,7 @@ function Add() {
                             type="number"
                             className="border border-black p-1 w-50 lg:w-full text-black"
                             value={item.gstPercentage}
-                            onChange={(e) => handleInputChange(item.id, "gstPercentage", e.target.value)}
+                            onChange={(e) => handleInputChangeExpiry(item.id, "gstPercentage", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
