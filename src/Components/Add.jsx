@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier,getAllExpiry,addNewExpiry } from '../services/medicineService.js';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -104,6 +104,9 @@ function Add() {
     }
   };
 
+
+  //for bills and CN
+
   const handleSupplierSelect = (e) => {
     const supplierName = e.target.value;
     const supplier = allSupplier.find(s => s.supplierName === supplierName);
@@ -117,6 +120,28 @@ function Add() {
       }));
     } else {
       setFormData(prev => ({
+        ...prev,
+        supplierName,
+        supplierContact: '',
+        supplierDrugLn: ''
+      }));
+    }
+  };
+
+  //for expiry
+  const handleSupplierSelectExpiry = (e) => {
+    const supplierName = e.target.value;
+    const supplier = allSupplier.find(s => s.supplierName === supplierName);
+
+    if (supplier) {
+      setExpiryFormData(prev => ({
+        ...prev,
+        supplierName: supplier.supplierName,
+        supplierContact: supplier.phoneNumber,
+        supplierDrugLn: supplier.drugLn
+      }));
+    } else {
+      setExpiryFormData(prev => ({
         ...prev,
         supplierName,
         supplierContact: '',
@@ -669,8 +694,8 @@ function Add() {
           list="supplierList"
           className="border p-2 w-full border-black"
           name="supplierName"
-          value={formData.supplierName}
-          onChange={handleSupplierSelect}
+          value={expiryFormData.supplierName}
+          onChange={handleSupplierSelectExpiry}
         />
         <datalist id="supplierList">
           {allSupplier.map(s => (
@@ -681,12 +706,12 @@ function Add() {
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierDrugLn'>Supplier Drug L/N</Label>
-                  <Input name='supplierDrugLn' value={formData.supplierDrugLn} className='border-black' type='text' onChange={handleChange}></Input>
+                  <Input name='supplierDrugLn' value={expiryFormData.supplierDrugLn} className='border-black' type='text' onChange={handleChange}></Input>
                 </div>
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierContact'>Supplier Contact</Label>
-                  <Input name='supplierContact' value={formData.supplierContact} className='border-black' type='tel' onChange={handleChange}></Input>
+                  <Input name='supplierContact' value={expiryFormData.supplierContact} className='border-black' type='tel' onChange={handleChange}></Input>
                 </div>
               </div>
             </div>
