@@ -5,6 +5,7 @@ const API_BASE_URL_BILL = 'http://localhost:8000:8000/api/bills'
 const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
 const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
 const API_BASE_URL_SUPPLIER = 'http://localhost:8000/api/addSupplier'
+const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
 
 
 //get all suppliers
@@ -190,3 +191,30 @@ export const addPayment = async(paymentData)=>{
         throw error;
     }
 }
+
+
+//get all expiry
+
+export const getAllExpiry = async () => {
+  try {
+    // Make the GET request to fetch all expiry data
+    const response = await axios.get(`${API_BASE_URL_EXPIRY}/all-expiry`);
+    return response.data; // Return only the response data for easier consumption
+  } catch (error) {
+    console.error("Error fetching all expiry data:", error.message); // Log the error for debugging
+    throw new Error("Failed to fetch expiry data. Please try again."); // Throw a descriptive error
+  }
+};
+//add expiry
+
+export const addNewExpiry = async (expiryData) => {
+  try {
+    // Make the POST request to add new expiry data
+    const response = await axios.post(`${API_BASE_URL_EXPIRY}/add-expiry`, expiryData);
+    return response.data; // Return only the response data for easier consumption
+  } catch (error) {
+    console.error('Error adding new expiry:', error.message); // Log the error message for debugging
+    throw new Error('Failed to add new expiry. Please try again.'); // Throw a descriptive error for the caller
+  }
+};
+

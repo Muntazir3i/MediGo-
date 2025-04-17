@@ -228,6 +228,7 @@ const Ledger = () => {
       <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
         <thead className="bg-gray-50">
           <tr>
+          <th className="px-6 py-4">NO.</th>
             <th className="px-6 py-4">SUPPLIER</th>
             <th className="px-6 py-4">INVOICE</th>
             <th className="px-6 py-4">AMOUNT</th>
@@ -236,13 +237,14 @@ const Ledger = () => {
         <tbody className="divide-y divide-gray-100 border-t border-gray-100">
           {dailyPayments.map((item, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
+              <td className="px-6 py-4 text-black font-bold">{idx+1}</td>
               <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
               <td className="px-6 py-4 text-black">{item.invoice}</td>
               <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
             </tr>
           ))}
           <tr className="bg-gray-100">
-  <td className="px-6 py-4 font-bold text-right" colSpan="2">Total</td>
+  <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
   <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
 </tr>
 
