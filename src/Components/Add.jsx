@@ -32,6 +32,8 @@ function Add() {
     products: []
   });
 
+  
+
   const [products, setProducts] = useState([
     {
       id: Date.now(),
@@ -337,7 +339,6 @@ function Add() {
           <TabsTrigger value="add-supplier">Add Supplier</TabsTrigger>
           <TabsTrigger value="add-payment">Add Payment</TabsTrigger>
           <TabsTrigger value="add-expiry">Add Expiry</TabsTrigger>
-          <TabsTrigger value="add-credit-note">Add Credit Note</TabsTrigger>
         </TabsList>
         <TabsContent value="add-purchase">
           <div>
