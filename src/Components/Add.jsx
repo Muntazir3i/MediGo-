@@ -49,10 +49,7 @@ function Add() {
       batchNumber: "",
       expiryDate: "",
       stock: 0,
-      unitPrice: 0,
       mrp: 0,
-      discount: 0,
-      gstPercentage: 0,
     },
   ])
 
@@ -916,26 +913,7 @@ function Add() {
                 </div>
               </div>
             </div>
-
-            <div id="payment-details-container" className='border-gray-400 border-b-2 py-2'>
-              <h2 className='text-2xl'>Payment Details</h2>
-              <div id="payment-details-inner-container">
-                <div id="sub-total-container" className='flex justify-between'>
-                  <p>Subtotal</p>
-                  <p>Rs {totalAmountExpiry.toFixed(2)}</p>
-                </div>
-                <div id="gst-amount" className='flex justify-between'>
-                  <p>Gst Amount</p>
-                  <p>Rs {totalGstExpiry.toFixed(2)}</p>
-                </div>
-                <hr />
-                <div id="all-total" className='flex justify-between'>
-                  <p className='font-bold'>Total Amount</p>
-                  <p className='font-bold'>Rs {Math.round((totalAmountExpiry + totalGstExpiry).toFixed(2))}</p>
-                </div>
-              </div>
-            </div>
-
+            
             <button
               onClick={handleExpityData}
               className="px-4 py-2 bg-green-500 text-white rounded mt-2"
