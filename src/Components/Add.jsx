@@ -343,7 +343,8 @@ function Add() {
         products: validProducts,
         totalAmount: totalAmount.toFixed(2),
         totalGst: totalGst.toFixed(2),
-        total: Math.round(totalAmount + totalGst),
+        totalDiscount: totalDiscount.toFixed(2),
+        total: Math.round(totalAmount + totalGst - totalDiscount),
         type: 'Bill'
       };
 
@@ -480,6 +481,7 @@ function Add() {
 
   const totalAmount = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
   const totalGst = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
+  const totalDiscount = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * (item.discount || 0)) / 100, 0);
 
 
 
@@ -665,24 +667,30 @@ function Add() {
               </div>
             </div>
 
-            <div id="payment-details-container" className='border-gray-400 border-b-2 py-2'>
-              <h2 className='text-2xl'>Payment Details</h2>
-              <div id="payment-details-inner-container">
-                <div id="sub-total-container" className='flex justify-between'>
-                  <p>Subtotal</p>
-                  <p>Rs {totalAmount.toFixed(2)}</p>
-                </div>
-                <div id="gst-amount" className='flex justify-between'>
-                  <p>Gst Amount</p>
-                  <p>Rs {totalGst.toFixed(2)}</p>
-                </div>
-                <hr />
-                <div id="all-total" className='flex justify-between'>
-                  <p className='font-bold'>Total Amount</p>
-                  <p className='font-bold'>Rs {Math.round((totalAmount + totalGst).toFixed(2))}</p>
-                </div>
-              </div>
-            </div>
+            <div id="payment-details-container" className="border-gray-400 border-b-2 py-2">
+  <h2 className="text-2xl">Payment Details</h2>
+  <div id="payment-details-inner-container">
+    <div id="sub-total-container" className="flex justify-between">
+      <p>Subtotal</p>
+      <p>Rs {totalAmount.toFixed(2)}</p>
+    </div>
+    <div id="gst-amount" className="flex justify-between">
+      <p>Gst Amount</p>
+      <p>Rs {totalGst.toFixed(2)}</p>
+    </div>
+    <div id="discount-amount" className="flex justify-between">
+      <p>Discount Amount</p>
+      <p>Rs {totalDiscount.toFixed(2)}</p>
+    </div>
+    <hr />
+    <div id="all-total" className="flex justify-between">
+      <p className="font-bold">Total Amount</p>
+      <p className="font-bold">
+        Rs {Math.round((totalAmount + totalGst - totalDiscount).toFixed(2))}
+      </p>
+    </div>
+  </div>
+</div>
 
             <button
               onClick={handleBothActions}
