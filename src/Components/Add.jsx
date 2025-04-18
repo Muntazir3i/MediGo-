@@ -411,9 +411,6 @@ function Add() {
         id: Date.now(),
         ...expiryFormData,
         products: validProducts,
-        totalAmount: totalAmount.toFixed(2),
-        totalGst: totalGst.toFixed(2),
-        total: Math.round(totalAmount + totalGst),
         type: 'EXPIRY'
       };
       
@@ -912,7 +909,7 @@ function Add() {
                 </div>
               </div>
             </div>
-
+            
             <button
               onClick={handleExpityData}
               className="px-4 py-2 bg-green-500 text-white rounded mt-2"
