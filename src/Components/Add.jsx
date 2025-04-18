@@ -482,8 +482,7 @@ function Add() {
   const totalAmount = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
   const totalGst = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
 
-  const totalAmountExpiry = expiryProducts.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
-  const totalGstExpiry = expiryProducts.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
+
 
 
   return (
@@ -913,7 +912,7 @@ function Add() {
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={handleExpityData}
               className="px-4 py-2 bg-green-500 text-white rounded mt-2"
