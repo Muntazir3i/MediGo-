@@ -837,10 +837,7 @@ function Add() {
                       <th className="px-4 py-2 text-black">Batch Number</th>
                       <th className="px-4 py-2 text-black">EXP Date</th>
                       <th className="px-4 py-2 text-black">Quantity</th>
-                      <th className="px-4 py-2 text-black">Unit Price</th>
                       <th className="px-4 py-2 text-black">MRP</th>
-                      <th className="px-4 py-2 text-black">Discount %</th>
-                      <th className="px-4 py-2 text-black">GST %</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 border-t border-gray-100 ">
@@ -896,32 +893,8 @@ function Add() {
                           <Input
                             type="number"
                             className="border border-black p-1 w-40 lg:w-full text-black"
-                            value={item.unitPrice}
-                            onChange={(e) => handleInputChangeExpiry(item.id, "unitPrice", e.target.value)}
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <Input
-                            type="number"
-                            className="border border-black p-1 w-40 lg:w-full text-black"
                             value={item.mrp}
                             onChange={(e) => handleInputChangeExpiry(item.id, "mrp", e.target.value)}
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <Input
-                            type="number"
-                            className="border border-black p-1 w-40 lg:w-full text-black"
-                            value={item.discount}
-                            onChange={(e) => handleInputChangeExpiry(item.id, "discount", e.target.value)}
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <Input
-                            type="number"
-                            className="border border-black p-1 w-50 lg:w-full text-black"
-                            value={item.gstPercentage}
-                            onChange={(e) => handleInputChangeExpiry(item.id, "gstPercentage", e.target.value)}
                           />
                         </td>
                         <td className="px-4 py-2">
