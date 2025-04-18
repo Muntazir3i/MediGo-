@@ -485,8 +485,8 @@ function Add() {
   const totalAmount = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
   const totalGst = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
 
-  const totalAmountExpiry = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
-  const totalGstExpiry = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
+  const totalAmountExpiry = expiryProducts.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
+  const totalGstExpiry = expiryProducts.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
 
 
   return (
@@ -816,12 +816,12 @@ function Add() {
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierDrugLn'>Supplier Drug L/N</Label>
-                  <Input name='supplierDrugLn' value={expiryFormData.supplierDrugLn} className='border-black' type='text' onChange={handleChange}></Input>
+                  <Input name='supplierDrugLn' value={expiryFormData.supplierDrugLn} className='border-black' type='text' onChange={handleChangeExpiry}></Input>
                 </div>
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierContact'>Supplier Contact</Label>
-                  <Input name='supplierContact' value={expiryFormData.supplierContact} className='border-black' type='tel' onChange={handleChange}></Input>
+                  <Input name='supplierContact' value={expiryFormData.supplierContact} className='border-black' type='tel' onChange={handleChangeExpiry}></Input>
                 </div>
               </div>
             </div>
@@ -862,7 +862,7 @@ function Add() {
                             onChange={(e) => handleInputChange(item.id, "category", e.target.value)}
                           /> */}
                           <SelectList
-                            handleInputChangeExpiry={handleInputChangeExpiry}
+                            handleInputChange={handleInputChange}
                             itemId={item.id}
                             selectedCategory={item.category}
                           />
