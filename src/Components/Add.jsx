@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier,getAllExpiry,addNewExpiry } from '../services/medicineService.js';
-import { Link } from 'react-router-dom';
+import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier,addNewExpiry } from '../services/medicineService.js';
+import { Link, data } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
 import { Label } from './ui/label';
@@ -389,43 +389,46 @@ function Add() {
   //handle add expiry
 
   const handleExpityData = async () => {
-    // if (!expiryFormData.invoice.trim() || !expiryFormData.date.trim()) {
-    //   alert("Bill Number and Bill Date are required.");
-    //   return;
-    // }
-
+    // Filter valid products based on the criteria
     const validProducts = expiryProducts.filter(product =>
-      product.name.trim() &&
-      product.batchNumber.trim() &&
-      product.expiryDate.trim() &&
-      product.stock > 0
+      product.name.trim() && // Ensure product name is not empty
+      product.batchNumber.trim() && // Ensure batch number is not empty
+      product.expiryDate.trim() && // Ensure expiry date is not empty
+      product.stock > 0 // Ensure stock is greater than 0
     );
-
+  
+    // Check if there are any valid products
     if (validProducts.length === 0) {
       alert("At least one valid product is required.");
       return;
     }
-
+  
     try {
+      // Create the payload for the API request
       let allData = {
-        id: Date.now(),
-        ...expiryFormData,
-        products: validProducts,
-        type: 'EXPIRY'
+        id: Date.now(), // Generate a unique ID
+        ...expiryFormData, // Include form data (e.g., supplier details)
+        products: validProducts, // Include the validated products
+        type: 'EXPIRY', // Set the type to 'EXPIRY'
       };
-      
-    console.log(allData);
-
-      alert('Purchase and Medicine added successfully!');
-
-      // Reset state
+  
+      // Send the data to the backend using the addNewExpiry function
+      const response = await addNewExpiry(allData);
+  
+      console.log("Response from server:", response);
+  
+      // Show success message to the user
+      alert('Expiry data added successfully!');
+  
+      // Reset the form state
       setExpiryFormData({
         date: '',
         supplierName: '',
         supplierGstin: '',
         supplierContact: '',
       });
-
+  
+      // Reset the products state
       setExpiryProducts([
         {
           id: Date.now(),
@@ -433,16 +436,15 @@ function Add() {
           batchNumber: "",
           expiryDate: "",
           stock: 0,
-          unitPrice: 0,
           mrp: 0,
-          discount: 0,
-          gstPercentage: 0,
         },
       ]);
-
     } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to process. Please check if the item already exists.');
+      // Log the error for debugging
+      console.error("Error while adding expiry data:", error);
+  
+      // Show an error message to the user
+      alert('Failed to process. Please check if the item already exists or try again later.');
     }
   };
 
@@ -826,7 +828,6 @@ function Add() {
                   <thead className="bg-gray-50 overflow-auto">
                     <tr >
                       <th className="px-4 py-2 text-black">Product Name</th>
-                      <th className="px-4 py-2 text-black">Category</th>
                       <th className="px-4 py-2 text-black">Batch Number</th>
                       <th className="px-4 py-2 text-black">EXP Date</th>
                       <th className="px-4 py-2 text-black">Quantity</th>
@@ -843,20 +844,6 @@ function Add() {
                             value={item.name}
                             onChange={(e) => handleInputChangeExpiry(item.id, "name", e.target.value)}
                           />
-                        </td>
-                        <td className="px-4 py-2">
-                          {/* <Input
-                            type="text"
-                            className="border p-1 w-full"
-                            value={item.category}
-                            onChange={(e) => handleInputChange(item.id, "category", e.target.value)}
-                          /> */}
-                          <SelectList
-                            handleInputChange={handleInputChange}
-                            itemId={item.id}
-                            selectedCategory={item.category}
-                          />
-
                         </td>
                         <td className="px-4 py-2">
                           <Input
