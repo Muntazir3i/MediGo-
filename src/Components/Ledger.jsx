@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getSupplier, getPurchase,findSupplierTransaction,findPaymentByDate } from '@/services/medicineService.js';
+import { getSupplier, getPurchase, findSupplierTransaction, findPaymentByDate } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+
 
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
@@ -19,13 +21,13 @@ const Ledger = () => {
     try {
       const date = e.target.value; // Get the selected date from the event
       setSelectedDate(date); // Update the selected date state
-  
+
       // If no date is selected, clear the dailyPayments state
       if (!date) {
         setDailyPayments([]);
         return;
       }
-  
+
       // Fetch payments for the selected date
       const payments = await findPaymentByDate(date);
       setDailyPayments(payments); // Update the dailyPayments state with the retrieved payments
@@ -76,17 +78,17 @@ const Ledger = () => {
     try {
       // Set the selected supplier name
       setSelectedSupplierName(name);
-  
+
       // Find the selected supplier from the list of all suppliers
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
-  
+
       if (selectedSupplier) {
         // Set the supplier's balance
         setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
-  
+
         // Fetch the supplier transactions from the server
         const supplierBills = await findSupplierTransaction(name);
-  
+
         // Set the filtered and sorted bills
         setFilteredBill(supplierBills);
       }
@@ -103,7 +105,21 @@ const Ledger = () => {
   const averageBalance = allSupplier.length > 0 ? totalBalance / allSupplier.length : 0;
 
   return (
+
     <main id='main-top-container' className="h-[90vh] lg:h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
+
+      <Tabs defaultValue="account" className="w-[400px]">
+        <TabsList>
+          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="password">Password</TabsTrigger>
+        </TabsList>
+        <TabsContent value="account">Make changes to your account here.</TabsContent>
+        <TabsContent value="password">Change your password here.</TabsContent>
+      </Tabs>
+
+
+
+
       <h1 className="text-3xl font-bold mb-8">Supplier Ledger</h1>
 
 
@@ -222,39 +238,39 @@ const Ledger = () => {
         />
       </div>
       {selectedDate && (
-  <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
-    <h2 className='text-xl font-bold mb-2'>Payments on {selectedDate}</h2>
-    {dailyPayments.length > 0 ? (
-      <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-        <thead className="bg-gray-50">
-          <tr>
-          <th className="px-6 py-4">NO.</th>
-            <th className="px-6 py-4">SUPPLIER</th>
-            <th className="px-6 py-4">INVOICE</th>
-            <th className="px-6 py-4">AMOUNT</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-          {dailyPayments.map((item, idx) => (
-            <tr key={idx} className="hover:bg-gray-50">
-              <td className="px-6 py-4 text-black font-bold">{idx+1}</td>
-              <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
-              <td className="px-6 py-4 text-black">{item.invoice}</td>
-              <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
-            </tr>
-          ))}
-          <tr className="bg-gray-100">
-  <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
-  <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
-</tr>
+        <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
+          <h2 className='text-xl font-bold mb-2'>Payments on {selectedDate}</h2>
+          {dailyPayments.length > 0 ? (
+            <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4">NO.</th>
+                  <th className="px-6 py-4">SUPPLIER</th>
+                  <th className="px-6 py-4">INVOICE</th>
+                  <th className="px-6 py-4">AMOUNT</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                {dailyPayments.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-black font-bold">{idx + 1}</td>
+                    <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
+                    <td className="px-6 py-4 text-black">{item.invoice}</td>
+                    <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-100">
+                  <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
+                  <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
+                </tr>
 
-        </tbody>
-      </table>
-    ) : (
-      <p className='text-gray-600'>No payments found on this date.</p>
-    )}
-  </div>
-)}
+              </tbody>
+            </table>
+          ) : (
+            <p className='text-gray-600'>No payments found on this date.</p>
+          )}
+        </div>
+      )}
 
 
     </main>
