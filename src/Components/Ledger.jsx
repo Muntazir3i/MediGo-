@@ -115,10 +115,8 @@ const Ledger = () => {
           <TabsTrigger value="credit-notes">Credit Notes</TabsTrigger>
         </TabsList>
         <TabsContent value="general-ledger">
-
-
-
-        <h1 className="text-3xl font-bold mb-8">General Ledger</h1>
+        <h1 className="text-3xl font-bold ">General Ledger</h1>
+        <p className='mb-8'>Check Bills & Daily Payments</p>
 <div className='h-[65vh] flex flex-col-reverse lg:flex-row gap-4 border'>
   <div className='border-gray-300 border lg:w-[65%] rounded-lg p-3 overflow-auto'>
     <Input className='mb-2 bg-white' placeholder="Search Suppliers" value={search} onChange={handleSearchChange} />
@@ -268,8 +266,14 @@ const Ledger = () => {
   </div>
 )}
         </TabsContent>
-        <TabsContent value="expiry-ledger"></TabsContent>
-        <TabsContent value="credit-notes"></TabsContent>
+        <TabsContent value="expiry-ledger">
+        <h1 className="text-3xl font-bold ">Expiry Ledger</h1>
+        <p className='mb-8'>Check Sales Return Based on Supplier</p>
+        </TabsContent>
+        <TabsContent value="credit-notes">
+        <h1 className="text-3xl font-bold ">Credit Notes</h1>
+        <p className='mb-8'>Check Sales Return Bill Based on Supplier</p>
+        </TabsContent>
       </Tabs>
 
 
