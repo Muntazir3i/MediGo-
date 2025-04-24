@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSupplier, getPurchase, findSupplierTransaction, findPaymentByDate } from '@/services/medicineService.js';
+import { getSupplier, getPurchase, findSupplierTransaction, findPaymentByDate,findSupplierExpiry } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -10,6 +10,7 @@ const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
   const [allPurchases, setAllPurchases] = useState([]);
   const [filteredBill, setFilteredBill] = useState([]);
+  const [fileredExpiry,setFilteredExpiry] = useState([]);
   const [filteredSupplier, setFilteredSupplier] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -94,6 +95,31 @@ const Ledger = () => {
       }
     } catch (error) {
       console.error("Error fetching supplier transactions:", error.message);
+      // Handle the error (e.g., show a toast or alert to the user)
+    }
+  };
+
+
+  const findExpiryFn = async (name) => {
+    try {
+      // Set the selected supplier name
+      setSelectedSupplierName(name);
+
+      // Find the selected supplier from the list of all suppliers
+      const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
+
+      if (selectedSupplier) {
+        // Set the supplier's balance
+        setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
+
+        // Fetch the supplier expiry from the server
+        const supplierExpiry = await findSupplierExpiry(name);
+
+        // Set the filtered and sorted expiry
+        setFilteredExpiry(supplierExpiry);
+      }
+    } catch (error) {
+      console.error("Error fetching supplier expiry", error.message);
       // Handle the error (e.g., show a toast or alert to the user)
     }
   };
