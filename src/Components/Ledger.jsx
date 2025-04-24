@@ -117,6 +117,9 @@ const Ledger = () => {
 
         // Set the filtered and sorted expiry
         setFilteredExpiry(supplierExpiry);
+
+        //
+        console.log(fileredExpiry);
       }
     } catch (error) {
       console.error("Error fetching supplier expiry", error.message);
@@ -314,7 +317,7 @@ const Ledger = () => {
             <tr key={index} className="hover:bg-gray-50">
               <td className="px-6 py-4 text-black font-bold">{supplier.supplierName}</td>
               <td className="px-6 py-4">
-                <Button onClick={() => showNameFn(supplier.supplierName)}>View Transactions</Button>
+                <Button onClick={() => findExpiryFn(supplier.supplierName)}>View Transactions</Button>
               </td>
             </tr>
           ))
