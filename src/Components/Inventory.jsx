@@ -308,7 +308,7 @@ function Inventory() {
                                                                 <DialogTrigger asChild>
                                                                     <Button variant="outline">View Details</Button>
                                                                 </DialogTrigger>
-                                                                <DialogContent className="sm:max-w-[1400px]">
+                                                                <DialogContent className="sm:max-w-[1400px] h-[90vh]">
                                                                     <DialogHeader>
                                                                         <DialogTitle>{purchase.supplierName}</DialogTitle>
                                                                         <DialogDescription className="flex justify-between">

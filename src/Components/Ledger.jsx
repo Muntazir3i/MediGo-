@@ -391,11 +391,11 @@ const Ledger = () => {
                       </td>
                       <td className="px-6 py-4 text-black font-light">{bill.products.length}</td>
                       <td className="px-6 py-4">
-                        <Dialog>
+                        <Dialog  >
                           <DialogTrigger asChild>
                             <Button variant="outline">View Details</Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[1400px]">
+                          <DialogContent className="sm:max-w-[1400px] h-[90vh]">
                             <DialogHeader>
                               <DialogTitle>{bill.supplierName}</DialogTitle>
                               <DialogDescription className="flex justify-between">
