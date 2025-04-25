@@ -4,6 +4,18 @@ import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter
+} from "./ui/table.jsx"
 
 
 const Ledger = () => {
@@ -378,6 +390,48 @@ const Ledger = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 text-black font-light">{bill.products.length}</td>
+                      <td className="px-6 py-4">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline">View Details</Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[1400px]">
+                            <DialogHeader>
+                              <DialogTitle>{bill.supplierName}</DialogTitle>
+                              <DialogDescription className="flex justify-between">
+                                <p>DRUG L/N: {bill.supplierDrugLn}</p>
+                                <p>Contact: {bill.supplierContact}</p>
+                                <p>Bill Date: {bill.date}</p>
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-[100px]">Name</TableHead>
+                                  <TableHead>EXP</TableHead>
+                                  <TableHead>QTY</TableHead>
+                                  <TableHead>BATCH NO.</TableHead>
+                                  <TableHead>MRP</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {bill.products.map((item, idx) => (
+                                  <TableRow key={idx}>
+                                    <TableCell className="font-medium">{item.name}</TableCell>
+                                    <TableCell>{item.expiryDate}</TableCell>
+                                    <TableCell>{item.stock}</TableCell>
+                                    <TableCell>{item.batchNumber}</TableCell>
+                                    <TableCell>{item.mrp}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+
+                            <DialogFooter />
+                          </DialogContent>
+                        </Dialog>
+                      </td>
                     </tr>
                   ))
                 ) : (
