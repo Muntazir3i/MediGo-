@@ -369,7 +369,7 @@ const Ledger = () => {
                   <th className="px-6 py-4">SUPPLIER</th>
                   <th className="px-6 py-4">TYPE</th>
                   <th className="px-6 py-4">PRODUCTS</th>
-                  <th className="px-6 py-4">BAL</th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 border-t border-gray-100">
@@ -401,7 +401,7 @@ const Ledger = () => {
                               <DialogDescription className="flex justify-between">
                                 <p>DRUG L/N: {bill.supplierDrugLn}</p>
                                 <p>Contact: {bill.supplierContact}</p>
-                                <p>Bill Date: {bill.date}</p>
+                                <p>Expiry Bill Date: {bill.date}</p>
                               </DialogDescription>
                             </DialogHeader>
 
