@@ -6,6 +6,7 @@ const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
 const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
 const API_BASE_URL_SUPPLIER = 'http://localhost:8000/api/addSupplier'
 const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
+const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8000/api/supplier'
 
 
 //get all suppliers
@@ -25,6 +26,29 @@ export const addNewSupplier = async(supplierData) => {
     console.log('Error adding Supplier',error);
    }
 }
+
+
+//get all supplier sqlite
+
+export const getsupplierSql = async()=>{
+  try {
+    const response = await axios.get(`${API_BASE_URL_SUPPLIER_SQL}/suppliers`)
+    return response
+  } catch (error) {
+    console.log('Error Fetching the supplier from sql', error)
+  }
+}
+
+//add new supplier sqlite
+export const addNewSuppliersql = async(supplierData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL_SUPPLIER_SQL}/suppliers`, supplierData);
+    return response
+  } catch (error) {
+   console.log('Error adding Supplier',error);
+  }
+}
+
 
 //get all medicine
 export const getMedicines = async()=>{

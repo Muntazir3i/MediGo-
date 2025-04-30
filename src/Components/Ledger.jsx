@@ -408,7 +408,8 @@ const Ledger = () => {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead className="w-[100px]">Name</TableHead>
+                                <TableHead >No.</TableHead>
+                                  <TableHead >Name</TableHead>
                                   <TableHead>EXP</TableHead>
                                   <TableHead>QTY</TableHead>
                                   <TableHead>BATCH NO.</TableHead>
@@ -418,6 +419,7 @@ const Ledger = () => {
                               <TableBody>
                                 {bill.products.map((item, idx) => (
                                   <TableRow key={idx}>
+                                    <TableCell>{idx+1}</TableCell>
                                     <TableCell className="font-medium">{item.name}</TableCell>
                                     <TableCell>{item.expiryDate}</TableCell>
                                     <TableCell>{item.stock}</TableCell>

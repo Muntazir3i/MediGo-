@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier,addNewExpiry } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier,addNewExpiry,addNewSuppliersql, getsupplierSql } from '../services/medicineService.js';
 import { Link, data } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -80,17 +80,22 @@ function Add() {
   const [addSupplier,setAddSupplier] = useState({
     supplierName:'',
     phoneNumber:'',
-    email:'',
-    address:'',
     drugLn:'',
     supplierBalance:''
   })
 
   const [allSupplier, setAllSupplier] = useState([]);
+  const [allSuppliersSql,setAllSuppliersSqlite] = useState([])
 
   useEffect(() => {
     fetchAllSupplier();
   }, []);
+
+  useEffect(() => {
+    fetchAllSuppliersSql();
+  }, []);
+
+
 
   const fetchAllSupplier = async () => {
     try {
@@ -100,6 +105,16 @@ function Add() {
       console.error('Error fetching the Supplier:', error);
     }
   };
+
+  const fetchAllSuppliersSql = async()=>{
+    try {
+      const response = await getsupplierSql();
+      setAllSuppliersSqlite(response.data)
+      console.log(response);
+    } catch (error) {
+      console.log('Error Fetching the suppliers:',error);
+    }
+  }
 
 
   //for bills and CN
@@ -176,8 +191,6 @@ function Add() {
       setAddSupplier({
         supplierName:'',
         phoneNumber:'',
-        email:'',
-        address:'',
         drugLn:'',
         supplierBalance:''
       })
@@ -708,14 +721,6 @@ function Add() {
 
               <label htmlFor="phone-number">Phone Number</label>
               <input className="border-1" type="tel" name="phoneNumber" value={addSupplier.phoneNumber} onChange={handleChangeAddSupplier} required />
-
-              <label htmlFor="email">Email Address</label>
-              <input className="border-1" type="email" name="email" value={addSupplier.email} onChange={handleChangeAddSupplier} required />
-
-
-              <label htmlFor="address">Address</label>
-              <input className="border-1" type="text" name="address" value={addSupplier.address} onChange={handleChangeAddSupplier} required />
-
 
               <label htmlFor="drug-license-number">Drug License Number</label>
               <input className="border-1" type="text" name="drugLn" value={addSupplier.drugLn} onChange={handleChangeAddSupplier} required />
