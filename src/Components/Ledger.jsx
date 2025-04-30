@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSupplier, getPurchase, findSupplierTransaction, findPaymentByDate, findSupplierExpiry } from '@/services/medicineService.js';
+import { getSupplier, getPurchase, findSupplierTransaction, findPaymentByDate, findSupplierExpiry,getsupplierSql } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -60,9 +60,10 @@ const Ledger = () => {
 
   const fetchAllSupplier = async () => {
     try {
-      const response = await getSupplier();
+      const response = await getsupplierSql();
       setAllSupplier(response.data);
       setFilteredSupplier(response.data);
+      console.log(response);
     } catch (error) {
       console.error('Error fetching the Supplier:', error);
     }
