@@ -9,25 +9,6 @@ const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8000/api/supplier'
 
 
-//get all suppliers
-
-export const getSupplier = async()=>{
-    const response = await axios.get(`${API_BASE_URL_SUPPLIER}/all-supplier`);
-    return response
-}
-
-//add supplier
-
-export const addNewSupplier = async(supplierData) => {
-   try {
-     const response = await axios.post(`${API_BASE_URL_SUPPLIER}/add-supplier`, supplierData);
-     return response
-   } catch (error) {
-    console.log('Error adding Supplier',error);
-   }
-}
-
-
 //get all supplier sqlite
 
 export const getsupplierSql = async()=>{
