@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewSupplier,getSupplier,addNewExpiry,addNewSuppliersql, getsupplierSql } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewSupplier, getSupplier, addNewExpiry, addNewSuppliersql, getsupplierSql } from '../services/medicineService.js';
 import { Link, data } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -33,15 +33,15 @@ function Add() {
   });
 
   //for expiry
-  const [expiryFormData,setExpiryFormData] = useState({
-    date:'',
+  const [expiryFormData, setExpiryFormData] = useState({
+    date: '',
     supplierName: '',
     supplierDrugLn: '',
     supplierContact: '',
     products: []
   })
 
-//for expiry
+  //for expiry
   const [expiryProducts, setExpiryProducts] = useState([
     {
       id: Date.now(),
@@ -53,7 +53,7 @@ function Add() {
     },
   ])
 
-  
+
 
   const [products, setProducts] = useState([
     {
@@ -77,15 +77,15 @@ function Add() {
     total: ''
   })
 
-  const [addSupplier,setAddSupplier] = useState({
-    supplierName:'',
-    phoneNumber:'',
-    drugLn:'',
-    supplierBalance:''
+  const [addSupplier, setAddSupplier] = useState({
+    supplierName: '',
+    phoneNumber: '',
+    drugLn: '',
+    supplierBalance: ''
   })
 
   const [allSupplier, setAllSupplier] = useState([]);
-  const [allSuppliersSql,setAllSuppliersSqlite] = useState([])
+  const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
 
   useEffect(() => {
     fetchAllSupplier();
@@ -106,13 +106,13 @@ function Add() {
     }
   };
 
-  const fetchAllSuppliersSql = async()=>{
+  const fetchAllSuppliersSql = async () => {
     try {
       const response = await getsupplierSql();
       setAllSuppliersSqlite(response.data)
       console.log(response);
     } catch (error) {
-      console.log('Error Fetching the suppliers:',error);
+      console.log('Error Fetching the suppliers:', error);
     }
   }
 
@@ -176,23 +176,23 @@ function Add() {
       setPayments(prev => ({
         ...prev,
         supplierName,
-        drugLicenseNumber:''
+        drugLicenseNumber: ''
       }));
     }
   };
 
-  const showData =async  (e) =>{
+  const showData = async (e) => {
     e.preventDefault();
-    let newSupplier = {...addSupplier}
+    let newSupplier = { ...addSupplier }
     setAddSupplier(newSupplier);
     try {
-      const response = await addNewSupplier(newSupplier);
+      const response = await addNewSuppliersql(newSupplier);
       console.log(response);
       setAddSupplier({
-        supplierName:'',
-        phoneNumber:'',
-        drugLn:'',
-        supplierBalance:''
+        supplierName: '',
+        phoneNumber: '',
+        drugLn: '',
+        supplierBalance: ''
       })
     } catch (error) {
       console.error('Error Adding Supplier to the database', error)
@@ -201,7 +201,7 @@ function Add() {
 
   const showPayment = async (e) => {
     e.preventDefault();
-    let newPayment = { ...payments, id: Date.now(),type:'Payment' }
+    let newPayment = { ...payments, id: Date.now(), type: 'Payment' }
     setPayments(newPayment);
     try {
       const response = await addPurchase(newPayment);
@@ -304,12 +304,12 @@ function Add() {
     }));
   };
 
-  const handleChangeAddSupplier = (e)=>{
-    const {name,value} = e.target;
-    setAddSupplier((prevData)=>(
+  const handleChangeAddSupplier = (e) => {
+    const { name, value } = e.target;
+    setAddSupplier((prevData) => (
       {
         ...prevData,
-        [name]:  value.toUpperCase().replace(/\s+/g, ' ')
+        [name]: value.toUpperCase().replace(/\s+/g, ' ')
       }
     ))
   }
@@ -410,13 +410,13 @@ function Add() {
       product.expiryDate.trim() && // Ensure expiry date is not empty
       product.stock > 0 // Ensure stock is greater than 0
     );
-  
+
     // Check if there are any valid products
     if (validProducts.length === 0) {
       alert("At least one valid product is required.");
       return;
     }
-  
+
     try {
       // Create the payload for the API request
       let allData = {
@@ -425,15 +425,15 @@ function Add() {
         products: validProducts, // Include the validated products
         type: 'EXPIRY', // Set the type to 'EXPIRY'
       };
-  
+
       // Send the data to the backend using the addNewExpiry function
       const response = await addNewExpiry(allData);
-  
+
       console.log("Response from server:", response);
-  
+
       // Show success message to the user
       alert('Expiry data added successfully!');
-  
+
       // Reset the form state
       setExpiryFormData({
         date: '',
@@ -441,7 +441,7 @@ function Add() {
         supplierGstin: '',
         supplierContact: '',
       });
-  
+
       // Reset the products state
       setExpiryProducts([
         {
@@ -456,7 +456,7 @@ function Add() {
     } catch (error) {
       // Log the error for debugging
       console.error("Error while adding expiry data:", error);
-  
+
       // Show an error message to the user
       alert('Failed to process. Please check if the item already exists or try again later.');
     }
@@ -534,21 +534,21 @@ function Add() {
               <h2 className='text-2xl'>Supplier Details</h2>
               <div id="supplier-details-inner-container" className='flex flex-col gap-4 lg:flex-row lg:gap-2  '>
 
-              <div className='w-[100%]'>
-              <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
-        <Input
-          list="supplierList"
-          className="border p-2 w-full border-black"
-          name="supplierName"
-          value={formData.supplierName}
-          onChange={handleSupplierSelect}
-        />
-        <datalist id="supplierList">
-          {allSupplier.map(s => (
-            <option key={s.id} value={s.supplierName} />
-          ))}
-        </datalist>
-        </div>
+                <div className='w-[100%]'>
+                  <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
+                  <Input
+                    list="supplierList"
+                    className="border p-2 w-full border-black"
+                    name="supplierName"
+                    value={formData.supplierName}
+                    onChange={handleSupplierSelect}
+                  />
+                  <datalist id="supplierList">
+                    {allSupplier.map((s, index) => (
+                      <option key={index} value={s.supplierName} />
+                    ))}
+                  </datalist>
+                </div>
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierDrugLn'>Supplier Drug L/N</Label>
@@ -681,29 +681,29 @@ function Add() {
             </div>
 
             <div id="payment-details-container" className="border-gray-400 border-b-2 py-2">
-  <h2 className="text-2xl">Payment Details</h2>
-  <div id="payment-details-inner-container">
-    <div id="sub-total-container" className="flex justify-between">
-      <p>Subtotal</p>
-      <p>Rs {totalAmount.toFixed(2)}</p>
-    </div>
-    <div id="gst-amount" className="flex justify-between">
-      <p>Gst Amount</p>
-      <p>Rs {totalGst.toFixed(2)}</p>
-    </div>
-    <div id="discount-amount" className="flex justify-between">
-      <p>Discount Amount</p>
-      <p>Rs {totalDiscount.toFixed(2)}</p>
-    </div>
-    <hr />
-    <div id="all-total" className="flex justify-between">
-      <p className="font-bold">Total Amount</p>
-      <p className="font-bold">
-        Rs {Math.round((totalAmount + totalGst - totalDiscount).toFixed(2))}
-      </p>
-    </div>
-  </div>
-</div>
+              <h2 className="text-2xl">Payment Details</h2>
+              <div id="payment-details-inner-container">
+                <div id="sub-total-container" className="flex justify-between">
+                  <p>Subtotal</p>
+                  <p>Rs {totalAmount.toFixed(2)}</p>
+                </div>
+                <div id="gst-amount" className="flex justify-between">
+                  <p>Gst Amount</p>
+                  <p>Rs {totalGst.toFixed(2)}</p>
+                </div>
+                <div id="discount-amount" className="flex justify-between">
+                  <p>Discount Amount</p>
+                  <p>Rs {totalDiscount.toFixed(2)}</p>
+                </div>
+                <hr />
+                <div id="all-total" className="flex justify-between">
+                  <p className="font-bold">Total Amount</p>
+                  <p className="font-bold">
+                    Rs {Math.round((totalAmount + totalGst - totalDiscount).toFixed(2))}
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <button
               onClick={handleBothActions}
@@ -750,20 +750,20 @@ function Add() {
               {/* <label htmlFor="supplierName">Supplier Name</label>
               <input className="border-1" type="email" name="supplierName" value={payments.supplierName} onChange={handleChangePayment} required /> */}
               <div className='w-[100%]'>
-              <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
-        <Input
-          list="supplierList"
-          className="border p-2 w-full border-black"
-          name="supplierName"
-          value={payments.supplierName}
-          onChange={handleAddPaymentSupplierSelect}
-        />
-        <datalist id="supplierList">
-          {allSupplier.map(s => (
-            <option key={s.id} value={s.supplierName} />
-          ))}
-        </datalist>
-        </div>
+                <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
+                <Input
+                  list="supplierList"
+                  className="border p-2 w-full border-black"
+                  name="supplierName"
+                  value={payments.supplierName}
+                  onChange={handleAddPaymentSupplierSelect}
+                />
+                <datalist id="supplierList">
+                  {allSupplier.map(s => (
+                    <option key={s.id} value={s.supplierName} />
+                  ))}
+                </datalist>
+              </div>
 
               <label htmlFor="drugLicenseNumber">Drug License Number</label>
               <input className="border-1" type="text" name="drugLicenseNumber" value={payments.drugLicenseNumber} onChange={handleChangePayment} required />
@@ -782,7 +782,7 @@ function Add() {
           </div>
         </TabsContent>
         <TabsContent value='add-expiry'>
-        <div>
+          <div>
             <h1 className='text-3xl'>Record Expiry</h1>
             <p>Enter the details of the Expiry for a supplier</p>
 
@@ -806,21 +806,21 @@ function Add() {
               <h2 className='text-2xl'>Supplier Details</h2>
               <div id="supplier-details-inner-container" className='flex flex-col gap-4 lg:flex-row lg:gap-2  '>
 
-              <div className='w-[100%]'>
-              <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
-        <Input
-          list="supplierList"
-          className="border p-2 w-full border-black"
-          name="supplierName"
-          value={expiryFormData.supplierName}
-          onChange={handleSupplierSelectExpiry}
-        />
-        <datalist id="supplierList">
-          {allSupplier.map(s => (
-            <option key={s.id} value={s.supplierName} />
-          ))}
-        </datalist>
-        </div>
+                <div className='w-[100%]'>
+                  <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
+                  <Input
+                    list="supplierList"
+                    className="border p-2 w-full border-black"
+                    name="supplierName"
+                    value={expiryFormData.supplierName}
+                    onChange={handleSupplierSelectExpiry}
+                  />
+                  <datalist id="supplierList">
+                    {allSupplier.map(s => (
+                      <option key={s.id} value={s.supplierName} />
+                    ))}
+                  </datalist>
+                </div>
 
                 <div className='w-[100%]'>
                   <Label htmlFor='supplierDrugLn'>Supplier Drug L/N</Label>
@@ -891,7 +891,7 @@ function Add() {
                           />
                         </td>
                         <td className="px-4 py-2">
-                          <button onClick={() =>handleDeleteExpiry(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
+                          <button onClick={() => handleDeleteExpiry(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
                         </td>
                       </tr>
                     ))}
@@ -909,7 +909,7 @@ function Add() {
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={handleExpityData}
               className="px-4 py-2 bg-green-500 text-white rounded mt-2"
