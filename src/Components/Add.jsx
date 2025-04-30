@@ -84,27 +84,13 @@ function Add() {
     supplierBalance: ''
   })
 
-  const [allSupplier, setAllSupplier] = useState([]);
   const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
 
-  useEffect(() => {
-    fetchAllSupplier();
-  }, []);
 
   useEffect(() => {
     fetchAllSuppliersSql();
   }, []);
 
-
-
-  const fetchAllSupplier = async () => {
-    try {
-      const response = await getSupplier();
-      setAllSupplier(response.data);
-    } catch (error) {
-      console.error('Error fetching the Supplier:', error);
-    }
-  };
 
   const fetchAllSuppliersSql = async () => {
     try {
@@ -121,7 +107,7 @@ function Add() {
 
   const handleSupplierSelect = (e) => {
     const supplierName = e.target.value;
-    const supplier = allSupplier.find(s => s.supplierName === supplierName);
+    const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
 
     if (supplier) {
       setFormData(prev => ({
@@ -143,7 +129,7 @@ function Add() {
   //for expiry
   const handleSupplierSelectExpiry = (e) => {
     const supplierName = e.target.value;
-    const supplier = allSupplier.find(s => s.supplierName === supplierName);
+    const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
 
     if (supplier) {
       setExpiryFormData(prev => ({
@@ -164,7 +150,7 @@ function Add() {
 
   const handleAddPaymentSupplierSelect = (e) => {
     const supplierName = e.target.value;
-    const supplier = allSupplier.find(s => s.supplierName === supplierName);
+    const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
 
     if (supplier) {
       setPayments(prev => ({
@@ -544,7 +530,7 @@ function Add() {
                     onChange={handleSupplierSelect}
                   />
                   <datalist id="supplierList">
-                    {allSupplier.map((s, index) => (
+                    {allSuppliersSql.map((s, index) => (
                       <option key={index} value={s.supplierName} />
                     ))}
                   </datalist>
@@ -759,7 +745,7 @@ function Add() {
                   onChange={handleAddPaymentSupplierSelect}
                 />
                 <datalist id="supplierList">
-                  {allSupplier.map(s => (
+                  {allSuppliersSql.map(s => (
                     <option key={s.id} value={s.supplierName} />
                   ))}
                 </datalist>
@@ -816,7 +802,7 @@ function Add() {
                     onChange={handleSupplierSelectExpiry}
                   />
                   <datalist id="supplierList">
-                    {allSupplier.map(s => (
+                    {allSuppliersSql.map(s => (
                       <option key={s.id} value={s.supplierName} />
                     ))}
                   </datalist>
