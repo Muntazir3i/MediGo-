@@ -4,9 +4,23 @@ const API_BASE_URL = 'http://localhost:8000/api/medicines'
 const API_BASE_URL_BILL = 'http://localhost:8000:8000/api/bills'
 const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
 const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
-const API_BASE_URL_SUPPLIER = 'http://localhost:8000/api/addSupplier'
 const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8000/api/supplier'
+const API_BASE_URL_BILL_SQL = 'http://localhost:8000:8000/api/sqlbills'
+const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8000/api/sqlpayment'
+const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8000/api/sqlbillpayment'
+
+
+//get all bills and payment dql
+
+export const getBillPaymentSql = async()=>{
+  try{
+    const response = await axios.get(`${API_BASE_URL_BILL_PAYMENT_SQL}/all-data`)
+    return response
+  }catch(error){
+    console.log('Error Fetching bills and payment from sql',error);
+  }
+}
 
 
 //get all supplier sqlite
@@ -17,6 +31,17 @@ export const getsupplierSql = async()=>{
     return response
   } catch (error) {
     console.log('Error Fetching the supplier from sql', error)
+  }
+}
+
+// add new payment sql
+
+export const addPaymentSql = async(payment)=>{
+  try {
+    const response = await axios.post(`${API_BASE_URL_PAYMENT_SQL}/payments`,payment)
+    return response
+  } catch (error) {
+    console.log('Error adding payment',error);
   }
 }
 

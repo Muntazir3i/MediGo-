@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewExpiry, addNewSuppliersql, getsupplierSql } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewExpiry, addNewSuppliersql, getsupplierSql,getBillPaymentSql,addPaymentSql } from '../services/medicineService.js';
 import { Link, data } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -91,6 +91,10 @@ function Add() {
     fetchAllSuppliersSql();
   }, []);
 
+  useEffect(()=>{
+    fetchAllBillsPaymentSql()
+  },[])
+
 
   const fetchAllSuppliersSql = async () => {
     try {
@@ -98,6 +102,15 @@ function Add() {
       setAllSuppliersSqlite(response.data)
     } catch (error) {
       console.log('Error Fetching the suppliers:', error);
+    }
+  }
+
+  const fetchAllBillsPaymentSql = async()=>{
+    try {
+      const response = await getBillPaymentSql();
+      console.log([...response.data.bills, ...response.data.payments]);
+    } catch (error) {
+      console.log('Error Fetching Bills and Payment',error);
     }
   }
 
@@ -189,7 +202,7 @@ function Add() {
     let newPayment = { ...payments, id: Date.now(), type: 'Payment' }
     setPayments(newPayment);
     try {
-      const response = await addPurchase(newPayment);
+      const response = await addPaymentSql(newPayment);
       console.log(response);
       setPayments({
         date: '',
