@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPayment, addPurchase, addNewExpiry, addNewSuppliersql, getsupplierSql,getBillPaymentSql,addPaymentSql } from '../services/medicineService.js';
+import { addMedicines, addPayment, addPurchase, addNewExpiry, addNewSuppliersql, getsupplierSql,getBillPaymentSql,addPaymentSql,getAllPaymentsSql } from '../services/medicineService.js';
 import { Link, data } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 // import { Label } from '@radix-ui/react-label.jsx';
@@ -92,7 +92,7 @@ function Add() {
   }, []);
 
   useEffect(()=>{
-    fetchAllBillsPaymentSql()
+    fetchAllPaymentSql()
   },[])
 
 
@@ -105,12 +105,12 @@ function Add() {
     }
   }
 
-  const fetchAllBillsPaymentSql = async()=>{
+  const fetchAllPaymentSql = async()=>{
     try {
-      const response = await getBillPaymentSql();
-      console.log([...response.data.bills, ...response.data.payments]);
+      const response = await getAllPaymentsSql();
+      console.log(response);
     } catch (error) {
-      console.log('Error Fetching Bills and Payment',error);
+      console.log('Error Fetching Payment',error);
     }
   }
 

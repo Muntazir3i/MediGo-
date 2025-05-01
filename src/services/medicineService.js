@@ -2,7 +2,6 @@ import axios from "axios";
 
 const API_BASE_URL = 'http://localhost:8000/api/medicines'
 const API_BASE_URL_BILL = 'http://localhost:8000:8000/api/bills'
-const API_BASE_URL_PURCHASE = 'http://localhost:8000/api/purchase'
 const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
 const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8000/api/supplier'
@@ -22,7 +21,6 @@ export const getBillPaymentSql = async()=>{
   }
 }
 
-
 //get all supplier sqlite
 
 export const getsupplierSql = async()=>{
@@ -31,17 +29,6 @@ export const getsupplierSql = async()=>{
     return response
   } catch (error) {
     console.log('Error Fetching the supplier from sql', error)
-  }
-}
-
-// add new payment sql
-
-export const addPaymentSql = async(payment)=>{
-  try {
-    const response = await axios.post(`${API_BASE_URL_PAYMENT_SQL}/payments`,payment)
-    return response
-  } catch (error) {
-    console.log('Error adding payment',error);
   }
 }
 
@@ -191,36 +178,45 @@ export const findSupplierTransaction = async (name) => {
   }
 };
 
-//find payment by date
 
-export const findPaymentByDate = async (date) => {
+//get all payments
+
+export const getAllPaymentsSql = async()=>{
   try {
-    // Make the POST request to fetch payments by date
-    const response = await axios.post(`${API_BASE_URL_PURCHASE}/find-day-payment/${date}`);
-    return response.data; // Return the response data
+    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments`)
+    return response.data
+  } catch (error) {
+    console.log('Error Fetching payments',error);
+  }
+}
+
+
+// add new payment sql
+
+export const addPaymentSql = async(payment)=>{
+  try {
+    const response = await axios.post(`${API_BASE_URL_PAYMENT_SQL}/payments`,payment)
+    return response
+  } catch (error) {
+    console.log('Error adding payment',error);
+  }
+}
+
+
+//find payment by data sql
+
+export const findPaymentByDateSql = async(date)=>{
+  try {
+    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments/date/${date}`)
+    return response.data
   } catch (error) {
     console.error("Error fetching payments for the date:", error.message); // Log the error message
     throw new Error("Failed to fetch payments for the specified date. Please try again."); // Throw a descriptive error
   }
-};
-
-// get all payments
-
-export const getPayments = async()=>{
-    const response = await axios.get(`${API_BASE_URL_PAYMENT}/all-payments`);
-    return response
 }
 
-// add payments
-export const addPayment = async(paymentData)=>{
-    try {
-        const response = axios.post(`${API_BASE_URL_PAYMENT}/add-payment`,paymentData);
-        return response
-    } catch (error) {
-        console.error("Error adding payment:", error);
-        throw error;
-    }
-}
+
+
 
 
 //get all expiry

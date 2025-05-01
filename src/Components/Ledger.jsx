@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPurchase, findSupplierTransaction, findPaymentByDate, findSupplierExpiry,getsupplierSql } from '@/services/medicineService.js';
+import { getPurchase, findSupplierTransaction, findPaymentByDate, findSupplierExpiry,getsupplierSql,findPaymentByDateSql  } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -42,7 +42,7 @@ const Ledger = () => {
       }
 
       // Fetch payments for the selected date
-      const payments = await findPaymentByDate(date);
+      const payments = await findPaymentByDateSql(date);
       setDailyPayments(payments); // Update the dailyPayments state with the retrieved payments
     } catch (error) {
       console.error("Error fetching payments by date:", error.message); // Log the error for debugging
