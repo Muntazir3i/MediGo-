@@ -5,7 +5,7 @@ const API_BASE_URL_BILL = 'http://localhost:8000:8000/api/bills'
 const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
 const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8000/api/supplier'
-const API_BASE_URL_BILL_SQL = 'http://localhost:8000:8000/api/sqlbills'
+const API_BASE_URL_BILL_SQL = 'http://localhost:8000/api/sqlbills'
 const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8000/api/sqlpayment'
 const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8000/api/sqlbillpayment'
 
@@ -20,6 +20,32 @@ export const getBillPaymentSql = async()=>{
     console.log('Error Fetching bills and payment from sql',error);
   }
 }
+
+//add bill sql
+
+
+export const addBillSql = async(billData)=>{
+  try {
+      const response = axios.post(`${API_BASE_URL_BILL_SQL}/bills`,billData);
+      return response
+  } catch (error) {
+      console.error("Error adding bill:", error);
+      throw error;
+  }
+}
+
+//get bills with products
+
+export const fetchBillsProductsSql = async()=>{
+  try {
+      const response = axios.get(`${API_BASE_URL_BILL_SQL}/bills`);
+      return response
+  } catch (error) {
+      console.error("Error fetching bill with product:", error);
+      throw error;
+  }
+}
+
 
 //get all supplier sqlite
 

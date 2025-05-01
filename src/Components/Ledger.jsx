@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPurchase, findSupplierTransaction, findPaymentByDate, findSupplierExpiry,getsupplierSql,findPaymentByDateSql  } from '@/services/medicineService.js';
+import { getPurchase, findSupplierTransaction, findSupplierExpiry,getsupplierSql,findPaymentByDateSql  } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';

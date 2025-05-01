@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMedicines, deleteMedicine, updateMedicine, getPurchase, getPayments } from '../services/medicineService.js';
+import { getMedicines, deleteMedicine, updateMedicine, getPurchase, } from '../services/medicineService.js';
 import { Input } from "./ui/input";
 import { Badge } from './ui/badge.jsx';
 import './inventory.css'
@@ -308,7 +308,7 @@ function Inventory() {
                                                                 <DialogTrigger asChild>
                                                                     <Button variant="outline">View Details</Button>
                                                                 </DialogTrigger>
-                                                                <DialogContent className="sm:max-w-[1400px] h-[90vh]">
+                                                                <DialogContent className="sm:max-w-[1400px] ">
                                                                     <DialogHeader>
                                                                         <DialogTitle>{purchase.supplierName}</DialogTitle>
                                                                         <DialogDescription className="flex justify-between">
