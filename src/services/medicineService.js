@@ -1,8 +1,6 @@
 import axios from "axios";
 
 const API_BASE_URL = 'http://localhost:8008/api/medicines'
-const API_BASE_URL_BILL = 'http://localhost:8008/api/bills'
-// const API_BASE_URL_PAYMENT = 'http://localhost8008/api/payment'
 const API_BASE_URL_EXPIRY = 'http://localhost:8008/api/expiry'
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier'
 const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills'
@@ -175,37 +173,6 @@ export const showAllBills = async()=>{
         
     }
 }
-
-//get all purchases
-export const getPurchase = async()=>{
-    const response = await axios.get(`${API_BASE_URL_PURCHASE}/all-purchase`);
-    return response
-}
-
-//add purchases
-
-export const addPurchase = async(purchaseData)=>{
-    try {
-        const response = axios.post(`${API_BASE_URL_PURCHASE}/add-purchase`,purchaseData);
-        return response
-    } catch (error) {
-        console.error("Error adding bill:", error);
-        throw error;
-    }
-}
-
-//find transactions 
-
-export const findSupplierTransaction = async (name) => {
-  try {
-    // Make the POST request and wait for the response
-    const response = await axios.post(`${API_BASE_URL_PURCHASE}/find-trans/${name}`);
-    return response.data; // Return the response data
-  } catch (error) {
-    console.error("Error fetching supplier transactions:", error.message);
-    throw new Error("Failed to fetch supplier transactions. Please try again."); // Throw the error with a meaningful message
-  }
-};
 
 
 //get all payments

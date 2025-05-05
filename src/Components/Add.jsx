@@ -1,25 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addMedicines, addPurchase, addNewExpiry, addNewSuppliersql, getsupplierSql,getBillPaymentSql,addPaymentSql,getAllPaymentsSql, addBillSql,fetchBillsProductsSql } from '../services/medicineService.js';
-import { Link, data } from 'react-router-dom';
+import { addNewExpiry, addNewSuppliersql, getsupplierSql,getBillPaymentSql,addPaymentSql, addBillSql, } from '../services/medicineService.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
-// import { Label } from '@radix-ui/react-label.jsx';
 import { Label } from './ui/label';
 import { Input } from './ui/input.jsx';
-import { Button } from './ui/button.jsx';
 import SelectList from './SelectList.jsx'
-
-
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select"
-
 
 function Add() {
 
@@ -91,20 +76,6 @@ function Add() {
     fetchAllSuppliersSql();
   },[]);
 
-  // useEffect(()=>{
-  //   fetchAllPaymentSql();
-  // },[])
-
-  useEffect(()=>{
-    fetchAllBillsPayment();
-  },[])
-
-  // useEffect(()=>{
-  //   fetchAllBillProductSql();
-  // },[])
-
-
-
   const fetchAllSuppliersSql = async () => {
     try {
       const response = await getsupplierSql();
@@ -122,14 +93,7 @@ function Add() {
     }
   }
 
-  // const fetchAllPaymentSql = async()=>{
-  //   try {
-  //     const response = await getAllPaymentsSql();
-  //     console.log(response);
-  //   } catch (error) {
-  //     console.log('Error Fetching Payment',error);
-  //   }
-  // }
+
 
   // const fetchAllBillProductSql = async()=>{
   //   try {
