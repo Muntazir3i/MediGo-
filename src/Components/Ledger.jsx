@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPurchase, findSupplierTransaction, findSupplierExpiry,getsupplierSql,findPaymentByDateSql  } from '@/services/medicineService.js';
+import { getPurchase, findSupplierTransaction, findSupplierExpiry,getsupplierSql,findPaymentByDateSql,getBillPaymentSql  } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -55,7 +55,6 @@ const Ledger = () => {
 
   useEffect(() => {
     fetchAllSupplier();
-    fetchPurchases();
   }, []);
 
   const fetchAllSupplier = async () => {
@@ -69,14 +68,7 @@ const Ledger = () => {
     }
   };
 
-  const fetchPurchases = async () => {
-    try {
-      const response = await getPurchase();
-      setAllPurchases(response.data);
-    } catch (error) {
-      console.error('Error fetching the Bills:', error);
-    }
-  };
+
 
   const handleSearchChange = (e) => {
     const keyword = e.target.value;
@@ -90,24 +82,20 @@ const Ledger = () => {
 
   const showNameFn = async (name) => {
     try {
-      // Set the selected supplier name
       setSelectedSupplierName(name);
-
-      // Find the selected supplier from the list of all suppliers
+  
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
-
+  
       if (selectedSupplier) {
-        // Set the supplier's balance
         setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
-
-        // Fetch the supplier transactions from the server
-        const supplierBills = await findSupplierTransaction(name);
-
-        // Set the filtered and sorted bills
-        setFilteredBill(supplierBills);
+  
+        const supplierBills = await getBillPaymentSql(name); // Fetch supplier bills
+        console.log(supplierBills);
+  
+        setFilteredBill(supplierBills); // Set filtered and sorted bills
       }
     } catch (error) {
-      console.error("Error fetching supplier transactions:", error.message);
+      console.error('Error fetching supplier transactions:', error.message);
       // Handle the error (e.g., show a toast or alert to the user)
     }
   };

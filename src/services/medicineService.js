@@ -12,14 +12,17 @@ const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
 
 //get all bills and payment dql
 
-export const getBillPaymentSql = async()=>{
-  try{
-    const response = await axios.get(`${API_BASE_URL_BILL_PAYMENT_SQL}/all-data`)
-    return response
-  }catch(error){
-    console.log('Error Fetching bills and payment from sql',error);
+export const getBillPaymentSql = async (supplierName) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_BILL_PAYMENT_SQL}/all-data`, {
+      params: { supplierName }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching bills and payments from SQL:', error.message);
+    return [];
   }
-}
+};
 
 //add bill sql
 

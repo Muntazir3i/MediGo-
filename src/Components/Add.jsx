@@ -116,7 +116,7 @@ function Add() {
   const fetchAllBillsPayment = async () => {
     try {
       const response = await getBillPaymentSql();
-      console.log([...response.data.bills,...response.data.payments]);
+      console.log([response.data]);
     } catch (error) {
       console.log('Error Fetching the suppliers:', error);
     }
