@@ -1,13 +1,13 @@
 import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8000/api/medicines'
-const API_BASE_URL_BILL = 'http://localhost:8000:8000/api/bills'
-const API_BASE_URL_PAYMENT = 'http://localhost8000/api/payment'
-const API_BASE_URL_EXPIRY = 'http://localhost:8000/api/expiry'
-const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8000/api/supplier'
-const API_BASE_URL_BILL_SQL = 'http://localhost:8000/api/sqlbills'
-const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8000/api/sqlpayment'
-const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8000/api/sqlbillpayment'
+const API_BASE_URL = 'http://localhost:8008/api/medicines'
+const API_BASE_URL_BILL = 'http://localhost:8008/api/bills'
+// const API_BASE_URL_PAYMENT = 'http://localhost8008/api/payment'
+const API_BASE_URL_EXPIRY = 'http://localhost:8008/api/expiry'
+const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier'
+const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills'
+const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment'
+const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
 
 
 //get all bills and payment dql

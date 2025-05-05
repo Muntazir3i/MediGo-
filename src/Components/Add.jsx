@@ -95,9 +95,9 @@ function Add() {
   //   fetchAllPaymentSql();
   // },[])
 
-  // useEffect(()=>{
-  //   fetchAllBillsPayment();
-  // },[])
+  useEffect(()=>{
+    fetchAllBillsPayment();
+  },[])
 
   // useEffect(()=>{
   //   fetchAllBillProductSql();
@@ -113,14 +113,14 @@ function Add() {
       console.log('Error Fetching the suppliers:', error);
     }
   }
-  // const fetchAllBillsPayment = async () => {
-  //   try {
-  //     const response = await getBillPaymentSql();
-  //     console.log([...response.data.bills,...response.data.payments]);
-  //   } catch (error) {
-  //     console.log('Error Fetching the suppliers:', error);
-  //   }
-  // }
+  const fetchAllBillsPayment = async () => {
+    try {
+      const response = await getBillPaymentSql();
+      console.log([...response.data.bills,...response.data.payments]);
+    } catch (error) {
+      console.log('Error Fetching the suppliers:', error);
+    }
+  }
 
   // const fetchAllPaymentSql = async()=>{
   //   try {
