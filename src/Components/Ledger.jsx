@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { findSupplierExpiry,getsupplierSql,findPaymentByDateSql,getBillPaymentSql  } from '@/services/medicineService.js';
+import { findSupplierExpiry,getsupplierSql,findPaymentByDateSql,getBillPaymentSql,fetchBillsProductsSql  } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -57,16 +57,23 @@ const Ledger = () => {
     fetchAllSupplier();
   }, []);
 
+  useEffect(()=>{
+    fetchBillsWithProducts()
+  },[])
+
+
   const fetchAllSupplier = async () => {
     try {
       const response = await getsupplierSql();
       setAllSupplier(response.data);
       setFilteredSupplier(response.data);
-      console.log(response);
     } catch (error) {
       console.error('Error fetching the Supplier:', error);
     }
   };
+
+
+
 
 
 

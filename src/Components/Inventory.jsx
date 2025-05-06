@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMedicines, deleteMedicine, updateMedicine, getPurchase, } from '../services/medicineService.js';
+import { getMedicines, deleteMedicine, updateMedicine,fetchBillsProductsSql } from '../services/medicineService.js';
 import { Input } from "./ui/input";
 import { Badge } from './ui/badge.jsx';
 import './inventory.css'
@@ -63,9 +63,6 @@ function Inventory() {
         fetchPurchases()
     }, [])
 
-    useEffect(() => {
-        fetchPayments()
-    }, [])
 
     useEffect(() => {
         console.log(allPurchases);
@@ -97,7 +94,7 @@ function Inventory() {
 
     const fetchPurchases = async () => {
         try {
-            const response = await getPurchase();
+            const response = await fetchBillsProductsSql();
             setAllPurchases(response.data);
         } catch (error) {
             console.error('Error fetching the Bills:', error);
@@ -113,15 +110,7 @@ function Inventory() {
             console.error('Error fetching the medicine:', error);
         }
     };
-    const fetchPayments = async () => {
-        try {
-            const response = await getPayments();
-            setPayments(response.data);
-            // setFilterMedicine(response.data);
-        } catch (error) {
-            console.error('Error fetching the payments:', error);
-        }
-    };
+
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this medicine?")) {
