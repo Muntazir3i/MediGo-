@@ -208,7 +208,6 @@ function Inventory() {
                 <TabsList >
                     <TabsTrigger value="all-product">All Product</TabsTrigger>
                     <TabsTrigger value="all-purchase">All Purchase</TabsTrigger>
-                    <TabsTrigger value="all-payments">All Payments</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all-product">
                     <h1 className="text-5xl mb-3">All Products</h1>
@@ -374,44 +373,7 @@ function Inventory() {
                         </Accordion>
                     ))}
                 </TabsContent>
-                <TabsContent value="all-payments" className='overflow-auto'>
-                    <h1 className="text-5xl mb-3">All Payments</h1>
-                    <Input className='mb-2 bg-white' placeholder="Search Payments" onChange={handleSearchChange} />
-                    {allPurchases
-                        .filter((item) => item.type === "Payment")
-                        .map((item) => (
-                            <table
-                                key={item.id}
-                                className="w-full border-collapse bg-white text-left text-sm text-gray-500 mb-4"
-                            >
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-4">SUPPLIER NAME</th>
-                                        <th className="px-6 py-4">RECEIPT DATE</th>
-                                        <th className="px-6 py-4">RECEIPT NO.</th>
-                                        <th className="px-6 py-4">TYPE</th>
-                                        <th className="px-6 py-4">Amount Paid</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                                    <tr className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-black">{item.supplierName}</td>
-                                        <td className="px-6 py-4 text-black">{item.date}</td>
-                                        <td className="px-6 py-4 text-black">{item.invoice}</td>
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className="text-lg bg-green-100 text-green-800 hover:bg-green-100"
-                                            >
-                                                {item.type}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-6 py-4 text-black font-bold">{`Rs ${Number(item.total).toFixed(2)}`}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        ))}
-                </TabsContent>
+         
 
             </Tabs>
 

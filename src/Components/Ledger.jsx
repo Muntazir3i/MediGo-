@@ -57,9 +57,6 @@ const Ledger = () => {
     fetchAllSupplier();
   }, []);
 
-  useEffect(()=>{
-    fetchBillsWithProducts()
-  },[])
 
 
   const fetchAllSupplier = async () => {
