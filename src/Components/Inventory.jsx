@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMedicines, deleteMedicine, updateMedicine,fetchBillsProductsSql } from '../services/medicineService.js';
+import { getMedicines, deleteMedicine, updateMedicine,fetchBillsProductsSql,getAllMedicines} from '../services/medicineService.js';
 import { Input } from "./ui/input";
 import { Badge } from './ui/badge.jsx';
 import './inventory.css'
@@ -56,7 +56,8 @@ function Inventory() {
     const [payments, setPayments] = useState([])
 
     useEffect(() => {
-        fetchMedicines();
+      
+        fetchMedicinesSql();
     }, []);
 
     useEffect(() => {
@@ -101,15 +102,17 @@ function Inventory() {
         }
     }
 
-    const fetchMedicines = async () => {
+
+
+    const fetchMedicinesSql = async()=>{
         try {
-            const response = await getMedicines();
+            const response = await getAllMedicines();
             setMedicines(response.data);
-            setFilterMedicine(response.data);
+             setFilterMedicine(response.data);
         } catch (error) {
-            console.error('Error fetching the medicine:', error);
+            console.error('Error fetching Sql medicines:',error);
         }
-    };
+    }
 
 
     const handleDelete = async (id) => {

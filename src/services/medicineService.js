@@ -6,6 +6,7 @@ const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier'
 const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills'
 const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment'
 const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
+const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines'
 
 
 //get all bills and payment dql
@@ -53,6 +54,17 @@ export const fetchBillsProductsSql = async()=>{
 export const getsupplierSql = async()=>{
   try {
     const response = await axios.get(`${API_BASE_URL_SUPPLIER_SQL}/suppliers`)
+    return response
+  } catch (error) {
+    console.log('Error Fetching the supplier from sql', error)
+  }
+}
+
+//get all medicines sqlite
+
+export const getAllMedicines = async()=>{
+  try {
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/medicines`)
     return response
   } catch (error) {
     console.log('Error Fetching the supplier from sql', error)
