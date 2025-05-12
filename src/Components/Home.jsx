@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from './ui/input.jsx';
 // import { Label } from '@radix-ui/react-label.jsx';
-import { getMedicines, addBill, decreaseStock,increaseStock } from '../services/medicineService.js';
+import { getMedicines, addBill, decreaseStock,increaseStock,getAllMedicines } from '../services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import {
   Dialog,
@@ -48,7 +48,7 @@ function Home() {
   // };
 
   useEffect(() => {
-    fetchMedicines();
+    fetchMedicinesSql();
   }, []);
 
   useEffect(() => {
@@ -61,15 +61,16 @@ function Home() {
 
 
 
-  const fetchMedicines = async () => {
+  const fetchMedicinesSql = async()=>{
     try {
-      const response = await getMedicines();
-      setMedicines(response.data);
-      setFilterMedicine(response.data);
+        const response = await getAllMedicines();
+        setMedicines(response.data);
+         setFilterMedicine(response.data);
     } catch (error) {
-      console.error('Error fetching the medicine:', error);
+        console.error('Error fetching Sql medicines:',error);
     }
-  };
+}
+
 
   const handleName = (e) => {
     setName(e.target.value)
