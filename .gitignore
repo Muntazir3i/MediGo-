@@ -1,0 +1,5 @@
+node_modules/
+
+# Ignore OS or IDE-specific stuff
+.DS_Store
+.vscode/
