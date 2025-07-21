@@ -692,12 +692,13 @@ function Add() {
                   <p>Rs {totalAmount.toFixed(2)}</p>
                 </div>
                 <div id="gst-amount" className="flex justify-between">
-                  <p>Gst Amount</p>
-                  <p>Rs {totalGst.toFixed(2)}</p>
-                </div>
-                <div id="discount-amount" className="flex justify-between">
+                 
                   <p>Discount Amount</p>
                   <p>Rs {totalDiscount.toFixed(2)}</p>
+                </div>
+                <div id="discount-amount" className="flex justify-between">
+                <p>Gst Amount</p>
+                  <p>Rs {totalGst.toFixed(2)}</p>
                 </div>
                 <hr />
                 <div id="all-total" className="flex justify-between">
