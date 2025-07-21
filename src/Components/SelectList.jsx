@@ -42,12 +42,13 @@ const SelectList = ({ itemId, handleInputChange, selectedCategory }) => {
       <option value="Oil">Oil</option>
       <option value="Wipes">Wipes</option>
       <option value="Rotocap">ROTOCAP</option>
-      <option value="Rotocap">NANO SHOTS</option>
-      <option value="Rotocap">SACHETS</option>
-      <option value="Rotocap">GARGLES</option>
-      <option value="Rotocap">HANDWASH</option>
-      <option value="Rotocap">SUSPENSION</option>
-      <option value="Rotocap">HAIR PRODUCT</option>
+      <option value="NANO SHOTS">NANO SHOTS</option>
+      <option value="SACHET">SACHETS</option>
+      <option value="GARGLES">GARGLES</option>
+      <option value="HANDWASH">HANDWASH</option>
+      <option value="SUSPENSION">SUSPENSION</option>
+      <option value="HAIR PRODUCT">HAIR PRODUCT</option>
+
     </select>
   )
 }
