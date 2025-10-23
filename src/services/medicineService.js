@@ -8,6 +8,23 @@ const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment'
 const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
 const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines'
 
+const API_BASE_URL_SEARCH_MEDICINE = 'http://localhost:8008/api/searchMedicine'
+
+
+export const findmedicineByName = async (medName) => {
+  try {
+    
+    if (!medName || medName.trim() === '') return [];
+    const formattedName = medName.trim().toUpperCase();
+
+    const response = await axios.get(`${API_BASE_URL_SEARCH_MEDICINE}/medicines/search/${formattedName}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error Fetching Searched Medicine:", error.message);
+    throw new Error("Error Fetching Searched Medicine");
+  }
+};
+
 
 //get all bills and payment dql
 
