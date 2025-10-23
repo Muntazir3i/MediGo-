@@ -65,9 +65,7 @@ function Inventory() {
     }, [])
 
 
-    useEffect(() => {
-        console.log(allPurchases);
-    }, [allPurchases])
+  
 
     useEffect(() => {
         // Filter medicines whenever search input changes
@@ -85,13 +83,27 @@ function Inventory() {
         setFilterPurchase(filtered);
     }, [search, allPurchases]);
 
+    // useEffect(() => {
+    //     // Filter medicines whenever search input changes
+    //     const filtered = payments.filter((payment) =>
+    //         payment.supplierName.toLowerCase().includes(search.toLowerCase())
+    //     );
+    //     setFilterPayment(filtered);
+    // }, [search, payments]);
+
+
     useEffect(() => {
-        // Filter medicines whenever search input changes
-        const filtered = payments.filter((payment) =>
-            payment.supplierName.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilterPayment(filtered);
-    }, [search, payments]);
+        if (search.trim() === "") {
+          // if no search, show only first 50
+          setFilterMedicine(medicines.slice(0, 50));
+        } else {
+          const filtered = medicines.filter((medicine) =>
+            medicine.name.toLowerCase().includes(search.toLowerCase())
+          );
+          setFilterMedicine(filtered);
+        }
+      }, [search, medicines]);
+      
 
     const fetchPurchases = async () => {
         try {
@@ -108,7 +120,8 @@ function Inventory() {
         try {
             const response = await getAllMedicines();
             setMedicines(response.data);
-             setFilterMedicine(response.data);
+            //  setFilterMedicine(response.data);
+            setFilterMedicine(response.data.slice(0, 50));
         } catch (error) {
             console.error('Error fetching Sql medicines:',error);
         }
