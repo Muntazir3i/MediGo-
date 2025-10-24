@@ -205,6 +205,9 @@ function Add() {
         total: ''
       })
 
+      alert('Payment added successfully!');
+
+
     } catch (error) {
       console.error('Error Adding Payment to the database', error)
     }
