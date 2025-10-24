@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addNewExpiry, addNewSuppliersql, getsupplierSql,getBillPaymentSql,addPaymentSql, addBillSql, } from '../services/medicineService.js';
+import { addNewExpiry, addNewSuppliersql, getsupplierSql, getBillPaymentSql, addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
 import { Input } from './ui/input.jsx';
@@ -16,6 +16,9 @@ function Add() {
     supplierContact: '',
     products: []
   });
+
+  const [searchedMedTxt, setSearchedMedTxt] = useState('');
+  const [searchedMed, setSearchedMed] = useState([])
 
   //for expiry
   const [expiryFormData, setExpiryFormData] = useState({
@@ -74,7 +77,7 @@ function Add() {
 
   useEffect(() => {
     fetchAllSuppliersSql();
-  },[]);
+  }, []);
 
   const fetchAllSuppliersSql = async () => {
     try {
@@ -246,13 +249,69 @@ function Add() {
 
 
 
-  const handleInputChange = (id, field, value) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === id ? { ...product, [field]: value, supplier: formData.supplierName, } : product
-      )
-    );
-  };
+  // const handleInputChange = (id, field, value) => {
+  //   setSearchedMedTxt(value)
+  //   setProducts((prev) =>
+  //     prev.map((product) =>
+  //       product.id === id ? { ...product, [field]: value, supplier: formData.supplierName, } : product
+  //     )
+  //   );
+  // };
+
+  const handleInputChange = async (id, field, value) => {
+  let eValue = value
+  setSearchedMedTxt(eValue);
+
+  if (!eValue.trim()) {
+    setSearchedMed([]);
+
+     setProducts(prev =>
+    prev.map(product =>
+      product.id === id
+        ? { ...product, [field]: "", unitPrice: "", mrp: "", discount: "", gstPercentage: "", category: "" }
+        : product
+    )
+  );
+
+    return;
+  }
+
+  try {
+    const result = await findmedicineByName(value); // ✅ use 'value' not searchedMedTxt
+    setSearchedMed(result);
+
+    const selectedMed = result.find(med => med.name === value);
+
+    if (selectedMed) {
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === id
+            ? {
+                ...product,
+                name: selectedMed.name,
+                unitPrice: selectedMed.unitPrice,
+                mrp: selectedMed.mrp,
+                discount: selectedMed.discount,
+                gstPercentage: selectedMed.gstPercentage,
+                category: selectedMed.category,
+              }
+            : product
+        )
+      );
+    } else {
+      // Optional: allow manual entry for new meds
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === id
+            ? { ...product, [field]: value, supplier: formData.supplierName }
+            : product
+        )
+      );
+    }
+  } catch (error) {
+    console.error("Error searching medicine:", error);
+  }
+};
 
   //input change for expiry
 
@@ -324,19 +383,19 @@ function Add() {
       alert("Bill Number and Bill Date are required.");
       return;
     }
-  
+
     const validProducts = products.filter(product =>
       product.name.trim() &&
       product.batchNumber.trim() &&
       product.expiryDate.trim() &&
       product.stock > 0
     );
-  
+
     if (validProducts.length === 0) {
       alert("At least one valid product is required.");
       return;
     }
-  
+
     try {
       let billData = {
         id: Date.now(),
@@ -348,13 +407,13 @@ function Add() {
         total: Math.round(totalAmount + totalGst - totalDiscount),
         type: 'Bill'
       };
-  
+
       const billResponse = await addBillSql(billData);
-  
+
       console.log('Bill Response:', billResponse);
-  
+
       alert('Bill added successfully!');
-  
+
       // Reset state
       setFormData({
         invoice: '',
@@ -363,7 +422,7 @@ function Add() {
         supplierGstin: '',
         supplierContact: '',
       });
-  
+
       setProducts([
         {
           id: Date.now(),
@@ -377,12 +436,16 @@ function Add() {
           gstPercentage: 0,
         },
       ]);
-  
+
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to add the bill. Please try again.');
     }
   };
+
+
+
+
 
   //handle add expiry
 
@@ -484,13 +547,13 @@ function Add() {
     const price = item.unitPrice * item.stock;
     return acc + price;
   }, 0);
-  
+
   const totalDiscount = products.reduce((acc, item) => {
     const price = item.unitPrice * item.stock;
     const discount = price * (item.discount || 0) / 100;
     return acc + discount;
   }, 0);
-  
+
   const totalGst = products.reduce((acc, item) => {
     const price = item.unitPrice * item.stock;
     const discount = price * (item.discount || 0) / 100;
@@ -498,7 +561,7 @@ function Add() {
     const gst = priceAfterDiscount * (item.gstPercentage || 0) / 100;
     return acc + gst;
   }, 0);
-  
+
 
 
 
@@ -519,6 +582,31 @@ function Add() {
             <p>Enter the details of the purchase from a supplier</p>
 
             <div id="bill-details-container" className='border-b-2 border-gray-400 py-2'>
+
+
+              {/* This is for the test of search medicine */}
+
+              <div className='w-full lg:w-[49%]'>
+                <Label htmlFor='invoice'>Search Medicine</Label>
+                <Input name='invoice' className='border-black'
+                  list="searchedMedList"
+                  type='text'
+                  // onChange={handleSearchChange}
+                  // onKeyUp={handleSearch}
+                  required></Input>
+
+                {/* <datalist id="searchedMedList">
+                  {searchedMed.map((s, index) => (
+                    <option key={index} value={s.name} />
+                  ))}
+                </datalist> */}
+
+              </div>
+
+              {/* This is for the test of search medicine */}
+
+
+
               <h2 className='text-2xl'>Bill Details</h2>
               <div id="bill-details-inner-container" className='flex flex-col gap-2 lg:gap-0 lg:flex-row mt-2 justify-between'>
 
@@ -590,9 +678,15 @@ function Add() {
                           <Input
                             type="text"
                             className="border border-black p-1 w-40 lg:w-full text-black font-bold"
-                            value={item.name}
+                            value = {item.name}
+                            list="searchedMedList"
                             onChange={(e) => handleInputChange(item.id, "name", e.target.value)}
                           />
+                          <datalist id="searchedMedList">
+                            {searchedMed.map((s, index) => (
+                              <option key={index} value={s.name} />
+                            ))}
+                          </datalist>
                         </td>
                         <td className="px-4 py-2">
                           {/* <Input
@@ -692,12 +786,12 @@ function Add() {
                   <p>Rs {totalAmount.toFixed(2)}</p>
                 </div>
                 <div id="gst-amount" className="flex justify-between">
-                 
+
                   <p>Discount Amount</p>
                   <p>Rs {totalDiscount.toFixed(2)}</p>
                 </div>
                 <div id="discount-amount" className="flex justify-between">
-                <p>Gst Amount</p>
+                  <p>Gst Amount</p>
                   <p>Rs {totalGst.toFixed(2)}</p>
                 </div>
                 <hr />
