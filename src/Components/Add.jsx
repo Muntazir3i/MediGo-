@@ -252,16 +252,16 @@ function Add() {
 
 
 
-  // const handleInputChange = (id, field, value) => {
-  //   setSearchedMedTxt(value)
-  //   setProducts((prev) =>
-  //     prev.map((product) =>
-  //       product.id === id ? { ...product, [field]: value, supplier: formData.supplierName, } : product
-  //     )
-  //   );
-  // };
+  const handleInputChange = (id, field, value) => {
+    setSearchedMedTxt(value)
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === id ? { ...product, [field]: value, supplier: formData.supplierName, } : product
+      )
+    );
+  };
 
-  const handleInputChange = async (id, field, value) => {
+  const handleInputChangeSearch = async (id, field, value) => {
   let eValue = value
   setSearchedMedTxt(eValue);
 
@@ -297,6 +297,8 @@ function Add() {
                 discount: selectedMed.discount,
                 gstPercentage: selectedMed.gstPercentage,
                 category: selectedMed.category,
+                [field]: value,
+                supplier:formData.supplierName
               }
             : product
         )
@@ -587,29 +589,6 @@ function Add() {
             <div id="bill-details-container" className='border-b-2 border-gray-400 py-2'>
 
 
-              {/* This is for the test of search medicine */}
-
-              <div className='w-full lg:w-[49%]'>
-                <Label htmlFor='invoice'>Search Medicine</Label>
-                <Input name='invoice' className='border-black'
-                  list="searchedMedList"
-                  type='text'
-                  // onChange={handleSearchChange}
-                  // onKeyUp={handleSearch}
-                  required></Input>
-
-                {/* <datalist id="searchedMedList">
-                  {searchedMed.map((s, index) => (
-                    <option key={index} value={s.name} />
-                  ))}
-                </datalist> */}
-
-              </div>
-
-              {/* This is for the test of search medicine */}
-
-
-
               <h2 className='text-2xl'>Bill Details</h2>
               <div id="bill-details-inner-container" className='flex flex-col gap-2 lg:gap-0 lg:flex-row mt-2 justify-between'>
 
@@ -683,7 +662,7 @@ function Add() {
                             className="border border-black p-1 w-40 lg:w-full text-black font-bold"
                             value = {item.name}
                             list="searchedMedList"
-                            onChange={(e) => handleInputChange(item.id, "name", e.target.value)}
+                            onChange={(e) => handleInputChangeSearch(item.id, "name", e.target.value)}
                           />
                           <datalist id="searchedMedList">
                             {searchedMed.map((s, index) => (
