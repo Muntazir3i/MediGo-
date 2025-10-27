@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
 import { addNewExpiry, addNewSuppliersql, getsupplierSql, getBillPaymentSql, addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
+import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
 import { Input } from './ui/input.jsx';
 import SelectList from './SelectList.jsx'
+import { data } from 'react-router-dom';
 
 function Add() {
 
@@ -74,19 +76,18 @@ function Add() {
 
   const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
 
-
+  // Fetch and load all suppliers from the custom hook on component mount
   useEffect(() => {
-    fetchAllSuppliersSql();
+    const fetchingSuppliers = async () => {
+      const data = await fetchAllSuppliers();
+      setAllSuppliersSqlite(data);
+    }
+    fetchingSuppliers()
   }, []);
 
-  const fetchAllSuppliersSql = async () => {
-    try {
-      const response = await getsupplierSql();
-      setAllSuppliersSqlite(response.data)
-    } catch (error) {
-      console.log('Error Fetching the suppliers:', error);
-    }
-  }
+
+
+
   const fetchAllBillsPayment = async () => {
     try {
       const response = await getBillPaymentSql();
@@ -262,34 +263,34 @@ function Add() {
   };
 
   const handleInputChangeSearch = async (id, field, value) => {
-  let eValue = value
-  setSearchedMedTxt(eValue);
+    let eValue = value
+    setSearchedMedTxt(eValue);
 
-  if (!eValue.trim()) {
-    setSearchedMed([]);
+    if (!eValue.trim()) {
+      setSearchedMed([]);
 
-     setProducts(prev =>
-    prev.map(product =>
-      product.id === id
-        ? { ...product, [field]: "", unitPrice: "", mrp: "", discount: "", gstPercentage: "", category: "" }
-        : product
-    )
-  );
-
-    return;
-  }
-
-  try {
-    const result = await findmedicineByName(value); // ✅ use 'value' not searchedMedTxt
-    setSearchedMed(result);
-
-    const selectedMed = result.find(med => med.name === value);
-
-    if (selectedMed) {
       setProducts(prev =>
         prev.map(product =>
           product.id === id
-            ? {
+            ? { ...product, [field]: "", unitPrice: "", mrp: "", discount: "", gstPercentage: "", category: "" }
+            : product
+        )
+      );
+
+      return;
+    }
+
+    try {
+      const result = await findmedicineByName(value); // ✅ use 'value' not searchedMedTxt
+      setSearchedMed(result);
+
+      const selectedMed = result.find(med => med.name === value);
+
+      if (selectedMed) {
+        setProducts(prev =>
+          prev.map(product =>
+            product.id === id
+              ? {
                 ...product,
                 name: selectedMed.name,
                 unitPrice: selectedMed.unitPrice,
@@ -298,25 +299,25 @@ function Add() {
                 gstPercentage: selectedMed.gstPercentage,
                 category: selectedMed.category,
                 [field]: value,
-                supplier:formData.supplierName
+                supplier: formData.supplierName
               }
-            : product
-        )
-      );
-    } else {
-      // Optional: allow manual entry for new meds
-      setProducts(prev =>
-        prev.map(product =>
-          product.id === id
-            ? { ...product, [field]: value, supplier: formData.supplierName }
-            : product
-        )
-      );
+              : product
+          )
+        );
+      } else {
+        // Optional: allow manual entry for new meds
+        setProducts(prev =>
+          prev.map(product =>
+            product.id === id
+              ? { ...product, [field]: value, supplier: formData.supplierName }
+              : product
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error searching medicine:", error);
     }
-  } catch (error) {
-    console.error("Error searching medicine:", error);
-  }
-};
+  };
 
   //input change for expiry
 
@@ -660,7 +661,7 @@ function Add() {
                           <Input
                             type="text"
                             className="border border-black p-1 w-40 lg:w-full text-black font-bold"
-                            value = {item.name}
+                            value={item.name}
                             list="searchedMedList"
                             onChange={(e) => handleInputChangeSearch(item.id, "name", e.target.value)}
                           />
