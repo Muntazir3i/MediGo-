@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addNewExpiry, addNewSuppliersql, getsupplierSql, getBillPaymentSql, addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
+import { addNewExpiry, addNewSuppliersql,  getBillPaymentSql, addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
@@ -43,8 +43,6 @@ function Add() {
     },
   ])
 
-
-
   const [products, setProducts] = useState([
     {
       id: Date.now(),
@@ -86,27 +84,6 @@ function Add() {
   }, []);
 
 
-
-
-  const fetchAllBillsPayment = async () => {
-    try {
-      const response = await getBillPaymentSql();
-      console.log([response.data]);
-    } catch (error) {
-      console.log('Error Fetching the suppliers:', error);
-    }
-  }
-
-
-
-  // const fetchAllBillProductSql = async()=>{
-  //   try {
-  //     const response = await fetchBillsProductsSql();
-  //     console.log(response.data);
-  //   } catch (error) {
-  //     console.log('Error Fetching Payment',error);
-  //   }
-  // }
 
 
   //for bills and CN
