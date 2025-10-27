@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './add.css';
 import { addNewExpiry, addNewSuppliersql,  getBillPaymentSql, addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
+import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
 import { Input } from './ui/input.jsx';
@@ -85,31 +86,7 @@ function Add() {
 
 
 
-
-  //for bills and CN
-
-  const handleSupplierSelect = (e) => {
-    const supplierName = e.target.value;
-    const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
-
-    if (supplier) {
-      setFormData(prev => ({
-        ...prev,
-        supplierName: supplier.supplierName,
-        supplierContact: supplier.phoneNumber,
-        supplierDrugLn: supplier.drugLn
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        supplierName,
-        supplierContact: '',
-        supplierDrugLn: ''
-      }));
-    }
-  };
-
-  //for expiry
+// This function auto fills the other details of the Supplier when Adding a Expiry
   const handleSupplierSelectExpiry = (e) => {
     const supplierName = e.target.value;
     const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
@@ -593,7 +570,7 @@ function Add() {
                     className="border p-2 w-full border-black"
                     name="supplierName"
                     value={formData.supplierName}
-                    onChange={handleSupplierSelect}
+                    onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setFormData)}
                   />
                   <datalist id="supplierList">
                     {allSuppliersSql.map((s, index) => (
@@ -872,7 +849,7 @@ function Add() {
                     className="border p-2 w-full border-black"
                     name="supplierName"
                     value={expiryFormData.supplierName}
-                    onChange={handleSupplierSelectExpiry}
+                    onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setExpiryFormData)}
                   />
                   <datalist id="supplierList">
                     {allSuppliersSql.map(s => (
