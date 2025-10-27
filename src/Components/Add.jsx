@@ -85,29 +85,6 @@ function Add() {
   }, []);
 
 
-
-// This function auto fills the other details of the Supplier when Adding a Expiry
-  const handleSupplierSelectExpiry = (e) => {
-    const supplierName = e.target.value;
-    const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
-
-    if (supplier) {
-      setExpiryFormData(prev => ({
-        ...prev,
-        supplierName: supplier.supplierName,
-        supplierContact: supplier.phoneNumber,
-        supplierDrugLn: supplier.drugLn
-      }));
-    } else {
-      setExpiryFormData(prev => ({
-        ...prev,
-        supplierName,
-        supplierContact: '',
-        supplierDrugLn: ''
-      }));
-    }
-  };
-
   const handleAddPaymentSupplierSelect = (e) => {
     const supplierName = e.target.value;
     const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
