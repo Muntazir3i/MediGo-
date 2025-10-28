@@ -12,7 +12,9 @@ export const addNewSupplier = async (e,newSupplierDetails,setNewSupplierDetails)
         drugLn: '',
         supplierBalance: ''
       })
+      alert("Supplier Added Successfully")
     } catch (error) {
-      console.error('Error Adding Supplier to the database', error)
+      console.error('Error Adding Supplier to the database', error);
+      alert("Failed To Add New Supplier")
     }
   }
