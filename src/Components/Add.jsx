@@ -547,7 +547,7 @@ function Add() {
                     className="border p-2 w-full border-black"
                     name="supplierName"
                     value={formData.supplierName}
-                    onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setFormData)}
+                    onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setFormData,true)}
                   />
                   <datalist id="supplierList">
                     {allSuppliersSql.map((s, index) => (
@@ -769,7 +769,7 @@ function Add() {
                   className="border p-2 w-full border-black"
                   name="supplierName"
                   value={payments.supplierName}
-                  onChange={handleAddPaymentSupplierSelect}
+                  onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setPayments,false)}
                 />
                 <datalist id="supplierList">
                   {allSuppliersSql.map(s => (
@@ -826,7 +826,7 @@ function Add() {
                     className="border p-2 w-full border-black"
                     name="supplierName"
                     value={expiryFormData.supplierName}
-                    onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setExpiryFormData)}
+                    onChange={(e)=>handleSupplierSelect(e,allSuppliersSql,setExpiryFormData,true)}
                   />
                   <datalist id="supplierList">
                     {allSuppliersSql.map(s => (
