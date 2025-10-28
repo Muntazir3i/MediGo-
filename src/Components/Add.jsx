@@ -4,6 +4,7 @@ import { addNewExpiry, addBillSql, findmedicineByName } from '../services/medici
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
 import { addNewPayment } from '@/hooks/useAddPayment.js';
+import { addNewBill } from '@/hooks/useAddBill.js';
 import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
@@ -254,75 +255,6 @@ function Add() {
   };
 
 
-  const handleAddBill = async () => {
-    if (!formData.invoice.trim() || !formData.date.trim()) {
-      alert("Bill Number and Bill Date are required.");
-      return;
-    }
-
-    const validProducts = products.filter(product =>
-      product.name.trim() &&
-      product.batchNumber.trim() &&
-      product.expiryDate.trim() &&
-      product.stock > 0
-    );
-
-    if (validProducts.length === 0) {
-      alert("At least one valid product is required.");
-      return;
-    }
-
-    try {
-      let billData = {
-        id: Date.now(),
-        ...formData,
-        products: validProducts,
-        totalAmount: totalAmount.toFixed(2),
-        totalGst: totalGst.toFixed(2),
-        totalDiscount: totalDiscount.toFixed(2),
-        total: Math.round(totalAmount + totalGst - totalDiscount),
-        type: 'Bill'
-      };
-
-      const billResponse = await addBillSql(billData);
-
-      console.log('Bill Response:', billResponse);
-
-      alert('Bill added successfully!');
-
-      // Reset state
-      setFormData({
-        invoice: '',
-        date: '',
-        supplierName: '',
-        supplierGstin: '',
-        supplierContact: '',
-      });
-
-      setProducts([
-        {
-          id: Date.now(),
-          name: "",
-          batchNumber: "",
-          expiryDate: "",
-          stock: 0,
-          unitPrice: 0,
-          mrp: 0,
-          discount: 0,
-          gstPercentage: 0,
-        },
-      ]);
-
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to add the bill. Please try again.');
-    }
-  };
-
-
-
-
-
   //handle add expiry
 
   const handleExpityData = async () => {
@@ -386,38 +318,7 @@ function Add() {
   };
 
 
-  //   try {
-  //     // Ensure `products` is an array and correctly structured
-  //     const cleanedProducts = Array.isArray(products) ? products : Object.values(products);
-
-  //     // Send request with cleaned array
-  //     const response = await addMedicines(cleanedProducts);
-  //     console.log('Medicine Added Successfully:', response.data);
-  //     alert('Medicine added successfully!');
-
-  //     // Reset products list
-  //     setProducts([
-  //       {
-  //         id: Date.now(),
-  //         name: "",
-  //         batchNumber: "",
-  //         expiryDate: "",
-  //         stock: 0,
-  //         unitPrice: 0,
-  //         mrp: 0,
-  //         discount: 0,
-  //         gstPercentage: 0,
-  //       },
-  //     ]);
-  //   } catch (error) {
-  //     console.error('Error adding medicine:', error);
-  //     alert('Failed to add medicine. Either The Item Already Exist.');
-  //   }
-  // };
-
-  // const totalAmount = products.reduce((acc, item) => acc + item.unitPrice * item.stock, 0);
-  // const totalGst = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * item.gstPercentage) / 100, 0);
-  // const totalDiscount = products.reduce((acc, item) => acc + (item.unitPrice * item.stock * (item.discount || 0)) / 100, 0);
+  
 
   const totalAmount = products.reduce((acc, item) => {
     const price = item.unitPrice * item.stock;
@@ -658,7 +559,7 @@ function Add() {
             </div>
 
             <button
-              onClick={handleAddBill}
+              onClick={()=>addNewBill(formData,products,setFormData,setProducts,totalAmount,totalDiscount,totalGst)}
               className="px-4 py-2 bg-green-500 text-white rounded mt-2"
             >
               Save
