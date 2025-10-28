@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addNewExpiry, addNewSuppliersql,  getBillPaymentSql, addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
+import { addNewExpiry, addNewSuppliersql,  addPaymentSql, addBillSql, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
+import { addNewSupplier } from '@/hooks/useAddSupplier.js';
 import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
@@ -66,7 +67,7 @@ function Add() {
     total: ''
   })
 
-  const [addSupplier, setAddSupplier] = useState({
+  const [newSupplierDetails, setNewSupplierDetails] = useState({
     supplierName: '',
     phoneNumber: '',
     drugLn: '',
@@ -84,43 +85,7 @@ function Add() {
     fetchingSuppliers()
   }, []);
 
-
-  const handleAddPaymentSupplierSelect = (e) => {
-    const supplierName = e.target.value;
-    const supplier = allSuppliersSql.find(s => s.supplierName === supplierName);
-
-    if (supplier) {
-      setPayments(prev => ({
-        ...prev,
-        supplierName: supplier.supplierName,
-        drugLicenseNumber: supplier.drugLn,
-      }));
-    } else {
-      setPayments(prev => ({
-        ...prev,
-        supplierName,
-        drugLicenseNumber: ''
-      }));
-    }
-  };
-
-  const showData = async (e) => {
-    e.preventDefault();
-    let newSupplier = { ...addSupplier }
-    setAddSupplier(newSupplier);
-    try {
-      const response = await addNewSuppliersql(newSupplier);
-      console.log(response);
-      setAddSupplier({
-        supplierName: '',
-        phoneNumber: '',
-        drugLn: '',
-        supplierBalance: ''
-      })
-    } catch (error) {
-      console.error('Error Adding Supplier to the database', error)
-    }
-  }
+  
 
   const showPayment = async (e) => {
     e.preventDefault();
@@ -290,7 +255,7 @@ function Add() {
 
   const handleChangeAddSupplier = (e) => {
     const { name, value } = e.target;
-    setAddSupplier((prevData) => (
+    setNewSupplierDetails((prevData) => (
       {
         ...prevData,
         [name]: value.toUpperCase().replace(/\s+/g, ' ')
@@ -730,23 +695,23 @@ function Add() {
           <div>
             <form className="flex flex-col gap-3" >
               <label htmlFor="supplier-name">Supplier Name</label>
-              <input className="border-1" type="text" name="supplierName" value={addSupplier.supplierName} onChange={handleChangeAddSupplier} required />
+              <input className="border-1" type="text" name="supplierName" value={newSupplierDetails.supplierName} onChange={handleChangeAddSupplier} required />
 
               <label htmlFor="phone-number">Phone Number</label>
-              <input className="border-1" type="tel" name="phoneNumber" value={addSupplier.phoneNumber} onChange={handleChangeAddSupplier} required />
+              <input className="border-1" type="tel" name="phoneNumber" value={newSupplierDetails.phoneNumber} onChange={handleChangeAddSupplier} required />
 
               <label htmlFor="drug-license-number">Drug License Number</label>
-              <input className="border-1" type="text" name="drugLn" value={addSupplier.drugLn} onChange={handleChangeAddSupplier} required />
+              <input className="border-1" type="text" name="drugLn" value={newSupplierDetails.drugLn} onChange={handleChangeAddSupplier} required />
 
               <label htmlFor="drug-license-number">Balance</label>
-              <input className="border-1" type="text" name="supplierBalance" value={addSupplier.supplierBalance} onChange={handleChangeAddSupplier} required />
+              <input className="border-1" type="text" name="supplierBalance" value={newSupplierDetails.supplierBalance} onChange={handleChangeAddSupplier} required />
 
 
               <input
                 className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 type="submit"
                 value="Save"
-                onClick={showData}
+                onClick={(e)=>addNewSupplier(e,newSupplierDetails,setNewSupplierDetails)}
               />
             </form>
           </div>
