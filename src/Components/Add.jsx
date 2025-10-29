@@ -7,6 +7,7 @@ import { addNewPayment } from '@/hooks/useAddPayment.js';
 import { addNewBill } from '@/hooks/useAddBill.js';
 import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { handleAddProduct } from '@/utils/addProductHelper.js';
+import { calculateBillTotals } from '@/utils/billingCalculationsHelper.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
 import { Input } from './ui/input.jsx';
@@ -80,25 +81,6 @@ function Add() {
     }
     fetchingSuppliers()
   }, []);
-
-
-
-  const addProductExpiry = () => {
-    setExpiryProducts([
-      ...expiryProducts,
-      {
-        id: Date.now(),
-        name: "",
-        batchNumber: "",
-        expiryDate: "",
-        stock: 0,
-        unitPrice: 0,
-        mrp: 0,
-        discount: 0,
-        gstPercentage: 0,
-      },
-    ])
-  }
 
 
 
@@ -296,26 +278,9 @@ function Add() {
   };
 
 
-  
 
-  const totalAmount = products.reduce((acc, item) => {
-    const price = item.unitPrice * item.stock;
-    return acc + price;
-  }, 0);
 
-  const totalDiscount = products.reduce((acc, item) => {
-    const price = item.unitPrice * item.stock;
-    const discount = price * (item.discount || 0) / 100;
-    return acc + discount;
-  }, 0);
-
-  const totalGst = products.reduce((acc, item) => {
-    const price = item.unitPrice * item.stock;
-    const discount = price * (item.discount || 0) / 100;
-    const priceAfterDiscount = price - discount;
-    const gst = priceAfterDiscount * (item.gstPercentage || 0) / 100;
-    return acc + gst;
-  }, 0);
+  const {totalAmount,totalDiscount,totalGst} = calculateBillTotals(products);
 
 
 
