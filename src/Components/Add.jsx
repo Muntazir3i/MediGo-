@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import { addNewExpiry, addBillSql, findmedicineByName } from '../services/medicineService.js';
+import { addNewExpiry, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
 import { addNewPayment } from '@/hooks/useAddPayment.js';
 import { addNewBill } from '@/hooks/useAddBill.js';
 import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
+import { handleAddProduct } from '@/utils/addProductHelper.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import { Label } from './ui/label';
 import { Input } from './ui/input.jsx';
@@ -22,10 +23,8 @@ function Add() {
     supplierContact: '',
     products: []
   });
-
   const [searchedMedTxt, setSearchedMedTxt] = useState('');
   const [searchedMed, setSearchedMed] = useState([])
-
   //for expiry
   const [expiryFormData, setExpiryFormData] = useState({
     date: '',
@@ -34,7 +33,6 @@ function Add() {
     supplierContact: '',
     products: []
   })
-
   //for expiry
   const [expiryProducts, setExpiryProducts] = useState([
     {
@@ -46,7 +44,6 @@ function Add() {
       mrp: 0,
     },
   ])
-
   const [products, setProducts] = useState([
     {
       id: Date.now(),
@@ -60,7 +57,6 @@ function Add() {
       gstPercentage: 0,
     },
   ])
-
   const [newPaymentDetails, setNewPaymentDetails] = useState({
     date: '',
     invoice: '',
@@ -68,14 +64,12 @@ function Add() {
     drugLicenseNumber: '',
     total: ''
   })
-
   const [newSupplierDetails, setNewSupplierDetails] = useState({
     supplierName: '',
     phoneNumber: '',
     drugLn: '',
     supplierBalance: ''
   })
-
   const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
 
   // Fetch and load all suppliers from the custom hook on component mount
@@ -88,22 +82,22 @@ function Add() {
   }, []);
 
   
-  const addProduct = () => {
-    setProducts([
-      ...products,
-      {
-        id: Date.now(),
-        name: "",
-        batchNumber: "",
-        expiryDate: "",
-        stock: 0,
-        unitPrice: 0,
-        mrp: 0,
-        discount: 0,
-        gstPercentage: 0,
-      },
-    ])
-  }
+  // const addProduct = () => {
+  //   setProducts([
+  //     ...products,
+  //     {
+  //       id: Date.now(),
+  //       name: "",
+  //       batchNumber: "",
+  //       expiryDate: "",
+  //       stock: 0,
+  //       unitPrice: 0,
+  //       mrp: 0,
+  //       discount: 0,
+  //       gstPercentage: 0,
+  //     },
+  //   ])
+  // }
 
   const addProductExpiry = () => {
     setExpiryProducts([
@@ -522,7 +516,7 @@ function Add() {
 
                 <div className="mt-4 flex gap-4">
                   <button
-                    onClick={addProduct}
+                    onClick={()=>handleAddProduct(products,setProducts)}
                     className="px-4 py-2 bg-blue-500 text-white rounded"
                   >
                     Add Product
