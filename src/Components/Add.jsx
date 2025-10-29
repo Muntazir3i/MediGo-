@@ -730,7 +730,7 @@ function Add() {
 
                 <div className="mt-4 flex gap-4">
                   <button
-                    onClick={addProductExpiry}
+                    onClick={()=>handleAddProduct(expiryProducts,setExpiryProducts)}
                     className="px-4 py-2 bg-blue-500 text-white rounded"
                   >
                     Add Product
