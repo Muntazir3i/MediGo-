@@ -112,7 +112,7 @@ function Add() {
     }
 
     try {
-      const result = await findmedicineByName(value); // ✅ use 'value' not searchedMedTxt
+      const result = await findmedicineByName(value); 
       setSearchedMed(result);
 
       const selectedMed = result.find(med => med.name === value);
@@ -494,7 +494,7 @@ function Add() {
                 <hr />
                 <div id="all-total" className="flex justify-between">
                   <p className="font-bold">Total Amount</p>
-                  <p className="font-bold">
+                  <p className="font-bold text-2xl">
                     Rs {Math.round(((totalAmount - totalDiscount) + totalGst).toFixed(2))}
                   </p>
                 </div>
