@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import TabContentAddPurchase from './TabContentAddPurchase.jsx';
-import TabContentAddSupplier from './TabContentAddSupplier.jsx';
-import TabContentAddPayment from './TabContentAddPayment';
+import TabContentAddPurchase from './Tabs/TabContentAddPurchase.jsx';
+import TabContentAddSupplier from './Tabs/TabContentAddSupplier.jsx';
+import TabContentAddPayment from './Tabs/TabContentAddPayment';
 import { addNewExpiry, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
