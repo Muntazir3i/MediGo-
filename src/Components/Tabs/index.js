@@ -1,0 +1,4 @@
+export {default as TabContentAddPurchase} from "./TabContentAddPurchase.jsx"
+export {default as TabContentAddSupplier} from "./TabContentAddSupplier.jsx"
+export {default as TabContentAddPayment} from "./TabContentAddPayment.jsx"
+export {default as TabContentAddExpiry} from "./TabContentAddExpiry.jsx"

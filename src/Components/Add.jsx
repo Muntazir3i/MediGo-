@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './add.css';
-import TabContentAddPurchase from './Tabs/TabContentAddPurchase.jsx';
-import TabContentAddSupplier from './Tabs/TabContentAddSupplier.jsx';
-import TabContentAddPayment from './Tabs/TabContentAddPayment';
-import TabContentAddExpiry from './Tabs/TabContentAddExpiry.jsx';
+import {TabContentAddPurchase, TabContentAddSupplier, TabContentAddPayment, TabContentAddExpiry} from './Tabs/index.js'
 import { addNewExpiry, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
@@ -282,9 +279,6 @@ function Add() {
 
 
   const { totalAmount, totalDiscount, totalGst } = calculateBillTotals(products);
-
-
-
 
 
   return (
