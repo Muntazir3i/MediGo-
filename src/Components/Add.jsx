@@ -5,6 +5,7 @@ import { addNewExpiry, findmedicineByName } from '../services/medicineService.js
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
 import { addNewPayment } from '@/hooks/useAddPayment.js';
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch.js';
 import { addNewBill } from '@/hooks/useAddBill.js';
 import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { handleAddProduct } from '@/utils/addProductHelper.js';
@@ -23,8 +24,6 @@ function Add() {
     products: []
   });
   const [searchedMedTxt, setSearchedMedTxt] = useState('');
-  const [debouncedQuery,setDebouncedQuery] = useState("");
-  const [searchedMed, setSearchedMed] = useState([]);
   //for expiry
   const [expiryFormData, setExpiryFormData] = useState({
     date: '',
@@ -81,34 +80,7 @@ function Add() {
     fetchingSuppliers()
   }, []);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(searchedMedTxt);
-    }, 500);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchedMedTxt]);
-
- useEffect(() => {
-  const search = async () => {
-    if (!debouncedQuery.trim()) {
-      setSearchedMed([]);
-      return;
-    }
-
-    try {
-      const result = await findmedicineByName(debouncedQuery);
-      setSearchedMed(result);
-    } catch (err) {
-      console.error("Error searching medicine:", err);
-    }
-  };
-
-  search();
-}, [debouncedQuery]);
-
+  const searchedMed = useDebouncedSearch(searchedMedTxt);
 
 
   const handleInputChange = (id, field, value) => {
@@ -125,7 +97,7 @@ const handleInputChangeSearch = (id, field, value) => {
   setSearchedMedTxt(value); // update typing
 
   if (!value.trim()) {
-    setSearchedMed([]);
+    // setSearchedMed([]);
 
     setProducts(prev =>
       prev.map(product =>
