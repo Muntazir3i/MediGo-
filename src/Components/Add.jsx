@@ -23,7 +23,8 @@ function Add() {
     products: []
   });
   const [searchedMedTxt, setSearchedMedTxt] = useState('');
-  const [searchedMed, setSearchedMed] = useState([])
+  const [debouncedQuery,setDebouncedQuery] = useState("");
+  const [searchedMed, setSearchedMed] = useState([]);
   //for expiry
   const [expiryFormData, setExpiryFormData] = useState({
     date: '',
@@ -80,6 +81,34 @@ function Add() {
     fetchingSuppliers()
   }, []);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchedMedTxt);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchedMedTxt]);
+
+ useEffect(() => {
+  const search = async () => {
+    if (!debouncedQuery.trim()) {
+      setSearchedMed([]);
+      return;
+    }
+
+    try {
+      const result = await findmedicineByName(debouncedQuery);
+      setSearchedMed(result);
+    } catch (err) {
+      console.error("Error searching medicine:", err);
+    }
+  };
+
+  search();
+}, [debouncedQuery]);
+
 
 
   const handleInputChange = (id, field, value) => {
@@ -91,65 +120,68 @@ function Add() {
     );
   };
 
-  const handleInputChangeSearch = async (id, field, value) => {
-    let eValue = value
-    setSearchedMedTxt(eValue);
+  
+const handleInputChangeSearch = (id, field, value) => {
+  setSearchedMedTxt(value); // update typing
 
-    if (!eValue.trim()) {
-      setSearchedMed([]);
+  if (!value.trim()) {
+    setSearchedMed([]);
 
-      setProducts(prev =>
-        prev.map(product =>
-          product.id === id
-            ? { ...product, [field]: "", unitPrice: "", mrp: "", discount: "", gstPercentage: "", category: "" }
-            : product
-        )
-      );
+    setProducts(prev =>
+      prev.map(product =>
+        product.id === id
+          ? {
+              ...product,
+              [field]: "",
+              unitPrice: "",
+              mrp: "",
+              discount: "",
+              gstPercentage: "",
+              category: "",
+            }
+          : product
+      )
+    );
 
-      return;
-    }
+    return;
+  }
 
-    try {
-      const result = await findmedicineByName(value);
-      setSearchedMed(result);
+  // check if selected from search results
+  const selectedMed = searchedMed.find(med => med.name === value);
 
-      const selectedMed = result.find(med => med.name === value);
+  if (selectedMed) {
+    setProducts(prev =>
+      prev.map(product =>
+        product.id === id
+          ? {
+              ...product,
+              name: selectedMed.name,
+              unitPrice: selectedMed.unitPrice,
+              mrp: selectedMed.mrp,
+              discount: selectedMed.discount,
+              gstPercentage: selectedMed.gstPercentage,
+              category: selectedMed.category,
+              [field]: value,
+              supplier: formData.supplierName,
+            }
+          : product
+      )
+    );
+  } else {
+    // allow manual typing
+    setProducts(prev =>
+      prev.map(product =>
+        product.id === id
+          ? { ...product, [field]: value, supplier: formData.supplierName }
+          : product
+      )
+    );
+  }
+};
 
-      if (selectedMed) {
-        setProducts(prev =>
-          prev.map(product =>
-            product.id === id
-              ? {
-                ...product,
-                name: selectedMed.name,
-                unitPrice: selectedMed.unitPrice,
-                mrp: selectedMed.mrp,
-                discount: selectedMed.discount,
-                gstPercentage: selectedMed.gstPercentage,
-                category: selectedMed.category,
-                [field]: value,
-                supplier: formData.supplierName
-              }
-              : product
-          )
-        );
-      } else {
-        // Optional: allow manual entry for new meds
-        setProducts(prev =>
-          prev.map(product =>
-            product.id === id
-              ? { ...product, [field]: value, supplier: formData.supplierName }
-              : product
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error searching medicine:", error);
-    }
-  };
+
 
   //input change for expiry
-
   const handleInputChangeExpiry = (id, field, value) => {
     setExpiryProducts((prev) =>
       prev.map((product) =>
