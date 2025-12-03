@@ -181,23 +181,50 @@ const Ledger = () => {
               </table>
             </div>
 
-            <div className='border-gray-300 border lg:w-[35%] rounded-lg p-3'>
-              <h1 className="text-3xl mb-2">Summary</h1>
-              <p className='font-light text-lg'>Total outstanding balances</p>
+          <div className="flex flex-col w-[70%] items-center gap-4 mb-4 mt-4">
+            <label className="text-xl font-semibold">Check Payments on Date:</label>
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={handleDateChange}
+              className="w-60"/*  */
+            />
+            {selectedDate && (
+            <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
+              <h2 className='text-xl font-bold mb-2'>Payments on {selectedDate}</h2>
+              {dailyPayments.length > 0 ? (
+                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4">NO.</th>
+                      <th className="px-6 py-4">SUPPLIER</th>
+                      <th className="px-6 py-4">INVOICE</th>
+                      <th className="px-6 py-4">AMOUNT</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                    {dailyPayments.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-black font-bold">{idx + 1}</td>
+                        <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
+                        <td className="px-6 py-4 text-black">{item.invoice}</td>
+                        <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-100">
+                      <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
+                      <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
+                    </tr>
 
-              <div className='flex justify-between mt-3'>
-                <p className='text-2xl'>Total Suppliers:</p>
-                <p className='text-2xl font-bold'>{allSupplier.length}</p>
-              </div>
-              {/* <div className='flex justify-between mt-3'>
-      <p className='text-2xl'>Total Balance:</p>
-      <p className='text-2xl font-bold'>₹ {totalBalance.toFixed(2)}</p>
-    </div>
-    <div className='flex justify-between mt-3'>
-      <p className='text-2xl'>Avg. Balance:</p>
-      <p className='text-2xl font-bold'>₹ {averageBalance.toFixed(2)}</p>
-    </div> */}
+                  </tbody>
+                </table>
+              ) : (
+                <p className='text-gray-600'>No payments found on this date.</p>
+              )}
             </div>
+          )}
+          </div>
+           
           </div>
 
           <div className='border-gray-300 border w-full mt-5 h-[50vh] rounded-lg p-3 overflow-auto'>
@@ -254,49 +281,7 @@ const Ledger = () => {
               </tbody>
             </table>
           </div>
-          <div className="flex items-center gap-4 mb-4 mt-4">
-            <label className="text-xl font-semibold">Check Payments on Date:</label>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={handleDateChange}
-              className="w-60"/*  */
-            />
-          </div>
-          {selectedDate && (
-            <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
-              <h2 className='text-xl font-bold mb-2'>Payments on {selectedDate}</h2>
-              {dailyPayments.length > 0 ? (
-                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-4">NO.</th>
-                      <th className="px-6 py-4">SUPPLIER</th>
-                      <th className="px-6 py-4">INVOICE</th>
-                      <th className="px-6 py-4">AMOUNT</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                    {dailyPayments.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-black font-bold">{idx + 1}</td>
-                        <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
-                        <td className="px-6 py-4 text-black">{item.invoice}</td>
-                        <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                    <tr className="bg-gray-100">
-                      <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
-                      <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
-                    </tr>
-
-                  </tbody>
-                </table>
-              ) : (
-                <p className='text-gray-600'>No payments found on this date.</p>
-              )}
-            </div>
-          )}
+         
         </TabsContent>
         <TabsContent value="expiry-ledger">
           <h1 className="text-3xl font-bold ">Expiry Ledger</h1>
