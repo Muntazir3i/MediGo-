@@ -149,11 +149,11 @@ const Ledger = () => {
         <TabsContent value="general-ledger">
           <h1 className="text-3xl font-bold ">General Ledger</h1>
           <p className='mb-8'>Check Bills & Daily Payments</p>
-          <div className='h-[65vh] flex flex-col-reverse lg:flex-row gap-4 border'>
+          <div className='h-[65vh] flex flex-col-reverse lg:flex-row gap-4'>
             <div className='border-gray-300 border lg:w-[65%] rounded-lg p-3 overflow-auto'>
               <Input className='mb-2 bg-white' placeholder="Search Suppliers" value={search} onChange={handleSearchChange} />
-              <h1 className="text-3xl mb-2">Supplier Balances</h1>
-              <p className='font-light text-lg'>Current balances for all suppliers</p>
+              <h1 className="text-3xl mb-2">All Suppliers</h1>
+              <p className='font-light text-lg'>Check Transaction For All suppliers</p>
 
               <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
                 <thead className="bg-gray-50">
@@ -181,7 +181,7 @@ const Ledger = () => {
               </table>
             </div>
 
-          <div className="flex flex-col w-[70%] items-center gap-4 mb-4 mt-4">
+          <div className="flex flex-col w-[70%] items-center gap-4 mb-4 mt-4 border rounded-lg p-2">
             <label className="text-xl font-semibold">Check Payments on Date:</label>
             <Input
               type="date"
