@@ -148,7 +148,7 @@ const Ledger = () => {
         </TabsList>
         <TabsContent value="general-ledger">
           <h1 className="text-3xl font-bold ">General Ledger</h1>
-          <p className='mb-8'>Check Bills & Daily Payments</p>
+          <p className='mb-8'>Check Transaction & Daily Payments</p>
           <div className='h-[65vh] flex flex-col-reverse lg:flex-row gap-4'>
             <div className='border-gray-300 border lg:w-[65%] rounded-lg p-3 overflow-auto'>
               <Input className='mb-2 bg-white' placeholder="Search Suppliers" value={search} onChange={handleSearchChange} />
