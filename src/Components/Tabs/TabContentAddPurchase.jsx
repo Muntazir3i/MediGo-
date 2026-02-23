@@ -100,9 +100,9 @@ const TabContentAddPurchase = ({
                     <Input
                       type="text"
                       className="border border-black p-1 w-40 lg:w-full text-black font-bold"
-                      value={item.name}
+                      value={item.name.toUpperCase()}
                       list="searchedMedList"
-                      onChange={(e) => handleInputChangeSearch(item.id, "name", e.target.value)}
+                      onChange={(e) => handleInputChangeSearch(item.id, "name", e.target.value.toUpperCase())}
                     />
                     <datalist id="searchedMedList">
                       {searchedMed.map((s, index) => (
@@ -122,8 +122,8 @@ const TabContentAddPurchase = ({
                     <Input
                       type="text"
                       className="border border-black p-1 w-40 lg:w-full text-black"
-                      value={item.batchNumber}
-                      onChange={(e) => handleInputChange(item.id, "batchNumber", e.target.value)}
+                      value={item.batchNumber.toUpperCase()}
+                      onChange={(e) => handleInputChange(item.id, "batchNumber", e.target.value.toUpperCase())}
                     />
                   </td>
                   <td className="px-4 py-2">
