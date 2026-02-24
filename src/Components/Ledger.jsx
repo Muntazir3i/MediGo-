@@ -78,10 +78,20 @@ const Ledger = () => {
     setIsOpen(true);
   }
 
-  useEffect(() => {
-  console.log(formData);
-}, [formData])
+  function handleInputChange(e){
+    const {name, value} = e.target
+    setFormData((prev)=>(
+      {...prev,
+        [name]:value
+      }
+    ))
+  }
 
+  function handlePaymentEditSave(){
+    console.log(formData);
+    setIsOpen(false)
+    
+  }
 
 
 
@@ -458,14 +468,14 @@ const Ledger = () => {
                               {formData && Object.keys(formData).map((key) => (
                                   key !== 'id' && (
                                       <div key={key} className="grid grid-cols-4 items-center gap-4">
-                                          <Label htmlFor={key} className="text-right">{key}</Label>
-                                          <Input id={key} name={key} defaultValue={formData[key]} className="col-span-3" />
+                                          <Label htmlFor={key} className="text-right">{key.toUpperCase()}</Label>
+                                          <Input id={key} name={key} defaultValue={formData[key]} className="col-span-3" onChange={handleInputChange} />
                                       </div>
                                   )
                               ))}
                           </div>
                           <DialogFooter>
-                              <Button>Save changes</Button>
+                              <Button onClick={handlePaymentEditSave}>Save changes</Button>
                           </DialogFooter>
                       </DialogContent>
                   </Dialog>
