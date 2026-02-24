@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { findSupplierExpiry,getsupplierSql,findPaymentByDateSql,getBillPaymentSql,fetchBillsProductsSql  } from '@/services/medicineService.js';
+import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, fetchBillsProductsSql } from '@/services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
+import { Label } from "./ui/label.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 
@@ -29,6 +30,8 @@ const Ledger = () => {
   const [dailyPayments, setDailyPayments] = useState([]);
   const [selectedSupplierName, setSelectedSupplierName] = useState('');
   const [selectedSupplierBalance, setSelectedSupplierBalance] = useState(0);
+   const [formData, setFormData] = useState({});
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleDateChange = async (e) => {
     try {
@@ -70,6 +73,16 @@ const Ledger = () => {
   };
 
 
+  function handleEditClick(item){
+    setFormData(item)
+    setIsOpen(true);
+  }
+
+  useEffect(() => {
+  console.log(formData);
+}, [formData])
+
+
 
 
 
@@ -87,15 +100,15 @@ const Ledger = () => {
   const showNameFn = async (name) => {
     try {
       setSelectedSupplierName(name);
-  
+
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
-  
+
       if (selectedSupplier) {
         setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
-  
+
         const supplierBills = await getBillPaymentSql(name); // Fetch supplier bills
         console.log(supplierBills);
-  
+
         setFilteredBill(supplierBills); // Set filtered and sorted bills
       }
     } catch (error) {
@@ -181,50 +194,54 @@ const Ledger = () => {
               </table>
             </div>
 
-          <div className="flex flex-col w-[70%] items-center gap-4 mb-4 mt-4 border rounded-lg p-2">
-            <label className="text-xl font-semibold">Check Payments on Date:</label>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={handleDateChange}
-              className="w-60"/*  */
-            />
-            {selectedDate && (
-            <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
-              <h2 className='text-xl font-bold mb-2'>Payments on {selectedDate}</h2>
-              {dailyPayments.length > 0 ? (
-                <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-4">NO.</th>
-                      <th className="px-6 py-4">SUPPLIER</th>
-                      <th className="px-6 py-4">INVOICE</th>
-                      <th className="px-6 py-4">AMOUNT</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                    {dailyPayments.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-black font-bold">{idx + 1}</td>
-                        <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
-                        <td className="px-6 py-4 text-black">{item.invoice}</td>
-                        <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                    <tr className="bg-gray-100">
-                      <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
-                      <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
-                    </tr>
+            <div className="flex flex-col w-[70%] items-center gap-4 mb-4 mt-4 border rounded-lg p-2">
+              <label className="text-xl font-semibold">Check Payments on Date:</label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="w-60"/*  */
+              />
+              {selectedDate && (
+                <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
+                  <h2 className='text-xl font-bold mb-2'>Payments on {selectedDate}</h2>
+                  {dailyPayments.length > 0 ? (
+                    <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-4">NO.</th>
+                          <th className="px-6 py-4">SUPPLIER</th>
+                          <th className="px-6 py-4">INVOICE</th>
+                          <th className="px-6 py-4">AMOUNT</th>
+                          <th className="px-6 py-4"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                        {dailyPayments.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-black font-bold">{idx + 1}</td>
+                            <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
+                            <td className="px-6 py-4 text-black">{item.invoice}</td>
+                            <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
+                            <td className="px-6 py-4 font-bold">
+                               <Button variant="outline" onClick={() => handleEditClick(item)}>Edit</Button>
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-gray-100">
+                          <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
+                          <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
+                        </tr>
 
-                  </tbody>
-                </table>
-              ) : (
-                <p className='text-gray-600'>No payments found on this date.</p>
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p className='text-gray-600'>No payments found on this date.</p>
+                  )}
+                </div>
               )}
             </div>
-          )}
-          </div>
-           
+
           </div>
 
           <div className='border-gray-300 border w-full mt-5 h-[50vh] rounded-lg p-3 overflow-auto'>
@@ -281,7 +298,7 @@ const Ledger = () => {
               </tbody>
             </table>
           </div>
-         
+
         </TabsContent>
         <TabsContent value="expiry-ledger">
           <h1 className="text-3xl font-bold ">Expiry Ledger</h1>
@@ -386,7 +403,7 @@ const Ledger = () => {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                <TableHead >No.</TableHead>
+                                  <TableHead >No.</TableHead>
                                   <TableHead >Name</TableHead>
                                   <TableHead>EXP</TableHead>
                                   <TableHead>QTY</TableHead>
@@ -397,7 +414,7 @@ const Ledger = () => {
                               <TableBody>
                                 {bill.products.map((item, idx) => (
                                   <TableRow key={idx}>
-                                    <TableCell>{idx+1}</TableCell>
+                                    <TableCell>{idx + 1}</TableCell>
                                     <TableCell className="font-medium">{item.name}</TableCell>
                                     <TableCell>{item.expiryDate}</TableCell>
                                     <TableCell>{item.stock}</TableCell>
@@ -430,6 +447,28 @@ const Ledger = () => {
       </Tabs>
 
 
+
+                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                      <DialogContent className="sm:max-w-[700px]">
+                          <DialogHeader>
+                              <DialogTitle>Edit Medicine</DialogTitle>
+                              <DialogDescription>Modify the medicine details and save changes.</DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                              {formData && Object.keys(formData).map((key) => (
+                                  key !== 'id' && (
+                                      <div key={key} className="grid grid-cols-4 items-center gap-4">
+                                          <Label htmlFor={key} className="text-right">{key}</Label>
+                                          <Input id={key} name={key} defaultValue={formData[key]} className="col-span-3" />
+                                      </div>
+                                  )
+                              ))}
+                          </div>
+                          <DialogFooter>
+                              <Button>Save changes</Button>
+                          </DialogFooter>
+                      </DialogContent>
+                  </Dialog>
 
 
 
