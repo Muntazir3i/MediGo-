@@ -4,6 +4,12 @@ import { Badge } from '../ui/badge.jsx';
 import { Input } from '../ui/input.jsx';
 
 
+function deleteBtn(item){
+    console.log(item.id);
+    
+}
+
+
 const TabContentGeneraLedger = ({
     // 🔎 Supplier search
     search,
@@ -89,7 +95,7 @@ const TabContentGeneraLedger = ({
                                                 <td className="px-6 py-4 text-black">{item.invoice}</td>
                                                 <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
                                                 <td className="px-2 py-2 font-bold">
-                                                    <Button variant="outline" className="text-red-600 hover:text-red-800">Delete</Button>
+                                                    <Button onClick={()=> deleteBtn(item)} variant="outline" className="text-red-600 hover:text-red-800">Delete</Button>
                                                 </td>
                                                 <td className="px-2 py-2 font-bold">
                                                     <Button variant="outline" onClick={() => handleEditClick(item)}>Edit</Button>
