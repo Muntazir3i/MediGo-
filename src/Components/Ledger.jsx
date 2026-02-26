@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, fetchBillsProductsSql } from '@/services/medicineService.js';
+import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql } from '@/services/medicineService.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
@@ -61,6 +61,21 @@ const Ledger = () => {
     fetchAllSupplier();
   }, []);
 
+
+  const handleDeletePaymentSql = async (paymentId) => {
+    if (!confirm("Are you sure you want to delete this payment?")) return;
+
+    try {
+      const response = await deletePaymentSql(paymentId);
+      console.log(response);
+      // After deletion, you might want to refresh the payments list or update the state accordingly
+      setDailyPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
+      alert('Payment Deleted Successfully!');
+    } catch (error) {
+      console.error('Error deleting payment from the database', error);
+      alert('Failed To Delete Payment');
+    }
+  };
 
 
   const fetchAllSupplier = async () => {
@@ -183,10 +198,12 @@ const Ledger = () => {
             dailyPayments={dailyPayments}
             totalDailyPayment={totalDailyPayment}
             handleEditClick={handleEditClick}
+            handleDeletePaymentSql={handleDeletePaymentSql}
 
             selectedSupplierName={selectedSupplierName}
             filteredBill={filteredBill}
             selectedSupplierBalance={selectedSupplierBalance}
+
           />
         </TabsContent>
         <TabsContent value="expiry-ledger">

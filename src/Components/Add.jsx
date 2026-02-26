@@ -11,7 +11,7 @@ import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { handleAddProduct } from '@/utils/addProductHelper.js';
 import { calculateBillTotals } from '@/utils/billingCalculationsHelper.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
-import { data } from 'react-router-dom';
+
 
 function Add() {
 
@@ -331,6 +331,7 @@ const handleInputChangeSearch = (id, field, value) => {
             handleSupplierSelect={handleSupplierSelect}
             allSuppliersSql={allSuppliersSql}
             addNewPayment={addNewPayment}
+            
           />
         </TabsContent>
         <TabsContent value='add-expiry'>

@@ -9,6 +9,7 @@ const TabContentAddPayment = ({
   handleSupplierSelect,
   allSuppliersSql,
   addNewPayment,
+  
 }) => {
   return (
     <div>
