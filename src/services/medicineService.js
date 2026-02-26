@@ -7,8 +7,8 @@ const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills'
 const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment'
 const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
 const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines'
-
 const API_BASE_URL_SEARCH_MEDICINE = 'http://localhost:8008/api/searchMedicine'
+
 
 
 export const findmedicineByName = async (medName) => {
@@ -277,6 +277,18 @@ export const findSupplierExpiry = async (name) => {
   } catch (error) {
     console.error("Error fetching supplier expiry:", error.message);
     throw new Error("Failed to fetch supplier expiry. Please try again."); // Throw the error with a meaningful message
+  }
+};
+
+//delete payment by id
+
+export const deletePaymentSql = async (paymentId) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL_PAYMENT_SQL}/payments/${paymentId}`);
+    return response.data; // Return the response data for confirmation
+  } catch (error) {
+    console.error("Error deleting payment:", error.message); // Log the error message for debugging
+    throw new Error("Failed to delete payment. Please try again."); // Throw a descriptive error for the caller
   }
 };
 
