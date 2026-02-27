@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql } from '@/services/medicineService.js';
+import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql } from '@/services/medicineService.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
@@ -104,11 +104,35 @@ const Ledger = () => {
     ))
   }
 
-  function handlePaymentEditSave() {
-    console.log(formData);
-    setIsOpen(false)
+ const handlePaymentEditSave =  async () => {
+  console.log(formData);
+  console.log(formData.id);
+  
+  
+  try {
+    const response = await updatePaymentSql(
+      formData.id,
+      formData
+    );
 
+    alert("Payment Updated Successfully!");
+    setIsOpen(false);
+    console.log(response);
+    
+
+    setDailyPayments((prevPayments) =>
+      prevPayments.map((payment) =>
+        payment.id === formData.id
+          ? { ...payment, ...formData }
+          : payment
+      )
+    );
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed To Update Payment");
   }
+}
 
 
 
@@ -134,7 +158,7 @@ const Ledger = () => {
         setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
 
         const supplierBills = await getBillPaymentSql(name); // Fetch supplier bills
-        console.log(supplierBills);
+        // console.log(supplierBills);
 
         setFilteredBill(supplierBills); // Set filtered and sorted bills
       }
@@ -197,8 +221,9 @@ const Ledger = () => {
             handleDateChange={handleDateChange}
             dailyPayments={dailyPayments}
             totalDailyPayment={totalDailyPayment}
-            handleEditClick={handleEditClick}
+            handlePaymentEditSave={handlePaymentEditSave}
             handleDeletePaymentSql={handleDeletePaymentSql}
+            handleEditClick={handleEditClick}
 
             selectedSupplierName={selectedSupplierName}
             filteredBill={filteredBill}

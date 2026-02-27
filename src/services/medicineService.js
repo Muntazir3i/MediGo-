@@ -292,3 +292,15 @@ export const deletePaymentSql = async (paymentId) => {
   }
 };
 
+//update payment by id
+
+export const updatePaymentSql = async (paymentId, updatedPayment) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL_PAYMENT_SQL}/payments/${paymentId}`, updatedPayment);
+    return response.data; // Return the response data for confirmation
+  } catch (error) {
+    console.error("Error updating payment:", error.message); // Log the error message for debugging
+    throw new Error("Failed to update payment. Please try again."); // Throw a descriptive error for the caller
+  }
+};  
+

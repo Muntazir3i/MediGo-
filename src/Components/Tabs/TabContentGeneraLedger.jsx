@@ -87,11 +87,11 @@ const TabContentGeneraLedger = ({
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 border-t border-gray-100">
                                         {dailyPayments.map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 text-black font-bold">{idx + 1}</td>
-                                                <td className="px-6 py-4 text-black font-bold">{item.supplierName}</td>
-                                                <td className="px-6 py-4 text-black">{item.invoice}</td>
-                                                <td className="px-6 py-4 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
+                                            <tr key={idx} className="hover:bg-gray-50 px-6 py-4">
+                                                <td className="px-2 py-2 text-black font-bold">{idx + 1}</td>
+                                                <td className="px-2 py-2 text-black font-bold">{item.supplierName}</td>
+                                                <td className="px-2 py-2 text-black">{item.invoice}</td>
+                                                <td className="px-2 py-2 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
                                                 <td className="px-2 py-2 font-bold">
                                                     <Button onClick={()=> handleDeletePaymentSql(item.id)} variant="outline" className="text-red-600 hover:text-red-800">Delete</Button>
                                                 </td>
@@ -101,8 +101,8 @@ const TabContentGeneraLedger = ({
                                             </tr>
                                         ))}
                                         <tr className="bg-gray-100">
-                                            <td className="px-6 py-4 font-bold text-right" colSpan="3">Total</td>
-                                            <td className="px-6 py-4 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
+                                            <td className="px-2 py-2 font-bold text-right" colSpan="3">Total</td>
+                                            <td className="px-2 py-2 font-bold text-green-800">₹ {totalDailyPayment.toFixed(2)}</td>
                                         </tr>
 
                                     </tbody>
