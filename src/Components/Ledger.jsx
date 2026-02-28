@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql } from '@/services/medicineService.js';
-import { TabContentGeneralLedger, TabContentExpiryLedger } from './Tabs/index.js';
+import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql } from '@/services/medicineService.js';
+import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
@@ -22,6 +22,7 @@ import {
 
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
+  const [allPayments,setAllPayments] = useState([])
   const [allPurchases, setAllPurchases] = useState([]);
   const [filteredBill, setFilteredBill] = useState([]);
   const [fileredExpiry, setFilteredExpiry] = useState([]);
@@ -59,7 +60,10 @@ const Ledger = () => {
 
   useEffect(() => {
     fetchAllSupplier();
+    fetchAllPayments();
   }, []);
+
+
 
 
   const handleDeletePaymentSql = async (paymentId) => {
@@ -88,6 +92,15 @@ const Ledger = () => {
     }
   };
 
+  const fetchAllPayments = async() =>{
+    try {
+      const response = await getAllPaymentsSql();
+      setAllPayments(response);
+    } catch (error) {
+      console.log("Error Fetching All The Payments:",error)
+    }
+  }
+
 
   function handleEditClick(item) {
     setFormData(item)
@@ -104,11 +117,7 @@ const Ledger = () => {
     ))
   }
 
- const handlePaymentEditSave =  async () => {
-  console.log(formData);
-  console.log(formData.id);
-  
-  
+ const handlePaymentEditSave =  async () => { 
   try {
     const response = await updatePaymentSql(
       formData.id,
@@ -121,6 +130,14 @@ const Ledger = () => {
     
 
     setDailyPayments((prevPayments) =>
+      prevPayments.map((payment) =>
+        payment.id === formData.id
+          ? { ...payment, ...formData }
+          : payment
+      )
+    );
+
+     setAllPayments((prevPayments) =>
       prevPayments.map((payment) =>
         payment.id === formData.id
           ? { ...payment, ...formData }
@@ -207,6 +224,7 @@ const Ledger = () => {
       <Tabs defaultValue="general-ledger" className="w-full">
         <TabsList>
           <TabsTrigger value="general-ledger">General Ledger</TabsTrigger>
+          <TabsTrigger value="all-payment">All Payments</TabsTrigger>
           <TabsTrigger value="expiry-ledger">Expiry Ledger</TabsTrigger>
           <TabsTrigger value="credit-notes">Credit Notes</TabsTrigger>
         </TabsList>
@@ -229,6 +247,13 @@ const Ledger = () => {
             filteredBill={filteredBill}
             selectedSupplierBalance={selectedSupplierBalance}
 
+          />
+        </TabsContent>
+        <TabsContent value="all-payment">
+          <TabContentShowAllPayments
+          allPayments = {allPayments}
+          handleDeletePaymentSql = {handleDeletePaymentSql}
+          handleEditClick = {handleEditClick}
           />
         </TabsContent>
         <TabsContent value="expiry-ledger">
