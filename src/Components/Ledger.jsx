@@ -74,6 +74,7 @@ const Ledger = () => {
       console.log(response);
       // After deletion, you might want to refresh the payments list or update the state accordingly
       setDailyPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
+      setAllPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
       alert('Payment Deleted Successfully!');
     } catch (error) {
       console.error('Error deleting payment from the database', error);
