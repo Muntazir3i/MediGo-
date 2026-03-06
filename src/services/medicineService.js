@@ -218,14 +218,20 @@ export const getAllPaymentsSql = async()=>{
 
 // add new payment sql
 
-export const addPaymentSql = async(payment)=>{
+export const addPaymentSql = async (payment) => {
   try {
-    const response = await axios.post(`${API_BASE_URL_PAYMENT_SQL}/payments`,payment)
-    return response
+    const response = await axios.post(
+      `${API_BASE_URL_PAYMENT_SQL}/payments`,
+      payment
+    );
+
+    return response.data;
+
   } catch (error) {
-    console.log('Error adding payment',error);
+    console.error('Error adding payment', error);
+    throw error; 
   }
-}
+};
 
 
 //find payment by data sql

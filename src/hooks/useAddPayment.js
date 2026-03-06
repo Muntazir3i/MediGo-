@@ -1,8 +1,8 @@
 import { addPaymentSql } from "@/services/medicineService.js";
-export const addNewPayment = async (e,newPaymentDetails,setNewPaymentDetails) => {
+export const addNewPayment = async (e, newPaymentDetails, setNewPaymentDetails) => {
     e.preventDefault();
-    if(!confirm("Do You Want To Add This Payment")) return;
-    
+    if (!confirm("Do You Want To Add This Payment")) return;
+
     let newPayment = { ...newPaymentDetails, id: Date.now(), type: 'Payment' }
     setNewPaymentDetails(newPayment);
     try {
@@ -20,8 +20,13 @@ export const addNewPayment = async (e,newPaymentDetails,setNewPaymentDetails) =>
 
 
     } catch (error) {
+
         console.error('Error Adding Payment to the database', error);
-        alert('Failed To Add Payment');
+
+        const message =
+            error.response?.data?.error || 'Failed To Add Payment';
+
+        alert(message);
     }
 
 
