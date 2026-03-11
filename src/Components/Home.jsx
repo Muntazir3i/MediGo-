@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from './ui/input.jsx';
 // import { Label } from '@radix-ui/react-label.jsx';
-import { getMedicines, addBill, decreaseStock,increaseStock,getAllMedicines } from '../services/medicineService.js';
+import { getMedicines, addBillSql, decreaseStock,increaseStock,getAllMedicines } from '../services/medicineService.js';
 import { Button } from './ui/button.jsx';
 import {
   Dialog,

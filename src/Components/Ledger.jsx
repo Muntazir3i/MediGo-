@@ -86,8 +86,8 @@ const Ledger = () => {
   const fetchAllSupplier = async () => {
     try {
       const response = await getsupplierSql();
-      setAllSupplier(response.data);
-      setFilteredSupplier(response.data);
+      setAllSupplier(response);
+      setFilteredSupplier(response);
     } catch (error) {
       console.error('Error fetching the Supplier:', error);
     }

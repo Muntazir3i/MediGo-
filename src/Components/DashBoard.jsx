@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from './ui/button.jsx'
-import { showAllBills } from '@/services/medicineService.js';
 import { getMedicines, getLowStock, getOutOfStock, getExpiry } from '../services/medicineService.js';
 
 import {
