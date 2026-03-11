@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from './ui/button.jsx'
 import { showAllBills } from '@/services/medicineService.js';
-import { getMedicines, getLowStock, getOutOfStock,getExpiry } from '../services/medicineService.js';
+import { getMedicines, getLowStock, getOutOfStock, getExpiry } from '../services/medicineService.js';
 
 import {
   Card,
@@ -59,7 +59,7 @@ function DashBoard() {
   const [medicines, setMedicines] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [outOfStock, setOutOfStock] = useState([]);
-  const [expiry,setExpiry] = useState([])
+  const [expiry, setExpiry] = useState([])
 
   useEffect(() => {
     fetchMedicines();
@@ -73,9 +73,9 @@ function DashBoard() {
     fetchOutOfStock();
   }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchExpiryStock()
-  },[])
+  }, [])
 
 
   console.log(outOfStock);
@@ -87,7 +87,7 @@ function DashBoard() {
   const fetchMedicines = async () => {
     try {
       const response = await getMedicines();
-      setMedicines(response.data);
+      setMedicines(response);
     } catch (error) {
       console.error('Error fetching the medicine:', error);
     }
@@ -96,7 +96,7 @@ function DashBoard() {
   const fetchLowStock = async () => {
     try {
       const response = await getLowStock();
-      setLowStock(response.data)
+      setLowStock(response)
     } catch (error) {
       console.error('Error fetching the Low Stock medicine:', error);
     }
@@ -106,17 +106,17 @@ function DashBoard() {
   const fetchOutOfStock = async () => {
     try {
       const response = await getOutOfStock();
-      setOutOfStock(response.data)
+      setOutOfStock(response)
     } catch (error) {
       console.error('Error fetching the Out Of Stock medicine:', error)
     }
   }
 
   //fetch expiry stock 
-  const fetchExpiryStock = async()=>{
+  const fetchExpiryStock = async () => {
     try {
       const response = await getExpiry();
-      setExpiry(response.data)
+      setExpiry(response)
     } catch (error) {
       console.error('Error fetching the Expiry medicine:', error)
     }
@@ -127,7 +127,7 @@ function DashBoard() {
   const fetchAllBills = async () => {
     try {
       const response = await showAllBills();
-      setAllBills(response.data);
+      setAllBills(response);
     } catch (error) {
       console.error('Error fetching the Bills:', error);
     }
@@ -485,45 +485,45 @@ function DashBoard() {
         <TabsContent value='expiry'>
           <h1 className="text-3xl font-bold mb-8">Expiry</h1>
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">Category</th>
-                    <th className="px-6 py-4">Supplier</th>
-                    <th className="px-6 py-4">Batch Number</th>
-                    <th className="px-6 py-4">EXP Date</th>
-                    <th className="px-6 py-4">Stock</th>
-                    <th className="px-6 py-4">Price</th>
-                    <th className="px-6 py-4"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 border-t border-gray-100">
-                  {expiry.length > 0 ? (
-                    expiry
-                      .map((med) => (
-                        <tr key={med.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-black font-bold">{med.name}</td>
-                          <td className="px-6 py-4 text-black font-light">{med.category}</td>
-                          <td className="px-6 py-4 text-black font-light">{med.supplier}</td>
-                          <td className="px-6 py-4 text-black font-light">{med.batchNumber}</td>
-                          <td className="px-6 py-4 text-black font-bold">{med.expiryDate}</td>
-                          <td className={`${Number(med.stock) > 0 ? 'text-green-600' : 'text-red-600'} px-6 py-4 font-bold`}>
-                            {med.stock}
-                          </td>
-                          <td className="px-6 py-4 text-black font-extrabold">Rs {med.mrp}</td>
-                          <td className="flex gap-4 px-6 py-4">
-                            <button onClick={() => handleDelete(med.id)} className="text-red-600 hover:text-red-800">Delete</button>
-                            <Button variant="outline" onClick={() => handleEditClick(med)}>Edit</Button>
-                          </td>
-                        </tr>
-                      ))
-                  ) : (
-                    <tr>
-                      <td colSpan="10" className="px-6 py-4 text-center">No Medicines Found</td>
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4">Name</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Supplier</th>
+                <th className="px-6 py-4">Batch Number</th>
+                <th className="px-6 py-4">EXP Date</th>
+                <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Price</th>
+                <th className="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+              {expiry.length > 0 ? (
+                expiry
+                  .map((med) => (
+                    <tr key={med.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-black font-bold">{med.name}</td>
+                      <td className="px-6 py-4 text-black font-light">{med.category}</td>
+                      <td className="px-6 py-4 text-black font-light">{med.supplier}</td>
+                      <td className="px-6 py-4 text-black font-light">{med.batchNumber}</td>
+                      <td className="px-6 py-4 text-black font-bold">{med.expiryDate}</td>
+                      <td className={`${Number(med.stock) > 0 ? 'text-green-600' : 'text-red-600'} px-6 py-4 font-bold`}>
+                        {med.stock}
+                      </td>
+                      <td className="px-6 py-4 text-black font-extrabold">Rs {med.mrp}</td>
+                      <td className="flex gap-4 px-6 py-4">
+                        <button onClick={() => handleDelete(med.id)} className="text-red-600 hover:text-red-800">Delete</button>
+                        <Button variant="outline" onClick={() => handleEditClick(med)}>Edit</Button>
+                      </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="px-6 py-4 text-center">No Medicines Found</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </TabsContent>
       </Tabs>
 

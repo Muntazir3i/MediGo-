@@ -6,29 +6,29 @@ import { getMedicines } from './services/medicineService.js';
 
 
 function App() {
-  const [medicines,setMedicines] = useState([]);
+  const [medicines, setMedicines] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchMedicines()
-  },[])
+  }, [])
 
   //fetch Medicine
-  const fetchMedicines = async()=>{
+  const fetchMedicines = async () => {
     try {
       const response = await getMedicines();
-      setMedicines(response.data)
+      setMedicines(response)
     } catch (error) {
       console.error('Error Fetching the medicine:', error)
     }
   }
 
   console.log(medicines);
-  
+
 
 
   return (
     <>
-      
+
 
     </>
   )
