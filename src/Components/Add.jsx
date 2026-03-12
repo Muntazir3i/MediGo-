@@ -71,6 +71,25 @@ function Add() {
   })
   const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
 
+
+ useEffect(() => {
+  const handleKeyDown = (event) => {
+    // Check if 'a' is pressed AND the Ctrl key (or Cmd key for Mac users) is held
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+      event.preventDefault(); // Stop the browser from selecting all text
+      
+      handleAddProduct(setProducts)
+      // Your custom logic here
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+  
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, []);
+
   // Fetch and load all suppliers from the custom hook on component mount
   useEffect(() => {
     const fetchingSuppliers = async () => {

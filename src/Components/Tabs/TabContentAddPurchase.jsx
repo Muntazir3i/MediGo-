@@ -184,7 +184,7 @@ const TabContentAddPurchase = ({
 
           <div className="mt-4 flex gap-4">
             <button
-              onClick={() => handleAddProduct(products, setProducts)}
+              onClick={() => handleAddProduct(setProducts)}
               className="px-4 py-2 bg-blue-500 text-white rounded"
             >
               Add Product

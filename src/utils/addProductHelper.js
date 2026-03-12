@@ -1,6 +1,7 @@
-export const handleAddProduct = (products,setProducts) => {
-    setProducts([
-        ...products,
+// In your helper file
+export const handleAddProduct = (setProducts) => {
+    setProducts((prevProducts) => [
+        ...prevProducts,
         {
             id: Date.now(),
             name: "",
@@ -12,5 +13,5 @@ export const handleAddProduct = (products,setProducts) => {
             discount: 0,
             gstPercentage: 0,
         },
-    ])
-}
+    ]);
+};
