@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './add.css';
-import {TabContentAddPurchase, TabContentAddSupplier, TabContentAddPayment, TabContentAddExpiry} from './Tabs/index.js'
+import { TabContentAddPurchase, TabContentAddSupplier, TabContentAddPayment, TabContentAddExpiry } from './Tabs/index.js'
 import { addNewExpiry, findmedicineByName } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
@@ -71,24 +71,48 @@ function Add() {
   })
   const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
 
+  const { totalAmount, totalDiscount, totalGst } = calculateBillTotals(products);
 
- useEffect(() => {
-  const handleKeyDown = (event) => {
-    // Check if 'a' is pressed AND the Ctrl key (or Cmd key for Mac users) is held
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
-      event.preventDefault(); // Stop the browser from selecting all text
-      
-      handleAddProduct(setProducts)
-      // Your custom logic here
-    }
-  };
 
-  document.addEventListener('keydown', handleKeyDown);
-  
-  return () => {
-    document.removeEventListener('keydown', handleKeyDown);
-  };
-}, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Check if 'a' is pressed AND the Ctrl key (or Cmd key for Mac users) is held
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+        event.preventDefault(); // Stop the browser from selecting all text
+
+        handleAddProduct(setProducts)
+
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const stateRef = useRef();
+  stateRef.current = { formData, products, totalAmount, totalDiscount, totalGst };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Check if 's' is pressed AND the Ctrl key (or Cmd key for Mac users) is held
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault(); // Stop the browser from saving the page
+        const { formData, products, totalAmount, totalDiscount, totalGst } = stateRef.current;
+        addNewBill(formData, products, setFormData, setProducts, totalAmount, totalDiscount, totalGst)
+
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Fetch and load all suppliers from the custom hook on component mount
   useEffect(() => {
@@ -111,17 +135,17 @@ function Add() {
     );
   };
 
-  
-const handleInputChangeSearch = (id, field, value) => {
-  setSearchedMedTxt(value); // update typing
 
-  if (!value.trim()) {
-    // setSearchedMed([]);
+  const handleInputChangeSearch = (id, field, value) => {
+    setSearchedMedTxt(value); // update typing
 
-    setProducts(prev =>
-      prev.map(product =>
-        product.id === id
-          ? {
+    if (!value.trim()) {
+      // setSearchedMed([]);
+
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === id
+            ? {
               ...product,
               [field]: "",
               unitPrice: "",
@@ -130,21 +154,21 @@ const handleInputChangeSearch = (id, field, value) => {
               gstPercentage: "",
               category: "",
             }
-          : product
-      )
-    );
+            : product
+        )
+      );
 
-    return;
-  }
+      return;
+    }
 
-  // check if selected from search results
-  const selectedMed = searchedMed.find(med => med.name === value);
+    // check if selected from search results
+    const selectedMed = searchedMed.find(med => med.name === value);
 
-  if (selectedMed) {
-    setProducts(prev =>
-      prev.map(product =>
-        product.id === id
-          ? {
+    if (selectedMed) {
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === id
+            ? {
               ...product,
               name: selectedMed.name,
               unitPrice: selectedMed.unitPrice,
@@ -155,20 +179,20 @@ const handleInputChangeSearch = (id, field, value) => {
               [field]: value,
               supplier: formData.supplierName,
             }
-          : product
-      )
-    );
-  } else {
-    // allow manual typing
-    setProducts(prev =>
-      prev.map(product =>
-        product.id === id
-          ? { ...product, [field]: value, supplier: formData.supplierName }
-          : product
-      )
-    );
-  }
-};
+            : product
+        )
+      );
+    } else {
+      // allow manual typing
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === id
+            ? { ...product, [field]: value, supplier: formData.supplierName }
+            : product
+        )
+      );
+    }
+  };
 
 
 
@@ -301,7 +325,6 @@ const handleInputChangeSearch = (id, field, value) => {
 
 
 
-  const { totalAmount, totalDiscount, totalGst } = calculateBillTotals(products);
 
 
   return (
@@ -350,7 +373,7 @@ const handleInputChangeSearch = (id, field, value) => {
             handleSupplierSelect={handleSupplierSelect}
             allSuppliersSql={allSuppliersSql}
             addNewPayment={addNewPayment}
-            
+
           />
         </TabsContent>
         <TabsContent value='add-expiry'>
