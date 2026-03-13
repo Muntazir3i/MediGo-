@@ -22,7 +22,7 @@ const TabContentShowAllPayments = ({allPayments,handleDeletePaymentSql,handleEdi
                                                 <td className="px-2 py-2 text-black font-bold">{idx + 1}</td>
                                                 <td className="px-2 py-2 text-black font-bold">{item.supplierName}</td>
                                                 <td className="px-2 py-2 text-black">{item.invoice}</td>
-                                                <td className="px-2 py-2 text-black">{item.date}</td>
+                                                <td className="px-2 py-2 text-black">{new Date(item.date).toLocaleDateString()}</td>
                                                 <td className="px-2 py-2 text-green-800 font-bold">₹ {Number(item.total).toFixed(2)}</td>
                                                 <td className="px-2 py-2 font-bold">
                                                     <Button onClick={()=> handleDeletePaymentSql(item.id)} variant="outline" className="text-red-600 hover:text-red-800">Delete</Button>
