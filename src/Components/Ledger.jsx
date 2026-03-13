@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql } from '@/services/medicineService.js';
+import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql } from '@/services/medicineService.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
@@ -22,7 +22,9 @@ import {
 
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
-  const [allPayments,setAllPayments] = useState([])
+  const [allPayments, setAllPayments] = useState([]);
+  const [loadMorePayments, setLoadMorePayments] = useState([]);
+  const [lastItemId, setLastItemId] = useState(null);
   const [allPurchases, setAllPurchases] = useState([]);
   const [filteredBill, setFilteredBill] = useState([]);
   const [fileredExpiry, setFilteredExpiry] = useState([]);
@@ -63,6 +65,19 @@ const Ledger = () => {
     fetchAllPayments();
   }, []);
 
+async function loadMore() {
+  if (allPayments.length > 0) {
+    try {
+      const lastId = allPayments[allPayments.length - 1].id;
+      const response = await loadMorePaymentsSql(lastId);
+      setAllPayments([...allPayments, ...response]);
+      setLastItemId(lastId);
+    } catch (error) {
+      console.log("Error Fetching More Payments:", error);
+    }
+  }
+}
+
 
 
 
@@ -93,12 +108,12 @@ const Ledger = () => {
     }
   };
 
-  const fetchAllPayments = async() =>{
+  const fetchAllPayments = async () => {
     try {
       const response = await getAllPaymentsSql();
       setAllPayments(response);
     } catch (error) {
-      console.log("Error Fetching All The Payments:",error)
+      console.log("Error Fetching All The Payments:", error)
     }
   }
 
@@ -118,39 +133,39 @@ const Ledger = () => {
     ))
   }
 
- const handlePaymentEditSave =  async () => { 
-  try {
-    const response = await updatePaymentSql(
-      formData.id,
-      formData
-    );
+  const handlePaymentEditSave = async () => {
+    try {
+      const response = await updatePaymentSql(
+        formData.id,
+        formData
+      );
 
-    alert("Payment Updated Successfully!");
-    setIsOpen(false);
-    console.log(response);
-    
+      alert("Payment Updated Successfully!");
+      setIsOpen(false);
+      console.log(response);
 
-    setDailyPayments((prevPayments) =>
-      prevPayments.map((payment) =>
-        payment.id === formData.id
-          ? { ...payment, ...formData }
-          : payment
-      )
-    );
 
-     setAllPayments((prevPayments) =>
-      prevPayments.map((payment) =>
-        payment.id === formData.id
-          ? { ...payment, ...formData }
-          : payment
-      )
-    );
+      setDailyPayments((prevPayments) =>
+        prevPayments.map((payment) =>
+          payment.id === formData.id
+            ? { ...payment, ...formData }
+            : payment
+        )
+      );
 
-  } catch (error) {
-    console.error(error);
-    alert("Failed To Update Payment");
+      setAllPayments((prevPayments) =>
+        prevPayments.map((payment) =>
+          payment.id === formData.id
+            ? { ...payment, ...formData }
+            : payment
+        )
+      );
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed To Update Payment");
+    }
   }
-}
 
 
 
@@ -252,9 +267,10 @@ const Ledger = () => {
         </TabsContent>
         <TabsContent value="all-payment">
           <TabContentShowAllPayments
-          allPayments = {allPayments}
-          handleDeletePaymentSql = {handleDeletePaymentSql}
-          handleEditClick = {handleEditClick}
+            allPayments={allPayments}
+            handleDeletePaymentSql={handleDeletePaymentSql}
+            handleEditClick={handleEditClick}
+            loadMore={loadMore}
           />
         </TabsContent>
         <TabsContent value="expiry-ledger">

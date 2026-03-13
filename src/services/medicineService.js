@@ -10,6 +10,7 @@ const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
 const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines';
 const API_BASE_URL_SEARCH_MEDICINE = 'http://localhost:8008/api/searchMedicine';
 
+
 // ─── Medicine Search ──────────────────────────────────────────────────────────
 
 /** Search medicines by name. Returns [] for empty input. */
@@ -260,6 +261,17 @@ export const updatePaymentSql = async (paymentId, updatedPayment) => {
   } catch (error) {
     console.error("Error updating payment:", error.message);
     throw new Error("Failed to update payment. Please try again.");
+  }
+};
+
+/** Load more payments */
+export const loadMorePaymentsSql = async (lastId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments/loadMore/${lastId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching payments:", error.message);
+    throw new Error("Failed to fetch payments. Please try again.");
   }
 };
 

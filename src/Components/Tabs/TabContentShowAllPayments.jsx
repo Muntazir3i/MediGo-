@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from '../ui/button.jsx';
 
-const TabContentShowAllPayments = ({allPayments,handleDeletePaymentSql,handleEditClick}) => {
+const TabContentShowAllPayments = ({allPayments,handleDeletePaymentSql,handleEditClick,loadMore}) => {
   return (
         <div className='border-gray-300 border w-full mt-2 mb-4 rounded-lg p-3 overflow-auto bg-white'>
                             {allPayments.length > 0 ? (
@@ -38,7 +38,7 @@ const TabContentShowAllPayments = ({allPayments,handleDeletePaymentSql,handleEdi
                             ) : (
                                 <p className='text-gray-600'>No payments found.</p>
                             )}
-                            <div className='btn-container flex justify-center py-4 '><Button className="bg-purple-600 hover:bg-purple-700 text-white" size="lg" variant="outline">LOAD MORE</Button></div>
+                            <div className='btn-container flex justify-center py-4 '><Button className="bg-purple-600 hover:bg-purple-700 text-white" size="lg" variant="outline" onClick={loadMore}>LOAD MORE</Button></div>
     </div>
     
   )
