@@ -277,7 +277,7 @@ function Inventory() {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent>
-                                    <div className='border border-red-400 overflow-auto'>
+                                    <div className='border h-[50vh] overflow-y-scroll'>
                                         <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
                                             <thead className="bg-gray-50">
                                                 <tr>
