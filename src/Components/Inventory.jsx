@@ -295,7 +295,7 @@ function Inventory() {
                                                     .map((purchase) => (
                                                         <tr key={purchase.id} className="hover:bg-gray-50">
                                                             <td className="px-6 py-4 text-black">{purchase.invoice}</td>
-                                                            <td className="px-6 py-4 text-black">{purchase.date}</td>
+                                                            <td className="px-6 py-4 text-black">{new Date(purchase.date).toLocaleDateString()}</td>
                                                             <td className="px-6 py-4 text-black">
                                                                 {purchase.products ? purchase.products.length : "-"}
                                                             </td>
