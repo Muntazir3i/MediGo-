@@ -77,19 +77,18 @@ function Add() {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Check if 'a' is pressed AND the Ctrl key (or Cmd key for Mac users) is held
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
-        event.preventDefault(); // Stop the browser from selecting all text
+      // Ctrl + Shift + A (Cmd + Shift + A on Mac)
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "a") {
+        event.preventDefault(); // Stop browser default behavior
 
-        handleAddProduct(setProducts)
-
+        handleAddProduct(setProducts);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -97,31 +96,31 @@ function Add() {
   stateRef.current = { formData, products, totalAmount, totalDiscount, totalGst };
 
   useEffect(() => {
-  const handleKeyDown = (event) => {
-    // Ctrl + Shift + S (Cmd + Shift + S on Mac)
-    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
-      event.preventDefault();
+    const handleKeyDown = (event) => {
+      // Ctrl + Shift + S (Cmd + Shift + S on Mac)
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
+        event.preventDefault();
 
-      const { formData, products, totalAmount, totalDiscount, totalGst } = stateRef.current;
+        const { formData, products, totalAmount, totalDiscount, totalGst } = stateRef.current;
 
-      addNewBill(
-        formData,
-        products,
-        setFormData,
-        setProducts,
-        totalAmount,
-        totalDiscount,
-        totalGst
-      );
-    }
-  };
+        addNewBill(
+          formData,
+          products,
+          setFormData,
+          setProducts,
+          totalAmount,
+          totalDiscount,
+          totalGst
+        );
+      }
+    };
 
-  document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
-  return () => {
-    document.removeEventListener("keydown", handleKeyDown);
-  };
-}, []);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // Fetch and load all suppliers from the custom hook on component mount
   useEffect(() => {
