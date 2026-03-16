@@ -97,22 +97,31 @@ function Add() {
   stateRef.current = { formData, products, totalAmount, totalDiscount, totalGst };
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      // Check if 's' is pressed AND the Ctrl key (or Cmd key for Mac users) is held
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-        event.preventDefault(); // Stop the browser from saving the page
-        const { formData, products, totalAmount, totalDiscount, totalGst } = stateRef.current;
-        addNewBill(formData, products, setFormData, setProducts, totalAmount, totalDiscount, totalGst)
+  const handleKeyDown = (event) => {
+    // Ctrl + Shift + S (Cmd + Shift + S on Mac)
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
+      event.preventDefault();
 
-      }
-    };
+      const { formData, products, totalAmount, totalDiscount, totalGst } = stateRef.current;
 
-    document.addEventListener('keydown', handleKeyDown);
+      addNewBill(
+        formData,
+        products,
+        setFormData,
+        setProducts,
+        totalAmount,
+        totalDiscount,
+        totalGst
+      );
+    }
+  };
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
+  document.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    document.removeEventListener("keydown", handleKeyDown);
+  };
+}, []);
 
   // Fetch and load all suppliers from the custom hook on component mount
   useEffect(() => {
