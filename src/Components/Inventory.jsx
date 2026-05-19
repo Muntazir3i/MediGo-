@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMedicines, deleteMedicine, updateMedicine, fetchBillsProductsSql, getAllMedicines } from '../services/medicineService.js';
+import { getMedicines, deleteMedicine, updateMedicine, fetchBillsProductsSql, getAllMedicines, findmedicineByName } from '../services/medicineService.js';
 import { Input } from "./ui/input";
 import { Badge } from './ui/badge.jsx';
 import './inventory.css'
@@ -67,13 +67,7 @@ function Inventory() {
 
 
 
-    useEffect(() => {
-        // Filter medicines whenever search input changes
-        const filtered = medicines.filter((medicine) =>
-            medicine.name.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilterMedicine(filtered);
-    }, [search, medicines]);
+
 
     useEffect(() => {
         // Filter medicines whenever search input changes
@@ -92,17 +86,26 @@ function Inventory() {
     // }, [search, payments]);
 
 
-    useEffect(() => {
-        if (search.trim() === "") {
-            // if no search, show only first 50
-            setFilterMedicine(medicines.slice(0, 50));
-        } else {
-            const filtered = medicines.filter((medicine) =>
-                medicine.name.toLowerCase().includes(search.toLowerCase())
-            );
-            setFilterMedicine(filtered);
+    const handleSearchChange = async (e) => {
+        const value = e.target.value;
+
+        setSearch(value);
+
+        try {
+            // if input empty -> show first 50 medicines
+            if (value.trim() === "") {
+                setFilterMedicine(medicines.slice(0, 50));
+                return;
+            }
+
+            const response = await findmedicineByName(value);
+
+            setFilterMedicine(response);
+
+        } catch (error) {
+            console.error("Search error:", error);
         }
-    }, [search, medicines]);
+    };
 
 
     const fetchPurchases = async () => {
@@ -161,9 +164,7 @@ function Inventory() {
     };
 
 
-    const handleSearchChange = (e) => {
-        setSearch(e.target.value);
-    };
+   
 
     const handleUpdate = async () => {
         if (!selectedMedicine || Object.keys(formData).length === 0) {
