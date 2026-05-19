@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
+
 import { Input } from './ui/input.jsx';
-// import { Label } from '@radix-ui/react-label.jsx';
-import { getMedicines, addBillSql, decreaseStock,increaseStock,getAllMedicines } from '../services/medicineService.js';
 import { Button } from './ui/button.jsx';
+
+import {
+  getAllMedicines,
+  addBillSql,
+  findmedicineByName
+} from '../services/medicineService.js';
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 import {
   Dialog,
   DialogContent,
@@ -12,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog.jsx";
+
 import {
   Table,
   TableBody,
@@ -21,433 +31,747 @@ import {
   TableHeader,
   TableRow,
   TableFooter
-} from "./ui/table.jsx"
+} from "./ui/table.jsx";
 
-
-
-
-import './home.css'
+import './home.css';
 
 function Home() {
-  const [open, setOpen] = useState(false)
+
+  const [open, setOpen] = useState(false);
+
   const [medicines, setMedicines] = useState([]);
   const [filterMedicine, setFilterMedicine] = useState([]);
-  const [search, setSearch] = useState('');
-  const [cart, setCart] = useState([]);
-  const [bill, setBill] = useState({
-    total: '',
-    medicines: []
-  })
-  const [name, setName] = useState('')
-  const [status, setStatus] = useState('')
 
-  // const handleSave = () => {
-  //   // Perform save logic here
-  //   addBill()
-  //   setOpen(false); // Close dialog
-  // };
+  const [search, setSearch] = useState('');
+
+  const [cart, setCart] = useState([]);
+
+  const [status, setStatus] = useState('completed');
+
+  const [customer, setCustomer] = useState({
+    name: '',
+    phone: '',
+    address: ''
+  });
+
+  const invoiceNumber = `INV-${Math.floor(
+    100000 + Math.random() * 900000
+  )}`;
 
   useEffect(() => {
     fetchMedicinesSql();
   }, []);
 
-  useEffect(() => {
-    // Filter medicines whenever search input changes
-    const filtered = medicines.filter((medicine) =>
-      medicine.name.toLowerCase().includes(search.toLowerCase())
-    );
-    setFilterMedicine(filtered);
-  }, [search, medicines]);
-
-
-
-  const fetchMedicinesSql = async()=>{
-    try {
-        const response = await getAllMedicines();
-        setMedicines(response.data);
-         setFilterMedicine(response.data);
-    } catch (error) {
-        console.error('Error fetching Sql medicines:',error);
-    }
-}
-
-
-  const handleName = (e) => {
-    setName(e.target.value)
-  }
-
-  const addBillFn = async () => {
-    const newBill = { medicines: [...cart], total: totalAmount, name: name, status: status, time: new Date().toLocaleTimeString() }; // Create the updated bill object
-
-    setBill(newBill); // Update state (but won't be available immediately)
+  const fetchMedicinesSql = async () => {
 
     try {
-      const response = await addBill(newBill); // Use newBill instead of bill
-      console.log(response);
-      setCart([])
-      setStatus('')
-      setOpen(false)
+
+      const data = await getAllMedicines();
+
+      const validData = Array.isArray(data) ? data : [];
+
+      setMedicines(validData);
+
+      setFilterMedicine(validData);
+
     } catch (error) {
-      console.error("Error Adding Bill to the database", error);
+
+      console.error('Error fetching medicines:', error);
+
+      setMedicines([]);
+      setFilterMedicine([]);
     }
   };
 
+  const handleSearchChange = async (e) => {
 
-  useEffect(() => {
-    console.log(bill);
-  }, [bill])
+    const value = e.target.value;
 
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
+    setSearch(value);
+
+    try {
+
+      if (value.trim() === '') {
+
+        setFilterMedicine(medicines);
+
+        return;
+      }
+
+      const response = await findmedicineByName(value);
+
+      setFilterMedicine(response);
+
+    } catch (error) {
+
+      console.error("Search Error:", error);
+    }
   };
 
-  // const onAddClick = (med) => {
-  //   setCart((prevCart) => {
-  //     // Check if medicine is already in the cart
-  //     const existingMed = prevCart.find((item) => item.id === med.id);
+  const handleCustomerChange = (e) => {
 
-  //     if (existingMed) {
-  //       // If found, increase quantity
-  //       return prevCart.map((item) =>
-  //         item.id === med.id ? { ...item, qty: item.qty + 1 } : item
-  //       );
-  //     } else {
-  //       // If not found, add new medicine with qty 1
-  //       return [...prevCart, { ...med, qty: 1 }];
-  //     }
-  //   });
-  // };
+    const { name, value } = e.target;
 
-  // useEffect(()=>{
-  //   console.log(cart);
+    setCustomer((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  // },[cart])
+  const statusCheck = (e) => {
+    setStatus(e.target.value);
+  };
 
-  const onAddClick = async(med) => {
-try {
-      let responce = await decreaseStock(med.id)
-      setCart((prevCart) => {
-        const existingMed = prevCart.find((item) => item.id === med.id);
-        console.log(existingMed);
-  
-        if (existingMed) {
-          // Prevent adding more than available stock
-          if (existingMed.qty >= (med.stock || 0)) return prevCart;
-  
-          return prevCart.map((item) =>
-            item.id === med.id ? { ...item, qty: item.qty + 1 } : item
-          );
-        } else {
-          // Only add if stock is available
-          if ((med.stock || 0) > 0) {
-            return [...prevCart, { ...med, qty: 1 }];
-          } else {
-            return prevCart; // No stock available, don't add
-          }
+  const onAddClick = (med) => {
+
+    setCart((prevCart) => {
+
+      const existingMed = prevCart.find((item) => item.id === med.id);
+
+      if (existingMed) {
+
+        if (existingMed.qty >= med.stock) {
+          return prevCart;
         }
-      });
-  
-      // Reduce stock in medicines
-      setMedicines((prevMedicines) =>
-        prevMedicines.map((medicine) =>
-          medicine.id === med.id && (medicine.stock || 0) > 0
-            ? { ...medicine, stock: medicine.stock - 1 }
-            : medicine
-        )
-      );
-} catch (error) {
-  
-}
+
+        return prevCart.map((item) =>
+          item.id === med.id
+            ? { ...item, qty: item.qty + 1 }
+            : item
+        );
+      }
+
+      return [...prevCart, { ...med, qty: 1 }];
+    });
   };
-  
-  
 
+  const increaseQty = (id) => {
 
-  const onDeleteClick = async(id) => {
- try {
-    let response = await increaseStock(id)
-     setCart((prevCart) => {
-       const itemInCart = prevCart.find((item) => item.id === id);
-   
-       if (!itemInCart) return prevCart; // If item not found in cart, do nothing
-   
-       return itemInCart.qty > 1
-         ? prevCart.map((item) =>
-             item.id === id ? { ...item, qty: item.qty - 1 } : item
-           )
-         : prevCart.filter((item) => item.id !== id);
-     });
-   
-     setMedicines((prevMedicines) =>
-       prevMedicines.map((medicine) =>
-         medicine.id === id
-           ? { ...medicine, stock: medicine.stock + 1 } // Always restore stock when removing from cart
-           : medicine
-       )
-     );
- } catch (error) {
-  
- }
+    setCart((prevCart) =>
+      prevCart.map((item) => {
+
+        if (item.id === id && item.qty < item.stock) {
+          return { ...item, qty: item.qty + 1 };
+        }
+
+        return item;
+      })
+    );
+  };
+
+  const decreaseQty = (id) => {
+
+    setCart((prevCart) =>
+      prevCart
+        .map((item) =>
+          item.id === id
+            ? { ...item, qty: item.qty - 1 }
+            : item
+        )
+        .filter((item) => item.qty > 0)
+    );
+  };
+
+  const onDeleteClick = (id) => {
+
+    setCart((prevCart) =>
+      prevCart.filter((item) => item.id !== id)
+    );
   };
 
   const clearCart = () => {
-    setCart([])
-  }
-
- 
-
-  const statusCheck = (e) => {
-    setStatus(e.target.name)
-  }
-
-
-  // const increaseQty = (id) => {
-  //   setCart((prevCart) =>
-  //     prevCart.map((item) =>
-  //       item.id === id
-  //         ? { ...item, qty: Math.min(item.qty + 1, item.stock) } // Prevent exceeding stock
-  //         : item
-  //     )
-  //   );
-
-  //   // Reduce stock in medicines only if there's stock left
-  //   setMedicines((prevMedicines) =>
-  //     prevMedicines.map((medicine) =>
-  //       medicine.id === id && medicine.stock > 0
-  //         ? { ...medicine, stock: medicine.stock - 1 }
-  //         : medicine
-  //     )
-  //   );
-  // };
-
-  const increaseQty = async (id) => {
-    try {
-      
-      setCart((prevCart) =>
-        prevCart.map((item) =>
-          item.id === id
-            ? { ...item, qty: Math.min(item.qty + 1, item.stock) }
-            : item
-        )
-      );
-      
-      const response = await decreaseStock(id); // response.stock
-      setMedicines((prevMedicines) =>
-        prevMedicines.map((medicine) =>
-          medicine.id === id
-            ? { ...medicine, stock: response.stock }
-            : medicine
-        )
-      );
-    } catch (error) {
-      console.error('Error increasing quantity:', error);
-      alert('Failed to increase quantity. Stock might be unavailable.');
-    }
-  };
-  
-
-
-
-  const decreaseQty = async(id) => {
- try {
-  const response = await increaseStock(id); // response.stock
-     setCart((prevCart) =>
-       prevCart
-         .map((item) =>
-           item.id === id && item.qty > 1 ? { ...item, qty: item.qty - 1 } : item
-         )
-         .filter((item) => item.qty > 0) // Remove if qty becomes 0
-     );
- 
-     // Increase stock only if quantity was greater than 1
-     setMedicines((prevMedicines) =>
-       prevMedicines.map((medicine) =>
-         medicine.id === id && cart.find(item => item.id === id)?.qty > 1
-           ? { ...medicine, stock: medicine.stock + 1 }
-           : medicine
-       )
-     );
- } catch (error) {
-  
- }
+    setCart([]);
   };
 
+  const totalAmount = cart.reduce(
+    (acc, item) => acc + Number(item.mrp) * item.qty,
+    0
+  );
 
-
-  useState(() => {
-    console.log(status);
-  }, [status])
-
-  const totalAmount = cart.reduce((acc, item) => acc + item.mrp * item.qty, 0);
   const today = new Date();
+
   const formattedDate = today.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
   });
 
-  // console.log(formattedDate);
+  const generatePDF = () => {
 
+    const doc = new jsPDF();
+
+    // HEADER
+
+    doc.setFontSize(24);
+
+    doc.text("SAABIT PHARMACY", 14, 20);
+
+    doc.setFontSize(11);
+
+    doc.text("Drug Licence No: 13351/52", 14, 30);
+
+    doc.text("Phone: +91 9797027047", 14, 37);
+
+    doc.text(
+      "Address: Kak Sarai, Karan Nagar, Opp HDFC Bank, Srinagar",
+      14,
+      44
+    );
+
+    // INVOICE INFO
+
+    doc.setFontSize(12);
+
+    doc.text(`Invoice No: ${invoiceNumber}`, 14, 58);
+
+    doc.text(`Date: ${formattedDate}`, 150, 58);
+
+    // CUSTOMER INFO
+
+    doc.setFontSize(13);
+
+    doc.text("Customer Details", 14, 72);
+
+    doc.setFontSize(11);
+
+    doc.text(`Name: ${customer.name}`, 14, 82);
+
+    doc.text(`Phone: ${customer.phone}`, 14, 89);
+
+    doc.text(`Address: ${customer.address}`, 14, 96);
+
+    // TABLE
+
+    autoTable(doc, {
+
+      startY: 110,
+
+      head: [[
+        'Medicine',
+        'Qty',
+        'Batch',
+        'Expiry',
+        'Price',
+        'Total'
+      ]],
+
+      body: cart.map((item) => [
+
+        item.name,
+
+        item.qty,
+
+        item.batchNumber,
+
+        item.expiryDate,
+
+        Number(item.mrp).toFixed(2),
+
+        (Number(item.mrp) * item.qty).toFixed(2)
+
+      ]),
+    });
+
+    // TOTAL
+
+    doc.setFontSize(16);
+
+    doc.text(
+      `Grand Total: ₹${totalAmount.toFixed(2)}`,
+      100,
+      doc.lastAutoTable.finalY + 20
+    );
+
+    // FOOTER
+
+    doc.setFontSize(11);
+
+    doc.text(
+      "Thank you for visiting Saabit Pharmacy",
+      14,
+      doc.lastAutoTable.finalY + 40
+    );
+
+    doc.save(`${invoiceNumber}.pdf`);
+  };
+
+  const addBillFn = async () => {
+
+    const newBill = {
+
+      invoiceNumber,
+
+      customer,
+
+      medicines: cart,
+
+      total: totalAmount,
+
+      status,
+
+      date: new Date(),
+    };
+
+    try {
+
+      await addBillSql(newBill);
+
+      generatePDF();
+
+      setCart([]);
+
+      setCustomer({
+        name: '',
+        phone: '',
+        address: ''
+      });
+
+      setStatus('completed');
+
+      setOpen(false);
+
+    } catch (error) {
+
+      console.error("Error Adding Bill:", error);
+    }
+  };
 
   return (
-    <main id='main-top-container' className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
-      <h1 className="text-5xl">Billing</h1>
-      <Input className='mb-3' placeholder="Search Medicines" onChange={handleSearchChange} />
+
+    <main
+      id='main-top-container'
+      className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4"
+    >
+
+      <h1 className="text-5xl mb-4">
+        Billing
+      </h1>
+
+      <Input
+        className='mb-3 bg-white'
+        placeholder="Search Medicines"
+        value={search}
+        onChange={handleSearchChange}
+      />
+
       <div id='main-container' className='flex gap-2'>
+
+        {/* INVENTORY */}
+
         <div id="inventory-container">
+
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+
             <thead className="bg-gray-50">
+
               <tr>
                 <th className="px-2 py-1">Name</th>
-                <th className="px-2 py-1">Category</th>
+                <th className="px-2 py-1">Batch No.</th>
                 <th className="px-2 py-1">EXP Date</th>
                 <th className="px-2 py-1">Stock</th>
                 <th className="px-2 py-1">Price</th>
                 <th className="px-2 py-1"></th>
               </tr>
+
             </thead>
+
             <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+
               {filterMedicine.length > 0 ? (
+
                 filterMedicine.map((med) => (
+
                   <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-1 text-black font-black">{med.name}</td>
-                    <td className="px-2 py-1 text-black font-light">{med.category}</td>
-                    <td className="px-2 py-1 text-black font-bold">{med.expiryDate}</td>
-                    <td className={`${Number(med.stock) > 0 ? 'text-green-600 px-2 py-1 font-bold ' : 'text-red-600 px-2 py-1 font-bold'}`}>{med.stock}</td>
-                    <td className="px-2 py-1 text-black font-bold">₹ {Number(med.mrp).toFixed(2)}</td>
-                    <td className="flex gap-4 px-2 py-1">
-                      {Number(med.stock) > 0 ?
-                        <Button onClick={() => onAddClick(med)}>Add to cart</Button>
-                        : <Button disabled>Add to Cart</Button>}
+
+                    <td className="px-2 py-1 text-black font-bold">
+                      {med.name}
                     </td>
+
+                    <td className="px-2 py-1 text-black">
+                      {med.batchNumber}
+                    </td>
+
+                    <td className="px-2 py-1 text-black">
+                      {med.expiryDate}
+                    </td>
+
+                    <td
+                      className={`${Number(med.stock) > 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                        } px-2 py-1 font-bold`}
+                    >
+                      {med.stock}
+                    </td>
+
+                    <td className="px-2 py-1 text-black font-bold">
+                      ₹ {Number(med.mrp).toFixed(2)}
+                    </td>
+
+                    <td className="px-2 py-1">
+
+                      {Number(med.stock) > 0 ? (
+
+                        <Button onClick={() => onAddClick(med)}>
+                          Add to Cart
+                        </Button>
+
+                      ) : (
+
+                        <Button disabled>
+                          Out of Stock
+                        </Button>
+
+                      )}
+
+                    </td>
+
                   </tr>
+
                 ))
+
               ) : (
+
                 <tr>
-                  <td colSpan="10" className="px-2 py-1 text-center">No Medicines Found</td>
+                  <td colSpan="10" className="text-center py-5">
+                    No Medicines Found
+                  </td>
                 </tr>
+
               )}
+
             </tbody>
+
           </table>
+
         </div>
-        <div id='cart-container' className='bg-white px-2'>
-          <h1 className='text-4xl text-center p-1'>Current Bill</h1>
+
+        {/* CART */}
+
+        <div
+          id='cart-container'
+          className='bg-white px-3 py-3 w-[500px]'
+        >
+
+          <h1 className='text-4xl text-center mb-4'>
+            Current Bill
+          </h1>
+
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
+
             <thead className="bg-gray-50">
+
               <tr>
                 <th className="px-2 py-1">Name</th>
-                <th className="px-2 py-1">Category</th>
                 <th className="px-2 py-1">Qty</th>
                 <th className="px-2 py-1">Price</th>
                 <th className="px-2 py-1">Total</th>
                 <th className="px-2 py-1"></th>
               </tr>
+
             </thead>
+
             <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+
               {cart.length > 0 ? (
+
                 cart.map((med) => (
-                  <tr key={med.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-1 text-black font-bold">{med.name}</td>
-                    <td className="px-2 py-1 text-black font-light">{med.category}</td>
-                    <td className="px-2 py-1 text-black">
-                      <div className="flex items-center space-x-1">
-                        <button className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colo₹ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-6 w-6'
-                          onClick={() => decreaseQty(med.id)}>-</button>
-                        <span className='w-8 text-center'>{med.qty}</span>
-                        <button className='inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colo₹ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-6 w-6'
-                          onClick={() => increaseQty(med.id)}>+</button>
+
+                  <tr key={med.id}>
+
+                    <td className="px-2 py-1 text-black font-bold">
+                      {med.name}
+                    </td>
+
+                    <td className="px-2 py-1">
+
+                      <div className="flex items-center gap-2">
+
+                        <button
+                          className='border w-6 h-6 rounded'
+                          onClick={() => decreaseQty(med.id)}
+                        >
+                          -
+                        </button>
+
+                        <span>{med.qty}</span>
+
+                        <button
+                          className='border w-6 h-6 rounded'
+                          onClick={() => increaseQty(med.id)}
+                        >
+                          +
+                        </button>
+
                       </div>
+
                     </td>
-                    <td className="px-2 py-1 text-black font-light">₹ {Number(med.mrp).toFixed(2)}</td>
-                    <td className="px-2 py-1 text-black font-bold ">₹ {(Number(med.mrp) * med.qty).toFixed(2)}</td>
-                    <td className="flex gap-4 px-2 py-1">
-                      <button onClick={() => onDeleteClick(med.id)} className="text-red-600 hover:text-red-800">Delete</button>
+
+                    <td className="px-2 py-1">
+                      ₹ {Number(med.mrp).toFixed(2)}
                     </td>
+
+                    <td className="px-2 py-1 font-bold">
+                      ₹ {(Number(med.mrp) * med.qty).toFixed(2)}
+                    </td>
+
+                    <td>
+
+                      <button
+                        onClick={() => onDeleteClick(med.id)}
+                        className='text-red-600'
+                      >
+                        Delete
+                      </button>
+
+                    </td>
+
                   </tr>
+
                 ))
+
               ) : (
+
                 <tr>
-                  <td colSpan="10" className="px-2 py-1 text-center">No medicines added to the bill yet</td>
+                  <td colSpan="10" className="text-center py-5">
+                    No medicines added yet
+                  </td>
                 </tr>
+
               )}
+
             </tbody>
+
           </table>
-          <hr className='mt-2' />
-          <div className="flex justify-between mt-4 text-2xl font-bold text-center px-3">
+
+          <hr className='mt-4' />
+
+          <div className="flex justify-between mt-4 text-2xl font-bold">
+
             <p>Total</p>
-            <p>₹{totalAmount.toFixed(2)}</p>
-          </div>
-          <div className={`mt-5 ${cart.length > 0 ? 'block' : 'hidden'}`}>
-            <Input placeholder='Enter Your name' className='border-black py-5' onChange={handleName} />
-            <p className='text-3xl font-bold mt-5'>Status</p>
-            <label htmlFor="completed" className='mr-3'>Completed</label>
-            <input name='completed' type="checkbox" onClick={statusCheck} />
-            <br />
-            <label htmlFor="pending" className='mr-3'>Pending</label>
-            <input name='pending' type="checkbox" onClick={statusCheck} />
+
+            <p>₹ {totalAmount.toFixed(2)}</p>
+
           </div>
 
+          {cart.length > 0 && (
+
+            <div className='flex flex-col gap-3 mt-5'>
+
+              <Input
+                placeholder='Customer Name'
+                name='name'
+                value={customer.name}
+                onChange={handleCustomerChange}
+              />
+
+              <Input
+                placeholder='Phone Number'
+                name='phone'
+                value={customer.phone}
+                onChange={handleCustomerChange}
+              />
+
+              <Input
+                placeholder='Address'
+                name='address'
+                value={customer.address}
+                onChange={handleCustomerChange}
+              />
+
+              <div>
+
+                <p className='text-xl font-bold mb-2'>
+                  Status
+                </p>
+
+                <div className='flex gap-5'>
+
+                  <label className='flex gap-2'>
+                    <input
+                      type="radio"
+                      value="completed"
+                      checked={status === 'completed'}
+                      onChange={statusCheck}
+                    />
+                    Completed
+                  </label>
+
+                  <label className='flex gap-2'>
+                    <input
+                      type="radio"
+                      value="pending"
+                      checked={status === 'pending'}
+                      onChange={statusCheck}
+                    />
+                    Pending
+                  </label>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          )}
+
           <div className="flex justify-between mt-5">
-            {cart.length > 0 ? <Button onClick={clearCart} >Clear Cart</Button> : <Button disabled>Clear Cart</Button>}
-            {cart.length && name.length > 0 ? <Dialog open={open} onOpenChange={setOpen}>
+
+            <Button
+              onClick={clearCart}
+              disabled={cart.length === 0}
+            >
+              Clear Cart
+            </Button>
+
+            <Dialog open={open} onOpenChange={setOpen}>
+
               <DialogTrigger asChild>
-                <Button onClick={() => setOpen(true)}>
+
+                <Button
+                  disabled={
+                    cart.length === 0 ||
+                    customer.name.trim() === ''
+                  }
+                >
                   Checkout
                 </Button>
+
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[650px]">
+
+              <DialogContent className="sm:max-w-[700px]">
+
                 <DialogHeader>
-                  <DialogTitle className='text-2xl'>Saabit Pharmacy</DialogTitle>
-                  <DialogDescription>
-                    <span className='font-bold'>Contact</span>: +91 9797027047
-                    <br></br>
-                    <span className='font-bold'>Address</span>: Saabit Complex, Hospital Road, Karan Nagar, Srinagar - 190010 (SMHS Hospital)
+
+                  <DialogTitle className='text-2xl font-bold'>
+                    SAABIT PHARMACY
+                  </DialogTitle>
+
+                  <DialogDescription className="space-y-1 text-sm">
+
+                    <p>
+                      <strong>Drug Licence No:</strong> 13351/52
+                    </p>
+
+                    <p>
+                      <strong>Phone:</strong> +91 9797027047
+                    </p>
+
+                    <p>
+                      <strong>Address:</strong> Kak Sarai, Karan Nagar,
+                      Opp HDFC Bank, Srinagar
+                    </p>
+
                   </DialogDescription>
-                  <DialogDescription>
-                    Thank you for your purchase!
+
+                  <DialogDescription className='space-y-1'>
+
+                    <p>
+                      <strong>Invoice No:</strong> {invoiceNumber}
+                    </p>
+
+                    <p>
+                      <strong>Customer:</strong> {customer.name}
+                    </p>
+
+                    <p>
+                      <strong>Phone:</strong> {customer.phone}
+                    </p>
+
+                    <p>
+                      <strong>Address:</strong> {customer.address}
+                    </p>
+
+                    <p>
+                      <strong>Date:</strong> {formattedDate}
+                    </p>
+
                   </DialogDescription>
+
                 </DialogHeader>
 
                 <Table>
-                  <TableCaption>{formattedDate}</TableCaption>
+
+                  <TableCaption>
+                    Invoice Summary
+                  </TableCaption>
+
                   <TableHeader>
+
                     <TableRow>
-                      <TableHead className="w-[100px]">Name</TableHead>
-                      <TableHead>QTY</TableHead>
-                      <TableHead>BATCH NO.</TableHead>
-                      <TableHead>PRICE</TableHead>
-                      <TableHead className="text-right">TOTAL</TableHead>
+
+                      <TableHead>Name</TableHead>
+                      <TableHead>Qty</TableHead>
+                      <TableHead>Batch</TableHead>
+                      <TableHead>Expiry</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Total</TableHead>
+
                     </TableRow>
+
                   </TableHeader>
+
                   <TableBody>
+
                     {cart.map((item) => (
-                      <TableRow>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{`x${item.qty}`}</TableCell>
+
+                      <TableRow key={item.id}>
+
+                        <TableCell>{item.name}</TableCell>
+
+                        <TableCell>{item.qty}</TableCell>
+
                         <TableCell>{item.batchNumber}</TableCell>
-                        <TableCell>{item.mrp}</TableCell>
-                        <TableCell className="text-right">{(Number(item.mrp) * item.qty).toFixed(2)}</TableCell>
+
+                        <TableCell>{item.expiryDate}</TableCell>
+
+                        <TableCell>
+                          ₹ {Number(item.mrp).toFixed(2)}
+                        </TableCell>
+
+                        <TableCell>
+                          ₹ {(Number(item.mrp) * item.qty).toFixed(2)}
+                        </TableCell>
+
                       </TableRow>
+
                     ))}
+
                   </TableBody>
+
                   <TableFooter>
+
                     <TableRow>
-                      {/* <TableCell colSpan={3}>Total</TableCell> */}
-                      <TableCell colSpan={5} className="text-right text-2xl font-extrabold">{`₹${totalAmount.toFixed(2)}`}</TableCell>
+
+                      <TableCell
+                        colSpan={6}
+                        className="text-right text-2xl font-bold"
+                      >
+                        ₹ {totalAmount.toFixed(2)}
+                      </TableCell>
+
                     </TableRow>
+
                   </TableFooter>
+
                 </Table>
 
-
                 <DialogFooter>
-                  <Button type="button" onClick={addBillFn}>
-                    Save & Print
+
+                  <Button onClick={addBillFn}>
+                    Save & Generate PDF
                   </Button>
+
                 </DialogFooter>
+
               </DialogContent>
-            </Dialog> : <Button disabled>Checkout</Button>}
+
+            </Dialog>
+
           </div>
+
         </div>
+
       </div>
 
     </main>
