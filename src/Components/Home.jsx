@@ -6,8 +6,11 @@ import { Button } from './ui/button.jsx';
 import {
   getAllMedicines,
   addBillSql,
-  findmedicineByName
+  findmedicineByName,
+  saveInvoice
 } from '../services/medicineService.js';
+
+
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,7 +28,6 @@ import {
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -126,32 +128,54 @@ function Home() {
 
     setCart((prevCart) => {
 
-      const existingMed = prevCart.find((item) => item.id === med.id);
+      const existingMed = prevCart.find(
+        (item) => String(item.id) === String(med.id)
+      );
 
       if (existingMed) {
 
-        if (existingMed.qty >= med.stock) {
+        if (existingMed.qty >= Number(med.stock)) {
           return prevCart;
         }
 
         return prevCart.map((item) =>
-          item.id === med.id
-            ? { ...item, qty: item.qty + 1 }
+
+          String(item.id) === String(med.id)
+
+            ? {
+              ...item,
+              qty: item.qty + 1
+            }
+
             : item
         );
       }
 
-      return [...prevCart, { ...med, qty: 1 }];
+      return [
+        ...prevCart,
+        {
+          ...med,
+          qty: 1
+        }
+      ];
     });
   };
 
   const increaseQty = (id) => {
 
     setCart((prevCart) =>
+
       prevCart.map((item) => {
 
-        if (item.id === id && item.qty < item.stock) {
-          return { ...item, qty: item.qty + 1 };
+        if (
+          String(item.id) === String(id) &&
+          item.qty < Number(item.stock)
+        ) {
+
+          return {
+            ...item,
+            qty: item.qty + 1
+          };
         }
 
         return item;
@@ -162,12 +186,20 @@ function Home() {
   const decreaseQty = (id) => {
 
     setCart((prevCart) =>
+
       prevCart
         .map((item) =>
-          item.id === id
-            ? { ...item, qty: item.qty - 1 }
+
+          String(item.id) === String(id)
+
+            ? {
+              ...item,
+              qty: item.qty - 1
+            }
+
             : item
         )
+
         .filter((item) => item.qty > 0)
     );
   };
@@ -175,7 +207,10 @@ function Home() {
   const onDeleteClick = (id) => {
 
     setCart((prevCart) =>
-      prevCart.filter((item) => item.id !== id)
+
+      prevCart.filter(
+        (item) => String(item.id) !== String(id)
+      )
     );
   };
 
@@ -200,8 +235,6 @@ function Home() {
 
     const doc = new jsPDF();
 
-    // HEADER
-
     doc.setFontSize(24);
 
     doc.text("SAABIT PHARMACY", 14, 20);
@@ -218,15 +251,11 @@ function Home() {
       44
     );
 
-    // INVOICE INFO
-
     doc.setFontSize(12);
 
     doc.text(`Invoice No: ${invoiceNumber}`, 14, 58);
 
     doc.text(`Date: ${formattedDate}`, 150, 58);
-
-    // CUSTOMER INFO
 
     doc.setFontSize(13);
 
@@ -239,8 +268,6 @@ function Home() {
     doc.text(`Phone: ${customer.phone}`, 14, 89);
 
     doc.text(`Address: ${customer.address}`, 14, 96);
-
-    // TABLE
 
     autoTable(doc, {
 
@@ -272,8 +299,6 @@ function Home() {
       ]),
     });
 
-    // TOTAL
-
     doc.setFontSize(16);
 
     doc.text(
@@ -281,8 +306,6 @@ function Home() {
       100,
       doc.lastAutoTable.finalY + 20
     );
-
-    // FOOTER
 
     doc.setFontSize(11);
 
@@ -297,27 +320,45 @@ function Home() {
 
   const addBillFn = async () => {
 
-    const newBill = {
+    if (cart.length === 0) {
+      alert("Cart is empty");
+      return;
+    }
+
+    const newInvoice = {
 
       invoiceNumber,
 
       customer,
 
-      medicines: cart,
+      medicines: cart.map((item) => ({
+        id: item.id,
+        name: item.name,
+        qty: item.qty,
+        mrp: item.mrp,
+        batchNumber: item.batchNumber,
+        expiryDate: item.expiryDate,
+      })),
 
       total: totalAmount,
 
       status,
 
-      date: new Date(),
+      date: new Date().toISOString(),
     };
 
     try {
 
-      await addBillSql(newBill);
+      // SAVE INVOICE
+      await saveInvoice(newInvoice);
 
+      // SAVE BILL
+      await addBillSql(newInvoice);
+
+      // GENERATE PDF
       generatePDF();
 
+      // RESET
       setCart([]);
 
       setCustomer({
@@ -328,11 +369,20 @@ function Home() {
 
       setStatus('completed');
 
+      setSearch('');
+
       setOpen(false);
+
+      // REFRESH
+      fetchMedicinesSql();
+
+      alert("Invoice Saved Successfully");
 
     } catch (error) {
 
-      console.error("Error Adding Bill:", error);
+      console.error("Error saving invoice:", error);
+
+      alert("Failed to save invoice");
     }
   };
 
@@ -647,44 +697,9 @@ function Home() {
                     SAABIT PHARMACY
                   </DialogTitle>
 
-                  <DialogDescription className="space-y-1 text-sm">
+                  <DialogDescription>
 
-                    <p>
-                      <strong>Drug Licence No:</strong> 13351/52
-                    </p>
-
-                    <p>
-                      <strong>Phone:</strong> +91 9797027047
-                    </p>
-
-                    <p>
-                      <strong>Address:</strong> Kak Sarai, Karan Nagar,
-                      Opp HDFC Bank, Srinagar
-                    </p>
-
-                  </DialogDescription>
-
-                  <DialogDescription className='space-y-1'>
-
-                    <p>
-                      <strong>Invoice No:</strong> {invoiceNumber}
-                    </p>
-
-                    <p>
-                      <strong>Customer:</strong> {customer.name}
-                    </p>
-
-                    <p>
-                      <strong>Phone:</strong> {customer.phone}
-                    </p>
-
-                    <p>
-                      <strong>Address:</strong> {customer.address}
-                    </p>
-
-                    <p>
-                      <strong>Date:</strong> {formattedDate}
-                    </p>
+                    Invoice No: {invoiceNumber}
 
                   </DialogDescription>
 
@@ -692,18 +707,12 @@ function Home() {
 
                 <Table>
 
-                  <TableCaption>
-                    Invoice Summary
-                  </TableCaption>
-
                   <TableHeader>
 
                     <TableRow>
 
                       <TableHead>Name</TableHead>
                       <TableHead>Qty</TableHead>
-                      <TableHead>Batch</TableHead>
-                      <TableHead>Expiry</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Total</TableHead>
 
@@ -720,10 +729,6 @@ function Home() {
                         <TableCell>{item.name}</TableCell>
 
                         <TableCell>{item.qty}</TableCell>
-
-                        <TableCell>{item.batchNumber}</TableCell>
-
-                        <TableCell>{item.expiryDate}</TableCell>
 
                         <TableCell>
                           ₹ {Number(item.mrp).toFixed(2)}
@@ -744,7 +749,7 @@ function Home() {
                     <TableRow>
 
                       <TableCell
-                        colSpan={6}
+                        colSpan={4}
                         className="text-right text-2xl font-bold"
                       >
                         ₹ {totalAmount.toFixed(2)}

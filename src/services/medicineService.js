@@ -9,6 +9,53 @@ const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment';
 const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment';
 const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines';
 const API_BASE_URL_SEARCH_MEDICINE = 'http://localhost:8008/api/searchMedicine';
+const API_BASE_URL_INVOICE = "http://localhost:8008/api/invoice";
+
+
+
+export const saveInvoice = async (invoiceData) => {
+
+  try {
+
+    const response = await axios.post(
+      `${API_BASE_URL_INVOICE}/save`,
+      invoiceData
+    );
+
+    return response.data;
+
+  } catch (error) {
+
+    console.error(error);
+
+    throw error;
+  }
+};
+
+// SEARCH INVOICE
+export const searchInvoices = async (date, customer) => {
+
+  try {
+
+    const response = await axios.get(
+      `${API_BASE_URL_INVOICE}/search`,
+      {
+        params: {
+          date,
+          customer
+        }
+      }
+    );
+
+    return response.data;
+
+  } catch (error) {
+
+    console.error(error);
+
+    throw error;
+  }
+};
 
 
 // ─── Medicine Search ──────────────────────────────────────────────────────────
