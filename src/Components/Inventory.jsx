@@ -164,7 +164,7 @@ function Inventory() {
     };
 
 
-   
+
 
     const handleUpdate = async () => {
         if (!selectedMedicine || Object.keys(formData).length === 0) {
@@ -313,7 +313,7 @@ function Inventory() {
                                                                     <DialogTrigger asChild>
                                                                         <Button variant="outline">View Details</Button>
                                                                     </DialogTrigger>
-                                                                    <DialogContent className="sm:max-w-[1400px] ">
+                                                                    <DialogContent className="sm:max-w-[1400px] max-h-[90vh] overflow-y-auto">
                                                                         <DialogHeader>
                                                                             <DialogTitle>{purchase.supplierName}</DialogTitle>
                                                                             <DialogDescription className="flex justify-between">
