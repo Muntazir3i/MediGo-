@@ -248,9 +248,9 @@ function Inventory() {
                     <h1 className="text-5xl mb-3">All Purchases</h1>
 
                     <Input className='mb-2 bg-white' placeholder="Search Purchases" onChange={handleSearchChange} />
-                    {Object.entries(groupedPurchases).map(([supplierName, data]) => (
-                        <Accordion type="single" collapsible key={supplierName}>
-                            <AccordionItem value={supplierName}>
+                    <Accordion type="single" collapsible>
+                        {Object.entries(groupedPurchases).map(([supplierName, data]) => (
+                            <AccordionItem value={supplierName} key={supplierName}>
                                 <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-lg bg-white mb-2">
                                     <div className="flex flex-1 flex-col md:flex-row md:items-center justify-between text-left gap-2">
                                         <div>
@@ -387,8 +387,8 @@ function Inventory() {
 
                                 </AccordionContent>
                             </AccordionItem>
-                        </Accordion>
-                    ))}
+                        ))}
+                    </Accordion>
                 </TabsContent>
 
 
