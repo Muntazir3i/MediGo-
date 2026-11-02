@@ -138,7 +138,7 @@ const TabContentAddPurchase = ({
                     <Input
                       type="number"
                       className="border border-black p-1 w-40 lg:w-full text-black"
-                      value={item.quantity}
+                      value={item.stock}
                       onChange={(e) => handleInputChange(item.id, "stock", e.target.value)}
                     />
                   </td>

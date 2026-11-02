@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button.jsx';
 
 import {
-  getMedicines,
   getLowStock,
   getOutOfStock,
   getExpiry,
@@ -67,8 +66,6 @@ function DashBoard() {
 
   const [filteredBill, setFilteredBill] = useState([]);
 
-  const [medicines, setMedicines] = useState([]);
-
   const [lowStock, setLowStock] = useState([]);
 
   const [outOfStock, setOutOfStock] = useState([]);
@@ -86,23 +83,6 @@ function DashBoard() {
     fetchExpiryStock();
     fetchInvoices();
   }, []);
-
-  const fetchMedicines = async () => {
-
-    try {
-
-      const response = await getMedicines();
-
-      setMedicines(response);
-
-    } catch (error) {
-
-      console.error(
-        'Error fetching medicines:',
-        error
-      );
-    }
-  };
 
   // ==========================
   // LOW STOCK
@@ -576,6 +556,10 @@ function DashBoard() {
                                     </TableHead>
 
                                     <TableHead>
+                                      Disc.
+                                    </TableHead>
+
+                                    <TableHead>
                                       Total
                                     </TableHead>
 
@@ -602,16 +586,20 @@ function DashBoard() {
                                       </TableCell>
 
                                       <TableCell>
-                                        ₹ {item.mrp}
+                                        ₹ {Number(item.price ?? item.mrp).toFixed(2)}
                                       </TableCell>
 
                                       <TableCell>
-                                        ₹ {
-                                          (
-                                            Number(item.mrp)
-                                            * item.qty
-                                          ).toFixed(2)
-                                        }
+                                        {Number(item.discount) > 0 ? `${Number(item.discount)}%` : '-'}
+                                      </TableCell>
+
+                                      <TableCell>
+                                        ₹ {Number(
+                                          item.lineTotal ??
+                                          (Number(item.price ?? item.mrp) || 0) *
+                                          (Number(item.qty) || 0) *
+                                          (1 - (Number(item.discount) || 0) / 100)
+                                        ).toFixed(2)}
                                       </TableCell>
 
                                     </TableRow>
@@ -622,10 +610,32 @@ function DashBoard() {
 
                                 <TableFooter>
 
+                                  {Number(med.totalDiscount) > 0 && (
+                                    <>
+                                      <TableRow>
+                                        <TableCell colSpan={5} className="text-right text-gray-600">
+                                          Subtotal
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          ₹ {Number(med.subtotal ?? med.total).toFixed(2)}
+                                        </TableCell>
+                                      </TableRow>
+
+                                      <TableRow>
+                                        <TableCell colSpan={5} className="text-right text-red-600">
+                                          Discount
+                                        </TableCell>
+                                        <TableCell className="text-right text-red-600">
+                                          - ₹ {Number(med.totalDiscount).toFixed(2)}
+                                        </TableCell>
+                                      </TableRow>
+                                    </>
+                                  )}
+
                                   <TableRow>
 
                                     <TableCell
-                                      colSpan={5}
+                                      colSpan={6}
                                       className="text-right text-2xl font-bold"
                                     >
                                       ₹ {

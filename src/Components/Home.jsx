@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { Input } from './ui/input.jsx';
 import { Button } from './ui/button.jsx';
 
 import {
   getAllMedicines,
-  addBillSql,
   findmedicineByName,
   saveInvoice
 } from '../services/medicineService.js';
 
-
-
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateInvoicePdf } from '../utils/invoicePdf.js';
 
 import {
   Dialog,
@@ -37,6 +33,28 @@ import {
 
 import './home.css';
 
+const round2 = (value) => Math.round((Number(value) || 0) * 100) / 100;
+
+const itemPrice = (item) => {
+  const value = Number(item.price);
+  if (Number.isFinite(value)) return Math.max(0, value);
+  return Math.max(0, Number(item.mrp) || 0);
+};
+
+const itemDiscount = (item) => {
+  const value = Number(item.discount);
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, value));
+};
+
+const lineSubtotal = (item) => itemPrice(item) * (Number(item.qty) || 0);
+
+const lineDiscountAmount = (item) => lineSubtotal(item) * (itemDiscount(item) / 100);
+
+const lineTotal = (item) => lineSubtotal(item) - lineDiscountAmount(item);
+
+const createInvoiceNumber = () => `INV-${Math.floor(100000 + Math.random() * 900000)}`;
+
 function Home() {
 
   const [open, setOpen] = useState(false);
@@ -50,15 +68,18 @@ function Home() {
 
   const [status, setStatus] = useState('completed');
 
+  const [saving, setSaving] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   const [customer, setCustomer] = useState({
     name: '',
     phone: '',
     address: ''
   });
 
-  const invoiceNumber = `INV-${Math.floor(
-    100000 + Math.random() * 900000
-  )}`;
+  const [invoiceNumber, setInvoiceNumber] = useState(createInvoiceNumber);
+
+  const searchRequestRef = useRef(0);
 
   useEffect(() => {
     fetchMedicinesSql();
@@ -85,29 +106,44 @@ function Home() {
     }
   };
 
-  const handleSearchChange = async (e) => {
+  useEffect(() => {
+    const term = search.trim();
 
-    const value = e.target.value;
-
-    setSearch(value);
-
-    try {
-
-      if (value.trim() === '') {
-
-        setFilterMedicine(medicines);
-
-        return;
-      }
-
-      const response = await findmedicineByName(value);
-
-      setFilterMedicine(response);
-
-    } catch (error) {
-
-      console.error("Search Error:", error);
+    if (!term) {
+      searchRequestRef.current += 1;
+      setFilterMedicine(medicines);
+      setSearchLoading(false);
+      return undefined;
     }
+
+    const requestId = ++searchRequestRef.current;
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+
+      try {
+        const response = await findmedicineByName(term);
+
+        // Ignore responses for a search term that is no longer current.
+        if (requestId !== searchRequestRef.current) return;
+
+        setFilterMedicine(Array.isArray(response) ? response : []);
+      } catch (error) {
+        if (requestId === searchRequestRef.current) {
+          console.error("Search Error:", error);
+          setFilterMedicine([]);
+        }
+      } finally {
+        if (requestId === searchRequestRef.current) {
+          setSearchLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search, medicines]);
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
   };
 
   const handleCustomerChange = (e) => {
@@ -155,10 +191,22 @@ function Home() {
         ...prevCart,
         {
           ...med,
-          qty: 1
+          qty: 1,
+          price: Number(med.mrp) || 0,
+          discount: 0
         }
       ];
     });
+  };
+
+  const updateCartItem = (id, field, value) => {
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        String(item.id) === String(id)
+          ? { ...item, [field]: value }
+          : item
+      )
+    );
   };
 
   const increaseQty = (id) => {
@@ -218,105 +266,15 @@ function Home() {
     setCart([]);
   };
 
-  const totalAmount = cart.reduce(
-    (acc, item) => acc + Number(item.mrp) * item.qty,
-    0
+  const subtotal = round2(
+    cart.reduce((acc, item) => acc + lineSubtotal(item), 0)
   );
 
-  const today = new Date();
+  const totalDiscount = round2(
+    cart.reduce((acc, item) => acc + lineDiscountAmount(item), 0)
+  );
 
-  const formattedDate = today.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  });
-
-  const generatePDF = () => {
-
-    const doc = new jsPDF();
-
-    doc.setFontSize(24);
-
-    doc.text("SAABIT PHARMACY", 14, 20);
-
-    doc.setFontSize(11);
-
-    doc.text("Drug Licence No: 13351/52", 14, 30);
-
-    doc.text("Phone: +91 9797027047", 14, 37);
-
-    doc.text(
-      "Address: Kak Sarai, Karan Nagar, Opp HDFC Bank, Srinagar",
-      14,
-      44
-    );
-
-    doc.setFontSize(12);
-
-    doc.text(`Invoice No: ${invoiceNumber}`, 14, 58);
-
-    doc.text(`Date: ${formattedDate}`, 150, 58);
-
-    doc.setFontSize(13);
-
-    doc.text("Customer Details", 14, 72);
-
-    doc.setFontSize(11);
-
-    doc.text(`Name: ${customer.name}`, 14, 82);
-
-    doc.text(`Phone: ${customer.phone}`, 14, 89);
-
-    doc.text(`Address: ${customer.address}`, 14, 96);
-
-    autoTable(doc, {
-
-      startY: 110,
-
-      head: [[
-        'Medicine',
-        'Qty',
-        'Batch',
-        'Expiry',
-        'Price',
-        'Total'
-      ]],
-
-      body: cart.map((item) => [
-
-        item.name,
-
-        item.qty,
-
-        item.batchNumber,
-
-        item.expiryDate,
-
-        Number(item.mrp).toFixed(2),
-
-        (Number(item.mrp) * item.qty).toFixed(2)
-
-      ]),
-    });
-
-    doc.setFontSize(16);
-
-    doc.text(
-      `Grand Total: ₹${totalAmount.toFixed(2)}`,
-      100,
-      doc.lastAutoTable.finalY + 20
-    );
-
-    doc.setFontSize(11);
-
-    doc.text(
-      "Thank you for visiting Saabit Pharmacy",
-      14,
-      doc.lastAutoTable.finalY + 40
-    );
-
-    doc.save(`${invoiceNumber}.pdf`);
-  };
+  const totalAmount = round2(subtotal - totalDiscount);
 
   const addBillFn = async () => {
 
@@ -325,38 +283,76 @@ function Home() {
       return;
     }
 
+    if (saving) return;
+
+    const invalidPrice = cart.find((item) => {
+      const value = Number(item.price);
+      return !Number.isFinite(value) || value < 0;
+    });
+
+    if (invalidPrice) {
+      alert(`Enter a valid price for ${invalidPrice.name}.`);
+      return;
+    }
+
+    const invalidDiscount = cart.find((item) => {
+      const value = Number(item.discount || 0);
+      return !Number.isFinite(value) || value < 0 || value > 100;
+    });
+
+    if (invalidDiscount) {
+      alert(`Discount for ${invalidDiscount.name} must be between 0 and 100.`);
+      return;
+    }
+
+    const invoiceDate = new Date().toISOString();
+
+    const invoiceItems = cart.map((item) => ({
+      id: item.id,
+      name: item.name,
+      qty: Number(item.qty) || 0,
+      mrp: Number(item.mrp) || 0,
+      price: itemPrice(item),
+      discount: itemDiscount(item),
+      discountAmount: round2(lineDiscountAmount(item)),
+      lineTotal: round2(lineTotal(item)),
+      batchNumber: item.batchNumber,
+      expiryDate: item.expiryDate
+    }));
+
     const newInvoice = {
-
       invoiceNumber,
-
-      customer,
-
-      medicines: cart.map((item) => ({
-        id: item.id,
-        name: item.name,
-        qty: item.qty,
-        mrp: item.mrp,
-        batchNumber: item.batchNumber,
-        expiryDate: item.expiryDate,
-      })),
-
+      customer: {
+        ...customer,
+        name: customer.name.trim()
+      },
+      medicines: invoiceItems,
+      subtotal,
+      totalDiscount,
       total: totalAmount,
-
       status,
-
-      date: new Date().toISOString(),
+      date: invoiceDate
     };
+
+    setSaving(true);
 
     try {
 
-      // SAVE INVOICE
+      // Sales invoices are stored in the invoice files. They must not be added
+      // to the supplier bills table, which is only for purchase bills.
       await saveInvoice(newInvoice);
 
-      // SAVE BILL
-      await addBillSql(newInvoice);
-
       // GENERATE PDF
-      generatePDF();
+      generateInvoicePdf({
+        invoiceNumber,
+        date: invoiceDate,
+        customer: newInvoice.customer,
+        items: invoiceItems,
+        subtotal,
+        totalDiscount,
+        total: totalAmount,
+        status
+      });
 
       // RESET
       setCart([]);
@@ -373,6 +369,8 @@ function Home() {
 
       setOpen(false);
 
+      setInvoiceNumber(createInvoiceNumber());
+
       // REFRESH
       fetchMedicinesSql();
 
@@ -383,6 +381,10 @@ function Home() {
       console.error("Error saving invoice:", error);
 
       alert("Failed to save invoice");
+
+    } finally {
+
+      setSaving(false);
     }
   };
 
@@ -397,12 +399,17 @@ function Home() {
         Billing
       </h1>
 
-      <Input
-        className='mb-3 bg-white'
-        placeholder="Search Medicines"
-        value={search}
-        onChange={handleSearchChange}
-      />
+      <div className='flex items-center gap-3 mb-3'>
+        <Input
+          className='bg-white'
+          placeholder="Search medicine name or batch number"
+          value={search}
+          onChange={handleSearchChange}
+        />
+        {searchLoading && (
+          <span className='whitespace-nowrap text-sm text-gray-500'>Searching…</span>
+        )}
+      </div>
 
       <div id='main-container' className='flex gap-2'>
 
@@ -500,12 +507,16 @@ function Home() {
 
         <div
           id='cart-container'
-          className='bg-white px-3 py-3 w-[500px]'
+          className='bg-white px-3 py-3 w-[640px] min-w-[620px]'
         >
 
-          <h1 className='text-4xl text-center mb-4'>
+          <h1 className='text-4xl text-center'>
             Current Bill
           </h1>
+
+          <p className='mb-4 text-center text-sm text-gray-500'>
+            Invoice No: <span className='font-semibold text-gray-700'>{invoiceNumber}</span>
+          </p>
 
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
 
@@ -514,7 +525,8 @@ function Home() {
               <tr>
                 <th className="px-2 py-1">Name</th>
                 <th className="px-2 py-1">Qty</th>
-                <th className="px-2 py-1">Price</th>
+                <th className="px-2 py-1">Price ₹</th>
+                <th className="px-2 py-1">Disc %</th>
                 <th className="px-2 py-1">Total</th>
                 <th className="px-2 py-1"></th>
               </tr>
@@ -530,7 +542,10 @@ function Home() {
                   <tr key={med.id}>
 
                     <td className="px-2 py-1 text-black font-bold">
-                      {med.name}
+                      <div>{med.name}</div>
+                      <div className='text-xs font-normal text-gray-500'>
+                        Batch: {med.batchNumber}
+                      </div>
                     </td>
 
                     <td className="px-2 py-1">
@@ -558,11 +573,35 @@ function Home() {
                     </td>
 
                     <td className="px-2 py-1">
-                      ₹ {Number(med.mrp).toFixed(2)}
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={med.price}
+                        onChange={(e) => updateCartItem(med.id, 'price', e.target.value)}
+                        className="h-8 w-24 bg-white px-2 text-right"
+                      />
                     </td>
 
-                    <td className="px-2 py-1 font-bold">
-                      ₹ {(Number(med.mrp) * med.qty).toFixed(2)}
+                    <td className="px-2 py-1">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={med.discount}
+                        onChange={(e) => updateCartItem(med.id, 'discount', e.target.value)}
+                        className="h-8 w-16 bg-white px-2 text-right"
+                      />
+                    </td>
+
+                    <td className="px-2 py-1 font-bold text-black">
+                      ₹ {lineTotal(med).toFixed(2)}
+                      {lineDiscountAmount(med) > 0 && (
+                        <div className='text-xs font-normal text-red-600'>
+                          - ₹ {lineDiscountAmount(med).toFixed(2)}
+                        </div>
+                      )}
                     </td>
 
                     <td>
@@ -596,12 +635,21 @@ function Home() {
 
           <hr className='mt-4' />
 
-          <div className="flex justify-between mt-4 text-2xl font-bold">
+          <div className='mt-4 space-y-2'>
+            <div className='flex justify-between text-sm text-gray-600'>
+              <span>Subtotal</span>
+              <span>₹ {subtotal.toFixed(2)}</span>
+            </div>
 
-            <p>Total</p>
+            <div className='flex justify-between text-sm text-red-600'>
+              <span>Discount</span>
+              <span>- ₹ {totalDiscount.toFixed(2)}</span>
+            </div>
 
-            <p>₹ {totalAmount.toFixed(2)}</p>
-
+            <div className="flex justify-between border-t pt-2 text-2xl font-bold">
+              <p>Grand Total</p>
+              <p>₹ {totalAmount.toFixed(2)}</p>
+            </div>
           </div>
 
           {cart.length > 0 && (
@@ -689,7 +737,7 @@ function Home() {
 
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-[700px]">
+              <DialogContent className="sm:max-w-[820px]">
 
                 <DialogHeader>
 
@@ -699,7 +747,12 @@ function Home() {
 
                   <DialogDescription>
 
-                    Invoice No: {invoiceNumber}
+                    <span className='font-medium text-gray-700'>Invoice No: {invoiceNumber}</span>
+                    <br />
+                    Customer: {customer.name || '-'}
+                    {customer.phone ? ` | Phone: ${customer.phone}` : ''}
+                    <br />
+                    Status: {status === 'completed' ? 'Paid' : 'Pending'}
 
                   </DialogDescription>
 
@@ -712,9 +765,11 @@ function Home() {
                     <TableRow>
 
                       <TableHead>Name</TableHead>
+                      <TableHead>Batch</TableHead>
                       <TableHead>Qty</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-right">Disc.</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
 
                     </TableRow>
 
@@ -726,16 +781,22 @@ function Home() {
 
                       <TableRow key={item.id}>
 
-                        <TableCell>{item.name}</TableCell>
+                        <TableCell className="font-medium text-gray-800">{item.name}</TableCell>
+
+                        <TableCell>{item.batchNumber}</TableCell>
 
                         <TableCell>{item.qty}</TableCell>
 
-                        <TableCell>
-                          ₹ {Number(item.mrp).toFixed(2)}
+                        <TableCell className="text-right">
+                          ₹ {itemPrice(item).toFixed(2)}
                         </TableCell>
 
-                        <TableCell>
-                          ₹ {(Number(item.mrp) * item.qty).toFixed(2)}
+                        <TableCell className="text-right">
+                          {itemDiscount(item) > 0 ? `${itemDiscount(item)}%` : '-'}
+                        </TableCell>
+
+                        <TableCell className="text-right font-semibold">
+                          ₹ {lineTotal(item).toFixed(2)}
                         </TableCell>
 
                       </TableRow>
@@ -747,14 +808,33 @@ function Home() {
                   <TableFooter>
 
                     <TableRow>
+                      <TableCell colSpan={5} className="text-right text-gray-600">
+                        Subtotal
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ₹ {subtotal.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
 
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-right text-gray-600">
+                        Discount
+                      </TableCell>
+                      <TableCell className="text-right text-red-600">
+                        - ₹ {totalDiscount.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={5}
                         className="text-right text-2xl font-bold"
                       >
+                        Grand Total
+                      </TableCell>
+                      <TableCell className="text-right text-2xl font-bold">
                         ₹ {totalAmount.toFixed(2)}
                       </TableCell>
-
                     </TableRow>
 
                   </TableFooter>
@@ -763,8 +843,11 @@ function Home() {
 
                 <DialogFooter>
 
-                  <Button onClick={addBillFn}>
-                    Save & Generate PDF
+                  <Button
+                    onClick={addBillFn}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving…' : 'Save & Generate PDF'}
                   </Button>
 
                 </DialogFooter>

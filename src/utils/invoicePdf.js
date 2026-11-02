@@ -1,0 +1,321 @@
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+const money = (value) => (Number(value) || 0).toFixed(2);
+
+const ONES = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen"
+];
+
+const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+const twoDigits = (value) => {
+    if (value < 20) return ONES[value];
+    const tens = Math.floor(value / 10);
+    const ones = value % 10;
+    return `${TENS[tens]}${ones ? ` ${ONES[ones]}` : ""}`;
+};
+
+const threeDigits = (value) => {
+    const parts = [];
+    const hundreds = Math.floor(value / 100);
+    const rest = value % 100;
+
+    if (hundreds) parts.push(`${ONES[hundreds]} Hundred`);
+    if (rest) parts.push(twoDigits(rest));
+
+    return parts.join(" ");
+};
+
+/** Indian numbering system, e.g. 1234567 -> "Twelve Lakh Thirty Four Thousand ..." */
+const numberToWords = (value) => {
+    const amount = Math.max(0, Number(value) || 0);
+    const rupees = Math.floor(amount);
+    const paise = Math.round((amount - rupees) * 100);
+
+    let remaining = rupees;
+    const parts = [];
+
+    if (remaining >= 10000000) {
+        parts.push(`${threeDigits(Math.floor(remaining / 10000000))} Crore`);
+        remaining %= 10000000;
+    }
+    if (remaining >= 100000) {
+        parts.push(`${threeDigits(Math.floor(remaining / 100000))} Lakh`);
+        remaining %= 100000;
+    }
+    if (remaining >= 1000) {
+        parts.push(`${threeDigits(Math.floor(remaining / 1000))} Thousand`);
+        remaining %= 1000;
+    }
+    if (remaining > 0) parts.push(threeDigits(remaining));
+
+    let words = parts.filter(Boolean).join(" ") || "Zero";
+    let result = `${words} Rupees`;
+
+    if (paise > 0) result += ` and ${twoDigits(paise)} Paise`;
+
+    return `${result} Only`;
+};
+
+const formatDate = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return String(value || "");
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+};
+
+const formatTime = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return "";
+
+    return date.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+};
+
+/**
+ * Generates a clean, professional sales invoice PDF.
+ */
+export const generateInvoicePdf = ({
+    invoiceNumber = "",
+    date = new Date().toISOString(),
+    customer = {},
+    items = [],
+    subtotal = 0,
+    totalDiscount = 0,
+    total = 0,
+    status = "completed"
+}) => {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    const right = pageWidth - margin;
+
+    // ── Header band ────────────────────────────────────────────────────
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageWidth, 30, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("SAABIT PHARMACY", margin, 14);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.text("Drug Licence No: 13351/52  |  Phone: +91 9797027047", margin, 21);
+    doc.text("Kak Sarai, Karan Nagar, Opp HDFC Bank, Srinagar", margin, 26);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("INVOICE", right, 14, { align: "right" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(invoiceNumber || "-", right, 21, { align: "right" });
+    doc.text(`Date: ${formatDate(date)}`, right, 26, { align: "right" });
+
+    // ── Customer and invoice details ───────────────────────────────────
+    doc.setTextColor(17, 24, 39);
+    let y = 42;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text("BILLED TO", margin, y);
+
+    doc.setFontSize(11);
+    doc.setTextColor(17, 24, 39);
+    doc.text(customer.name || "Walk-in Customer", margin, y + 6);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+
+    let leftY = y + 11;
+    if (customer.phone) {
+        doc.text(`Phone: ${customer.phone}`, margin, leftY);
+        leftY += 5;
+    }
+    if (customer.address) {
+        const addressLines = doc.splitTextToSize(customer.address, 88);
+        doc.text(addressLines, margin, leftY);
+        leftY += addressLines.length * 4.5;
+    }
+
+    const detailsX = 122;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text("INVOICE DETAILS", detailsX, y);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+    doc.text(`Invoice No: ${invoiceNumber || "-"}`, detailsX, y + 6);
+    doc.text(`Date: ${formatDate(date)}`, detailsX, y + 11);
+    doc.text(`Time: ${formatTime(date)}`, detailsX, y + 16);
+
+    const paid = String(status).toLowerCase() === "completed";
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(paid ? 21 : 185, paid ? 128 : 28, paid ? 61 : 28);
+    doc.text(`Status: ${paid ? "PAID" : "PENDING"}`, detailsX, y + 21);
+    doc.setTextColor(17, 24, 39);
+    doc.setFont("helvetica", "normal");
+
+    const detailsBottom = Math.max(leftY, y + 24);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(margin, detailsBottom + 4, right, detailsBottom + 4);
+
+    // ── Items table ────────────────────────────────────────────────────
+    autoTable(doc, {
+        startY: detailsBottom + 9,
+        head: [[
+            "#",
+            "Medicine",
+            "Batch No.",
+            "Expiry",
+            "Qty",
+            "Price (Rs)",
+            "Disc.",
+            "Amount (Rs)"
+        ]],
+        body: items.map((item, index) => {
+            const price = Number(item.price ?? item.mrp) || 0;
+            const qty = Number(item.qty) || 0;
+            const discount = Math.min(100, Math.max(0, Number(item.discount) || 0));
+            const amount = Number(item.lineTotal);
+
+            return [
+                index + 1,
+                item.name || "-",
+                item.batchNumber || "-",
+                item.expiryDate ? String(item.expiryDate).slice(0, 10) : "-",
+                qty,
+                money(price),
+                discount > 0 ? `${discount}%` : "-",
+                money(Number.isFinite(amount) ? amount : price * qty * (1 - discount / 100))
+            ];
+        }),
+        styles: {
+            font: "helvetica",
+            fontSize: 8.5,
+            cellPadding: 2.4,
+            valign: "middle",
+            textColor: [31, 41, 55],
+            lineColor: [229, 231, 235],
+            lineWidth: 0.1
+        },
+        headStyles: {
+            fillColor: [30, 64, 175],
+            textColor: 255,
+            fontStyle: "bold",
+            fontSize: 8.5,
+            halign: "left"
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+            0: { cellWidth: 8, halign: "center" },
+            1: { cellWidth: 50 },
+            2: { cellWidth: 32 },
+            3: { cellWidth: 22 },
+            4: { cellWidth: 10, halign: "center" },
+            5: { cellWidth: 20, halign: "right" },
+            6: { cellWidth: 14, halign: "right" },
+            7: { cellWidth: 26, halign: "right" }
+        },
+        margin: { left: margin, right: margin },
+        theme: "grid"
+    });
+
+    // ── Totals ─────────────────────────────────────────────────────────
+    let summaryY = doc.lastAutoTable.finalY + 12;
+
+    if (summaryY > pageHeight - 70) {
+        doc.addPage();
+        summaryY = 22;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text("AMOUNT IN WORDS", margin, summaryY);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+
+    const words = doc.splitTextToSize(numberToWords(total), 88);
+    doc.text(words, margin, summaryY + 5);
+
+    const boxWidth = 74;
+    const boxX = right - boxWidth;
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(229, 231, 235);
+    doc.roundedRect(boxX, summaryY - 7, boxWidth, 40, 2, 2, "FD");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+    doc.text("Subtotal", boxX + 4, summaryY);
+    doc.text(`Rs ${money(subtotal)}`, right - 4, summaryY, { align: "right" });
+
+    doc.setTextColor(185, 28, 28);
+    doc.text("Discount", boxX + 4, summaryY + 7);
+    doc.text(`- Rs ${money(totalDiscount)}`, right - 4, summaryY + 7, { align: "right" });
+
+    doc.setDrawColor(229, 231, 235);
+    doc.line(boxX + 4, summaryY + 12, right - 4, summaryY + 12);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(17, 24, 39);
+    doc.text("Grand Total", boxX + 4, summaryY + 21);
+    doc.text(`Rs ${money(total)}`, right - 4, summaryY + 21, { align: "right" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text(`${items.length} item${items.length === 1 ? "" : "s"} on this invoice`, boxX + 4, summaryY + 28);
+
+    // ── Footer ─────────────────────────────────────────────────────────
+    const footerY = pageHeight - 34;
+
+    doc.setDrawColor(229, 231, 235);
+    doc.line(margin, footerY, right, footerY);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text("Thank you for choosing Saabit Pharmacy. Get well soon!", margin, footerY + 6);
+    doc.text("This is a computer-generated invoice.", margin, footerY + 11);
+
+    doc.text("Authorised Signature", right, footerY + 6, { align: "right" });
+    doc.setDrawColor(156, 163, 175);
+    doc.line(right - 38, footerY + 1, right, footerY + 1);
+
+    // ── Page numbers ───────────────────────────────────────────────────
+    const pageCount = doc.getNumberOfPages();
+
+    for (let page = 1; page <= pageCount; page += 1) {
+        doc.setPage(page);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text(`Page ${page} of ${pageCount}`, pageWidth / 2, pageHeight - 8, { align: "center" });
+    }
+
+    const safeName = String(invoiceNumber || "invoice").replace(/[^a-z0-9-]+/gi, "-");
+    doc.save(`Invoice-${safeName}.pdf`);
+};

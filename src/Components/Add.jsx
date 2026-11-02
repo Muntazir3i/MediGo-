@@ -11,6 +11,7 @@ import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { handleAddProduct } from '@/utils/addProductHelper.js';
 import { calculateBillTotals } from '@/utils/billingCalculationsHelper.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
+import BillImageUpload from './BillImageUpload.jsx';
 
 
 function Add() {
@@ -331,6 +332,52 @@ function Add() {
   };
 
 
+  // const handleBillExtracted = (bill) => {
+  //   setFormData((previous) => ({
+  //     ...previous,
+  //     invoice: bill.invoice,
+  //     date: bill.date,
+  //     supplierName: bill.supplierName,
+  //     supplierDrugLn: bill.supplierDrugLn,
+  //     supplierContact: bill.supplierContact
+  //   }));
+  //   setProducts(bill.products.length ? bill.products : [{
+  //     id: crypto.randomUUID(), name: '', batchNumber: '', expiryDate: '', stock: 0,
+  //     unitPrice: 0, mrp: 0, discount: 0, gstPercentage: 0
+  //   }]);
+  // };
+
+  const handleBillExtracted = (bill) => {
+  const toNumber = (value) => Number(value) || 0;
+  const supplierName = bill.supplierName || '';
+
+  setFormData((previous) => ({
+    ...previous,
+    invoice: bill.invoice || '',
+    date: bill.date || '',
+    supplierName,
+    supplierDrugLn: bill.supplierDrugLn || '',
+    supplierContact: bill.supplierContact || '',
+  }));
+
+ setProducts(
+  (bill.products || []).map((product, index) => ({
+    id: Date.now() + index, // numeric ID for SQLite INTEGER PRIMARY KEY
+    name: product.name || '',
+    batchNumber: product.batchNumber || '',
+    expiryDate: product.expiryDate || '',
+    stock: toNumber(product.stock ?? product.quantity),
+    unitPrice: toNumber(product.unitPrice),
+    mrp: toNumber(product.mrp),
+    discount: toNumber(product.discount),
+    gstPercentage: toNumber(product.gstPercentage),
+    supplier: supplierName,
+    category: product.category || '',
+  }))
+);
+};
+
+
 
 
 
@@ -346,6 +393,7 @@ function Add() {
           <TabsTrigger value="add-expiry">Add Expiry</TabsTrigger>
         </TabsList>
         <TabsContent value="add-purchase">
+          <BillImageUpload onExtracted={handleBillExtracted} />
           <TabContentAddPurchase
             formData={formData}
             handleChange={handleChange}

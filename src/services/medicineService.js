@@ -75,16 +75,23 @@ export const findmedicineByName = async (medName) => {
 
 // ─── Bill + Payment (Combined) ────────────────────────────────────────────────
 
-/** Get all bills and payments for a supplier from SQL. */
-export const getBillPaymentSql = async (supplierName) => {
+/**
+ * Get a supplier's bills and payments from SQL, optionally within a date range.
+ * Returns { transactions, summary }.
+ */
+export const getBillPaymentSql = async (supplierName, { from = '', to = '' } = {}) => {
   try {
     const response = await axios.get(`${API_BASE_URL_BILL_PAYMENT_SQL}/all-data`, {
-      params: { supplierName }
+      params: {
+        supplierName,
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {})
+      }
     });
     return response.data;
   } catch (error) {
     console.error('Error fetching bills and payments from SQL:', error.message);
-    return [];
+    return { transactions: [], summary: null };
   }
 };
 
@@ -101,13 +108,39 @@ export const addBillSql = async (billData) => {
   }
 };
 
-/** Fetch all bills with their products from SQL. */
-export const fetchBillsProductsSql = async () => {
+/**
+ * Fetch a page of bills with their products from SQL.
+ * Defaults to 5 bills. Filters: supplierName (exact), supplierSearch (partial),
+ * date, invoice.
+ */
+export const fetchBillsProductsSql = async ({ limit = 5, offset = 0, supplierName = '', supplierSearch = '', date = '', invoice = '' } = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills`);
+    const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills`, {
+      params: {
+        limit,
+        offset,
+        ...(supplierName ? { supplierName } : {}),
+        ...(supplierSearch ? { supplierSearch } : {}),
+        ...(date ? { date } : {}),
+        ...(invoice ? { invoice } : {})
+      }
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching bills with products:", error.message);
+    throw error;
+  }
+};
+
+/** Fetch all bill suppliers with their bill count and total amount. */
+export const getBillSuppliers = async (search = '') => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills/suppliers`, {
+      params: search ? { search } : {}
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching bill suppliers:", error.message);
     throw error;
   }
 };

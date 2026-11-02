@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql } from '@/services/medicineService.js';
+import { generateSupplierStatementPdf } from '@/utils/supplierStatementPdf.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
@@ -23,41 +24,65 @@ import {
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
-  const [loadMorePayments, setLoadMorePayments] = useState([]);
-  const [lastItemId, setLastItemId] = useState(null);
-  const [allPurchases, setAllPurchases] = useState([]);
   const [filteredBill, setFilteredBill] = useState([]);
   const [fileredExpiry, setFilteredExpiry] = useState([]);
   const [filteredSupplier, setFilteredSupplier] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [dailyPayments, setDailyPayments] = useState([]);
+  const [dailyPaymentSummary, setDailyPaymentSummary] = useState(null);
+  const [dailyPaymentsLoading, setDailyPaymentsLoading] = useState(false);
   const [selectedSupplierName, setSelectedSupplierName] = useState('');
   const [selectedSupplierBalance, setSelectedSupplierBalance] = useState(0);
+  const [statementFrom, setStatementFrom] = useState('');
+  const [statementTo, setStatementTo] = useState('');
+  const [statementSummary, setStatementSummary] = useState(null);
+  const [statementLoading, setStatementLoading] = useState(false);
   const [formData, setFormData] = useState({});
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleDateChange = async (e) => {
+  const dailyPaymentsRequestRef = useRef(0);
+
+  const loadPaymentsForDate = async (date, { showLoading = true } = {}) => {
+    const requestId = ++dailyPaymentsRequestRef.current;
+    if (showLoading) setDailyPaymentsLoading(true);
+
     try {
-      const date = e.target.value; // Get the selected date from the event
-      setSelectedDate(date); // Update the selected date state
+      const response = await findPaymentByDateSql(date);
 
-      // If no date is selected, clear the dailyPayments state
-      if (!date) {
-        setDailyPayments([]);
-        return;
-      }
+      // Ignore responses for a date that is no longer selected.
+      if (requestId !== dailyPaymentsRequestRef.current) return;
 
-      // Fetch payments for the selected date
-      const payments = await findPaymentByDateSql(date);
-      setDailyPayments(payments); // Update the dailyPayments state with the retrieved payments
+      setDailyPayments(response.payments || []);
+      setDailyPaymentSummary(response.summary || null);
     } catch (error) {
-      console.error("Error fetching payments by date:", error.message); // Log the error for debugging
-      // You can set an error state here or display an error message to the user
+      console.error("Error fetching payments by date:", error.message);
+    } finally {
+      if (requestId === dailyPaymentsRequestRef.current) {
+        setDailyPaymentsLoading(false);
+      }
     }
   };
 
-  const totalDailyPayment = dailyPayments.reduce((sum, item) => sum + Number(item.total), 0);
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+
+    if (!date) {
+      // Invalidate any in-flight request.
+      dailyPaymentsRequestRef.current += 1;
+      setDailyPayments([]);
+      setDailyPaymentSummary(null);
+      setDailyPaymentsLoading(false);
+      return;
+    }
+
+    loadPaymentsForDate(date);
+  };
+
+  const totalDailyPayment = dailyPaymentSummary
+    ? Number(dailyPaymentSummary.total) || 0
+    : dailyPayments.reduce((sum, item) => sum + Number(item.total), 0);
 
 
   useEffect(() => {
@@ -71,7 +96,6 @@ async function loadMore() {
       const lastId = allPayments[allPayments.length - 1].id;
       const response = await loadMorePaymentsSql(lastId);
       setAllPayments([...allPayments, ...response]);
-      setLastItemId(lastId);
     } catch (error) {
       console.log("Error Fetching More Payments:", error);
     }
@@ -91,6 +115,11 @@ async function loadMore() {
       setDailyPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
       setAllPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
       alert('Payment Deleted Successfully!');
+
+      // Keep the selected date's list and totals in sync.
+      if (selectedDate) {
+        loadPaymentsForDate(selectedDate, { showLoading: false });
+      }
     } catch (error) {
       console.error('Error deleting payment from the database', error);
       alert('Failed To Delete Payment');
@@ -161,6 +190,11 @@ async function loadMore() {
         )
       );
 
+      // Keep the selected date's list and totals in sync.
+      if (selectedDate) {
+        loadPaymentsForDate(selectedDate, { showLoading: false });
+      }
+
     } catch (error) {
       console.error(error);
       alert("Failed To Update Payment");
@@ -184,20 +218,64 @@ async function loadMore() {
   const showNameFn = async (name) => {
     try {
       setSelectedSupplierName(name);
+      setStatementSummary(null);
 
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
 
       if (selectedSupplier) {
         setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
-
-        const supplierBills = await getBillPaymentSql(name); // Fetch supplier bills
-        // console.log(supplierBills);
-
-        setFilteredBill(supplierBills); // Set filtered and sorted bills
       }
+
+      const response = await getBillPaymentSql(name);
+      setFilteredBill(response.transactions || []);
+      setStatementSummary(response.summary || null);
     } catch (error) {
       console.error('Error fetching supplier transactions:', error.message);
       // Handle the error (e.g., show a toast or alert to the user)
+    }
+  };
+
+
+  const generateStatementPdf = async () => {
+    if (!selectedSupplierName) {
+      alert('Select a supplier first.');
+      return;
+    }
+
+    if (!statementFrom || !statementTo) {
+      alert('Please select both From and To dates.');
+      return;
+    }
+
+    if (statementFrom > statementTo) {
+      alert('The From date must be before the To date.');
+      return;
+    }
+
+    setStatementLoading(true);
+
+    try {
+      const response = await getBillPaymentSql(selectedSupplierName, {
+        from: statementFrom,
+        to: statementTo
+      });
+
+      const supplier = allSupplier.find((item) => item.supplierName === selectedSupplierName);
+
+      generateSupplierStatementPdf({
+        supplierName: selectedSupplierName,
+        supplierDrugLn: supplier?.drugLn || '',
+        phone: supplier?.phoneNumber || '',
+        from: statementFrom,
+        to: statementTo,
+        transactions: response.transactions || [],
+        summary: response.summary || {}
+      });
+    } catch (error) {
+      console.error('Error generating supplier statement:', error);
+      alert('Failed to generate the PDF statement.');
+    } finally {
+      setStatementLoading(false);
     }
   };
 
@@ -227,12 +305,6 @@ async function loadMore() {
     }
   };
 
-  const totalBalance = allSupplier.reduce((sum, supplier) => {
-    return sum + Number(supplier.supplierBalance);
-  }, 0);
-
-  const averageBalance = allSupplier.length > 0 ? totalBalance / allSupplier.length : 0;
-
   return (
 
     <main id='main-top-container' className="h-[90vh] lg:h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
@@ -254,6 +326,8 @@ async function loadMore() {
             selectedDate={selectedDate}
             handleDateChange={handleDateChange}
             dailyPayments={dailyPayments}
+            dailyPaymentsLoading={dailyPaymentsLoading}
+            dailyPaymentSummary={dailyPaymentSummary}
             totalDailyPayment={totalDailyPayment}
             handlePaymentEditSave={handlePaymentEditSave}
             handleDeletePaymentSql={handleDeletePaymentSql}
@@ -262,6 +336,14 @@ async function loadMore() {
             selectedSupplierName={selectedSupplierName}
             filteredBill={filteredBill}
             selectedSupplierBalance={selectedSupplierBalance}
+
+            statementFrom={statementFrom}
+            statementTo={statementTo}
+            handleStatementFromChange={(e) => setStatementFrom(e.target.value)}
+            handleStatementToChange={(e) => setStatementTo(e.target.value)}
+            generateStatementPdf={generateStatementPdf}
+            statementLoading={statementLoading}
+            statementSummary={statementSummary}
 
           />
         </TabsContent>
