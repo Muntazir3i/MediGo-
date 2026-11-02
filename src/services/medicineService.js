@@ -132,12 +132,21 @@ export const fetchBillsProductsSql = async ({ limit = 5, offset = 0, supplierNam
   }
 };
 
-/** Fetch all bill suppliers with their bill count and total amount. */
-export const getBillSuppliers = async (search = '') => {
+/**
+ * Fetch all bill suppliers with their bill count and total amount.
+ * Accepts an options object (or a plain search string for backwards compatibility).
+ *
+ * @param {{search?: string, date?: string, invoice?: string}|string} [options]
+ */
+export const getBillSuppliers = async (options = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills/suppliers`, {
-      params: search ? { search } : {}
-    });
+    const opts = typeof options === 'string' ? { search: options } : (options || {});
+    const params = {};
+    if (opts.search) params.search = opts.search;
+    if (opts.date) params.date = opts.date;
+    if (opts.invoice) params.invoice = opts.invoice;
+
+    const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills/suppliers`, { params });
     return response.data;
   } catch (error) {
     console.error("Error fetching bill suppliers:", error.message);
