@@ -102,7 +102,6 @@ const TabContentAddPayment = ({
           name="drugLicenseNumber"
           value={newPaymentDetails.drugLicenseNumber}
           onChange={handleChangePayment}
-          required
         />
 
         <label htmlFor="total">Amount Paid</label>
