@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BookOpen, CalendarClock, FileText, Landmark, Loader2, Pencil, Wallet } from 'lucide-react';
 import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql } from '@/services/medicineService.js';
 import { generateSupplierStatementPdf } from '@/utils/supplierStatementPdf.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments } from './Tabs/index.js';
@@ -7,29 +8,32 @@ import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
 import { Label } from "./ui/label.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter
-} from "./ui/table.jsx"
+const paymentFieldConfig = {
+  date: { label: 'Payment date', type: 'date' },
+  invoice: { label: 'Invoice number', type: 'text' },
+  supplierName: { label: 'Supplier', type: 'text', fullWidth: true },
+  drugLicenseNumber: { label: 'Drug licence number', type: 'text' },
+  total: { label: 'Amount (₹)', type: 'number', step: '0.01' },
+  type: { label: 'Payment type', type: 'text' },
+};
 
 
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(true);
   const [allPayments, setAllPayments] = useState([]);
   const [paymentInvoiceSearch, setPaymentInvoiceSearch] = useState('');
   const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [paymentsLoadingMore, setPaymentsLoadingMore] = useState(false);
   const [paymentsHasMore, setPaymentsHasMore] = useState(false);
+  const [paymentsError, setPaymentsError] = useState('');
+  const [paymentsReloadKey, setPaymentsReloadKey] = useState(0);
   const [filteredBill, setFilteredBill] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [fileredExpiry, setFilteredExpiry] = useState([]);
+  const [expiryLoading, setExpiryLoading] = useState(false);
   const [filteredSupplier, setFilteredSupplier] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -44,9 +48,12 @@ const Ledger = () => {
   const [statementLoading, setStatementLoading] = useState(false);
   const [formData, setFormData] = useState({});
   const [isOpen, setIsOpen] = useState(false);
+  const [paymentSaving, setPaymentSaving] = useState(false);
 
   const dailyPaymentsRequestRef = useRef(0);
   const paymentsRequestRef = useRef(0);
+  const transactionsRequestRef = useRef(0);
+  const expiryRequestRef = useRef(0);
 
   const loadPaymentsForDate = async (date, { showLoading = true } = {}) => {
     const requestId = ++dailyPaymentsRequestRef.current;
@@ -85,6 +92,14 @@ const Ledger = () => {
     loadPaymentsForDate(date);
   };
 
+  const handleClearDate = () => {
+    dailyPaymentsRequestRef.current += 1;
+    setSelectedDate('');
+    setDailyPayments([]);
+    setDailyPaymentSummary(null);
+    setDailyPaymentsLoading(false);
+  };
+
   const totalDailyPayment = dailyPaymentSummary
     ? Number(dailyPaymentSummary.total) || 0
     : dailyPayments.reduce((sum, item) => sum + Number(item.total), 0);
@@ -102,6 +117,7 @@ const Ledger = () => {
 
     const timer = setTimeout(async () => {
       setPaymentsLoading(true);
+      setPaymentsError('');
 
       try {
         const response = await getAllPaymentsSql(paymentInvoiceSearch.trim());
@@ -116,6 +132,7 @@ const Ledger = () => {
           console.error('Error fetching all payments:', error);
           setAllPayments([]);
           setPaymentsHasMore(false);
+          setPaymentsError('Failed to load payments. Please try again.');
         }
       } finally {
         if (requestId === paymentsRequestRef.current) {
@@ -125,7 +142,7 @@ const Ledger = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [paymentInvoiceSearch]);
+  }, [paymentInvoiceSearch, paymentsReloadKey]);
 
   async function loadMore() {
     if (allPayments.length === 0 || paymentsLoadingMore) return;
@@ -161,6 +178,7 @@ const Ledger = () => {
       // After deletion, you might want to refresh the payments list or update the state accordingly
       setDailyPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
       setAllPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
+      setPaymentsReloadKey((key) => key + 1);
       alert('Payment Deleted Successfully!');
 
       // Keep the selected date's list and totals in sync.
@@ -175,12 +193,15 @@ const Ledger = () => {
 
 
   const fetchAllSupplier = async () => {
+    setSuppliersLoading(true);
     try {
       const response = await getsupplierSql();
       setAllSupplier(response);
       setFilteredSupplier(response);
     } catch (error) {
       console.error('Error fetching the Supplier:', error);
+    } finally {
+      setSuppliersLoading(false);
     }
   };
 
@@ -200,6 +221,10 @@ const Ledger = () => {
   }
 
   const handlePaymentEditSave = async () => {
+    if (paymentSaving) return;
+
+    setPaymentSaving(true);
+
     try {
       const response = await updatePaymentSql(
         formData.id,
@@ -227,6 +252,9 @@ const Ledger = () => {
         )
       );
 
+      // Re-query so an edited invoice/date also respects the active filter.
+      setPaymentsReloadKey((key) => key + 1);
+
       // Keep the selected date's list and totals in sync.
       if (selectedDate) {
         loadPaymentsForDate(selectedDate, { showLoading: false });
@@ -235,6 +263,8 @@ const Ledger = () => {
     } catch (error) {
       console.error(error);
       alert("Failed To Update Payment");
+    } finally {
+      setPaymentSaving(false);
     }
   }
 
@@ -251,11 +281,20 @@ const Ledger = () => {
     setFilteredSupplier(filtered);
   };
 
+  const handleClearSupplierSearch = () => {
+    setSearch('');
+    setFilteredSupplier(allSupplier);
+  };
+
 
   const showNameFn = async (name) => {
+    const requestId = ++transactionsRequestRef.current;
+    setTransactionsLoading(true);
+
     try {
       setSelectedSupplierName(name);
       setStatementSummary(null);
+      setFilteredBill([]);
 
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
 
@@ -264,11 +303,18 @@ const Ledger = () => {
       }
 
       const response = await getBillPaymentSql(name);
+
+      if (requestId !== transactionsRequestRef.current) return;
+
       setFilteredBill(response.transactions || []);
       setStatementSummary(response.summary || null);
     } catch (error) {
       console.error('Error fetching supplier transactions:', error.message);
       // Handle the error (e.g., show a toast or alert to the user)
+    } finally {
+      if (requestId === transactionsRequestRef.current) {
+        setTransactionsLoading(false);
+      }
     }
   };
 
@@ -318,9 +364,13 @@ const Ledger = () => {
 
 
   const findExpiryFn = async (name) => {
+    const requestId = ++expiryRequestRef.current;
+    setExpiryLoading(true);
+
     try {
       // Set the selected supplier name
       setSelectedSupplierName(name);
+      setFilteredExpiry([]);
 
       // Find the selected supplier from the list of all suppliers
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
@@ -332,6 +382,8 @@ const Ledger = () => {
         // Fetch the supplier expiry from the server
         const supplierExpiry = await findSupplierExpiry(name);
 
+        if (requestId !== expiryRequestRef.current) return;
+
         // Set the filtered and sorted expiry
         setFilteredExpiry(supplierExpiry);
 
@@ -339,118 +391,230 @@ const Ledger = () => {
     } catch (error) {
       console.error("Error fetching supplier expiry", error.message);
       // Handle the error (e.g., show a toast or alert to the user)
+    } finally {
+      if (requestId === expiryRequestRef.current) {
+        setExpiryLoading(false);
+      }
     }
   };
 
+  const editFields = Object.keys(formData || {}).filter(
+    (key) => key !== 'id' && paymentFieldConfig[key]
+  );
+
   return (
+    <main id='main-top-container' className="h-[90vh] min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:h-screen lg:pb-6">
+      <div className="mx-auto max-w-[1600px] space-y-5">
+        <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-6 py-6 text-white shadow-sm">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-blue-500/20 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-indigo-500/10 blur-2xl" />
 
-    <main id='main-top-container' className="h-[90vh] lg:h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4">
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
+                <Landmark className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-200">
+                  Finance
+                </p>
+                <h1 className="mt-1 text-3xl font-semibold tracking-tight">Ledger</h1>
+                <p className="mt-1 max-w-2xl text-sm text-slate-300">
+                  Track supplier balances, daily payments, account statements and expiry credits.
+                </p>
+              </div>
+            </div>
 
-      <Tabs defaultValue="general-ledger" className="w-full">
-        <TabsList>
-          <TabsTrigger value="general-ledger">General Ledger</TabsTrigger>
-          <TabsTrigger value="all-payment">All Payments</TabsTrigger>
-          <TabsTrigger value="expiry-ledger">Expiry Ledger</TabsTrigger>
-          <TabsTrigger value="credit-notes">Credit Notes</TabsTrigger>
-        </TabsList>
-        <TabsContent value="general-ledger">
-          <TabContentGeneralLedger
-            search={search}
-            handleSearchChange={handleSearchChange}
-            filteredSupplier={filteredSupplier}
-            showNameFn={showNameFn}
-
-            selectedDate={selectedDate}
-            handleDateChange={handleDateChange}
-            dailyPayments={dailyPayments}
-            dailyPaymentsLoading={dailyPaymentsLoading}
-            dailyPaymentSummary={dailyPaymentSummary}
-            totalDailyPayment={totalDailyPayment}
-            handlePaymentEditSave={handlePaymentEditSave}
-            handleDeletePaymentSql={handleDeletePaymentSql}
-            handleEditClick={handleEditClick}
-
-            selectedSupplierName={selectedSupplierName}
-            filteredBill={filteredBill}
-            selectedSupplierBalance={selectedSupplierBalance}
-
-            statementFrom={statementFrom}
-            statementTo={statementTo}
-            handleStatementFromChange={(e) => setStatementFrom(e.target.value)}
-            handleStatementToChange={(e) => setStatementTo(e.target.value)}
-            generateStatementPdf={generateStatementPdf}
-            statementLoading={statementLoading}
-            statementSummary={statementSummary}
-
-          />
-        </TabsContent>
-        <TabsContent value="all-payment">
-          <TabContentShowAllPayments
-            allPayments={allPayments}
-            handleDeletePaymentSql={handleDeletePaymentSql}
-            handleEditClick={handleEditClick}
-            loadMore={loadMore}
-            invoiceSearch={paymentInvoiceSearch}
-            onInvoiceSearchChange={(e) => setPaymentInvoiceSearch(e.target.value)}
-            onClearInvoiceSearch={() => setPaymentInvoiceSearch('')}
-            loading={paymentsLoading}
-            loadingMore={paymentsLoadingMore}
-            hasMore={paymentsHasMore}
-          />
-        </TabsContent>
-        <TabsContent value="expiry-ledger">
-          <TabContentExpiryLedger
-
-            search={search}
-
-            handleSearchChange={handleSearchChange}
-
-            filteredSupplier={filteredSupplier}
-
-            findExpiryFn={findExpiryFn}
-
-            allSupplier={allSupplier}
-
-            selectedSupplierName={selectedSupplierName}
-
-            fileredExpiry={fileredExpiry}
-
-          />
-        </TabsContent>
-        <TabsContent value="credit-notes">
-          <h1 className="text-3xl font-bold ">Credit Notes</h1>
-          <p className='mb-8'>Check Sales Return Bill Based on Supplier</p>
-        </TabsContent>
-      </Tabs>
-
-
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[700px]">
-          <DialogHeader>
-            <DialogTitle>Edit Medicine</DialogTitle>
-            <DialogDescription>Modify the medicine details and save changes.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {formData && Object.keys(formData).map((key) => (
-              key !== 'id' && (
-                <div key={key} className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor={key} className="text-right">{key.toUpperCase()}</Label>
-                  <Input id={key} name={key} defaultValue={formData[key]} className="col-span-3" onChange={handleInputChange} />
-                </div>
-              )
-            ))}
+            <div className="flex flex-wrap gap-2">
+              <div className="min-w-[110px] rounded-xl bg-white/10 px-4 py-2.5 ring-1 ring-white/10">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                  Suppliers
+                </p>
+                <p className="mt-0.5 text-xl font-semibold">
+                  {suppliersLoading ? '—' : allSupplier.length}
+                </p>
+              </div>
+            
+            </div>
           </div>
-          <DialogFooter>
-            <Button onClick={handlePaymentEditSave}>Save changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </header>
 
+        <Tabs defaultValue="general-ledger" className="w-full gap-4">
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+            <TabsTrigger
+              value="general-ledger"
+              className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] justify-start gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm sm:flex-none sm:basis-auto sm:px-4"
+            >
+              <BookOpen className="h-4 w-4" />
+              General ledger
+            </TabsTrigger>
+            <TabsTrigger
+              value="all-payment"
+              className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] justify-start gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm sm:flex-none sm:basis-auto sm:px-4"
+            >
+              <Wallet className="h-4 w-4" />
+              All payments
+            </TabsTrigger>
+            <TabsTrigger
+              value="expiry-ledger"
+              className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] justify-start gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm sm:flex-none sm:basis-auto sm:px-4"
+            >
+              <CalendarClock className="h-4 w-4" />
+              Expiry ledger
+            </TabsTrigger>
+            <TabsTrigger
+              value="credit-notes"
+              className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] justify-start gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm sm:flex-none sm:basis-auto sm:px-4"
+            >
+              <FileText className="h-4 w-4" />
+              Credit notes
+            </TabsTrigger>
+          </TabsList>
 
+          <TabsContent value="general-ledger">
+            <TabContentGeneralLedger
+              search={search}
+              handleSearchChange={handleSearchChange}
+              onClearSearch={handleClearSupplierSearch}
+              filteredSupplier={filteredSupplier}
+              suppliersLoading={suppliersLoading}
+              showNameFn={showNameFn}
 
+              selectedDate={selectedDate}
+              handleDateChange={handleDateChange}
+              onClearDate={handleClearDate}
+              dailyPayments={dailyPayments}
+              dailyPaymentsLoading={dailyPaymentsLoading}
+              dailyPaymentSummary={dailyPaymentSummary}
+              totalDailyPayment={totalDailyPayment}
+              handleDeletePaymentSql={handleDeletePaymentSql}
+              handleEditClick={handleEditClick}
 
+              selectedSupplierName={selectedSupplierName}
+              selectedSupplierBalance={selectedSupplierBalance}
+              filteredBill={filteredBill}
+              transactionsLoading={transactionsLoading}
 
+              statementFrom={statementFrom}
+              statementTo={statementTo}
+              handleStatementFromChange={(e) => setStatementFrom(e.target.value)}
+              handleStatementToChange={(e) => setStatementTo(e.target.value)}
+              generateStatementPdf={generateStatementPdf}
+              statementLoading={statementLoading}
+              statementSummary={statementSummary}
+            />
+          </TabsContent>
+
+          <TabsContent value="all-payment">
+            <TabContentShowAllPayments
+              allPayments={allPayments}
+              handleDeletePaymentSql={handleDeletePaymentSql}
+              handleEditClick={handleEditClick}
+              loadMore={loadMore}
+              invoiceSearch={paymentInvoiceSearch}
+              onInvoiceSearchChange={(e) => setPaymentInvoiceSearch(e.target.value)}
+              onClearInvoiceSearch={() => setPaymentInvoiceSearch('')}
+              loading={paymentsLoading}
+              loadingMore={paymentsLoadingMore}
+              hasMore={paymentsHasMore}
+              error={paymentsError}
+              onRetry={() => setPaymentsReloadKey((key) => key + 1)}
+            />
+          </TabsContent>
+
+          <TabsContent value="expiry-ledger">
+            <TabContentExpiryLedger
+              search={search}
+              handleSearchChange={handleSearchChange}
+              onClearSearch={handleClearSupplierSearch}
+              filteredSupplier={filteredSupplier}
+              suppliersLoading={suppliersLoading}
+              findExpiryFn={findExpiryFn}
+              allSupplier={allSupplier}
+              selectedSupplierName={selectedSupplierName}
+              selectedSupplierBalance={selectedSupplierBalance}
+              fileredExpiry={fileredExpiry}
+              expiryLoading={expiryLoading}
+            />
+          </TabsContent>
+
+          <TabsContent value="credit-notes">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <FileText className="h-6 w-6" />
+              </div>
+              <Badge variant="secondary" className="mt-4 bg-slate-100 text-slate-600">
+                No records
+              </Badge>
+              <h2 className="mt-3 text-lg font-semibold text-slate-900">Credit notes</h2>
+              <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
+                Supplier return credit notes will appear here once they are recorded.
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-[620px]">
+            <DialogHeader>
+              <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <DialogTitle>Edit payment</DialogTitle>
+              <DialogDescription>
+                Update the payment details below, then save your changes.
+              </DialogDescription>
+            </DialogHeader>
+
+            {formData.id && (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                Payment reference: <span className="font-mono text-slate-700">#{formData.id}</span>
+              </p>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {editFields.map((key) => {
+                const config = paymentFieldConfig[key];
+
+                return (
+                  <div key={key} className={config.fullWidth ? 'sm:col-span-2' : ''}>
+                    <Label htmlFor={`payment-${key}`} className="mb-1.5 block text-xs font-medium text-slate-600">
+                      {config.label}
+                    </Label>
+                    <Input
+                      id={`payment-${key}`}
+                      name={key}
+                      type={config.type}
+                      step={config.step}
+                      value={formData[key] ?? ''}
+                      onChange={handleInputChange}
+                      className="bg-slate-50 focus-visible:bg-white"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                disabled={paymentSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handlePaymentEditSave}
+                disabled={paymentSaving}
+                className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {paymentSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {paymentSaving ? 'Saving…' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </main>
   );
 };
