@@ -309,10 +309,12 @@ export const getExpiry = async () => {
 
 // ─── Payments (SQL) ───────────────────────────────────────────────────────────
 
-/** Get all payments from SQL. */
-export const getAllPaymentsSql = async () => {
+/** Get the first page of payments, optionally filtered by invoice number. */
+export const getAllPaymentsSql = async (invoice = '') => {
   try {
-    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments`);
+    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments`, {
+      params: invoice ? { invoice } : {}
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching payments:', error.message);
@@ -364,10 +366,12 @@ export const updatePaymentSql = async (paymentId, updatedPayment) => {
   }
 };
 
-/** Load more payments */
-export const loadMorePaymentsSql = async (lastId) => {
+/** Load the next page of payments, optionally filtered by invoice number. */
+export const loadMorePaymentsSql = async (lastId, invoice = '') => {
   try {
-    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments/loadMore/${lastId}`);
+    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments/loadMore/${lastId}`, {
+      params: invoice ? { invoice } : {}
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching payments:", error.message);

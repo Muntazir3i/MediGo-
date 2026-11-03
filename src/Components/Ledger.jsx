@@ -24,6 +24,10 @@ import {
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
+  const [paymentInvoiceSearch, setPaymentInvoiceSearch] = useState('');
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [paymentsLoadingMore, setPaymentsLoadingMore] = useState(false);
+  const [paymentsHasMore, setPaymentsHasMore] = useState(false);
   const [filteredBill, setFilteredBill] = useState([]);
   const [fileredExpiry, setFilteredExpiry] = useState([]);
   const [filteredSupplier, setFilteredSupplier] = useState([]);
@@ -42,6 +46,7 @@ const Ledger = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const dailyPaymentsRequestRef = useRef(0);
+  const paymentsRequestRef = useRef(0);
 
   const loadPaymentsForDate = async (date, { showLoading = true } = {}) => {
     const requestId = ++dailyPaymentsRequestRef.current;
@@ -87,20 +92,62 @@ const Ledger = () => {
 
   useEffect(() => {
     fetchAllSupplier();
-    fetchAllPayments();
   }, []);
 
-async function loadMore() {
-  if (allPayments.length > 0) {
+  // Load payments on mount and whenever the invoice search changes.
+  useEffect(() => {
+    // Invalidate any in-flight payment request immediately.
+    paymentsRequestRef.current += 1;
+    const requestId = paymentsRequestRef.current;
+
+    const timer = setTimeout(async () => {
+      setPaymentsLoading(true);
+
+      try {
+        const response = await getAllPaymentsSql(paymentInvoiceSearch.trim());
+
+        if (requestId !== paymentsRequestRef.current) return;
+
+        const list = Array.isArray(response) ? response : [];
+        setAllPayments(list);
+        setPaymentsHasMore(list.length >= 50);
+      } catch (error) {
+        if (requestId === paymentsRequestRef.current) {
+          console.error('Error fetching all payments:', error);
+          setAllPayments([]);
+          setPaymentsHasMore(false);
+        }
+      } finally {
+        if (requestId === paymentsRequestRef.current) {
+          setPaymentsLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [paymentInvoiceSearch]);
+
+  async function loadMore() {
+    if (allPayments.length === 0 || paymentsLoadingMore) return;
+
+    const requestId = paymentsRequestRef.current;
+    setPaymentsLoadingMore(true);
+
     try {
       const lastId = allPayments[allPayments.length - 1].id;
-      const response = await loadMorePaymentsSql(lastId);
-      setAllPayments([...allPayments, ...response]);
+      const response = await loadMorePaymentsSql(lastId, paymentInvoiceSearch.trim());
+
+      if (requestId !== paymentsRequestRef.current) return;
+
+      const list = Array.isArray(response) ? response : [];
+      setAllPayments((prev) => [...prev, ...list]);
+      setPaymentsHasMore(list.length >= 50);
     } catch (error) {
-      console.log("Error Fetching More Payments:", error);
+      console.error("Error Fetching More Payments:", error);
+    } finally {
+      setPaymentsLoadingMore(false);
     }
   }
-}
 
 
 
@@ -136,16 +183,6 @@ async function loadMore() {
       console.error('Error fetching the Supplier:', error);
     }
   };
-
-  const fetchAllPayments = async () => {
-    try {
-      const response = await getAllPaymentsSql();
-      setAllPayments(response);
-    } catch (error) {
-      console.log("Error Fetching All The Payments:", error)
-    }
-  }
-
 
   function handleEditClick(item) {
     setFormData(item)
@@ -353,6 +390,12 @@ async function loadMore() {
             handleDeletePaymentSql={handleDeletePaymentSql}
             handleEditClick={handleEditClick}
             loadMore={loadMore}
+            invoiceSearch={paymentInvoiceSearch}
+            onInvoiceSearchChange={(e) => setPaymentInvoiceSearch(e.target.value)}
+            onClearInvoiceSearch={() => setPaymentInvoiceSearch('')}
+            loading={paymentsLoading}
+            loadingMore={paymentsLoadingMore}
+            hasMore={paymentsHasMore}
           />
         </TabsContent>
         <TabsContent value="expiry-ledger">
