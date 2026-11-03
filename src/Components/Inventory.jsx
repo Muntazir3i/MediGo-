@@ -4,6 +4,7 @@ import {
     updateMedicine,
     fetchBillsProductsSql,
     getBillSuppliers,
+    deleteBillSql,
     getAllMedicines,
     findmedicineByName,
 } from '../services/medicineService.js';
@@ -39,7 +40,7 @@ import {
 } from './ui/table.jsx';
 
 // How many bills to show when a supplier accordion is opened / "Load more" is clicked.
-const PURCHASE_BILL_PAGE_SIZE = 3;
+const PURCHASE_BILL_PAGE_SIZE = 5;
 
 function Inventory() {
     // ----- Medicines state -----
@@ -55,6 +56,7 @@ function Inventory() {
     const [invoiceSearch, setInvoiceSearch] = useState('');
     const [purchaseDate, setPurchaseDate] = useState('');
     const [openSupplier, setOpenSupplier] = useState('');
+    const [deletingBillId, setDeletingBillId] = useState(null);
     // Per-supplier paginated bills: { [supplierName]: { bills, total, hasMore, ... } }
     const [supplierBills, setSupplierBills] = useState({});
 
@@ -109,10 +111,12 @@ function Inventory() {
                     ? response.data
                     : [];
             setBillSuppliers(list);
+            return list;
         } catch (error) {
             console.error('Error fetching purchase suppliers:', error);
             setBillSuppliers([]);
             setSuppliersError('Could not load suppliers. Please try again.');
+            return [];
         } finally {
             setSuppliersLoading(false);
         }
@@ -235,6 +239,51 @@ function Inventory() {
         }
     };
 
+    // ----- Delete a purchase bill and its related product rows -----
+    const handleDeleteBill = async (supplierName, bill) => {
+        const label = bill.invoice || `#${bill.id}`;
+        const productCount = bill.products?.length ?? 0;
+
+        const confirmed = window.confirm(
+            `Delete bill ${label} and ${productCount} related medicine line(s)?\n\nThis cannot be undone.`
+        );
+
+        if (!confirmed || deletingBillId !== null) return;
+
+        setDeletingBillId(bill.id);
+
+        try {
+            await deleteBillSql(bill.id);
+
+            // Refresh the All Products tab because its rows come from bill_products.
+            await fetchMedicinesSql();
+
+            const updatedSuppliers = await loadSuppliers();
+            const supplierStillExists = updatedSuppliers.some(
+                (supplier) => supplier.supplierName === supplierName
+            );
+
+            if (supplierStillExists) {
+                // Reload from the first page so the gap left by the deleted bill is filled.
+                await loadSupplierBills(supplierName, { reset: true });
+            } else {
+                setOpenSupplier('');
+                setSupplierBills((prev) => {
+                    const next = { ...prev };
+                    delete next[supplierName];
+                    return next;
+                });
+            }
+
+            alert(`Bill ${label} deleted successfully.`);
+        } catch (error) {
+            console.error('Error deleting bill:', error);
+            alert('Failed to delete the bill. Please try again.');
+        } finally {
+            setDeletingBillId(null);
+        }
+    };
+
     // ----- Delete -----
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this medicine?')) return;
@@ -310,7 +359,7 @@ function Inventory() {
                     </h2>
                     <Input
                         className="mb-2 bg-white"
-                        placeholder="Search Medicines"
+                        placeholder="Search medicine name or batch number"
                         value={medicineSearch}
                         onChange={(e) => setMedicineSearch(e.target.value)}
                     />
@@ -476,12 +525,13 @@ function Inventory() {
                                                                             {Number(purchase.total || 0).toFixed(2)}
                                                                         </td>
                                                                         <td className="px-6 py-4">
-                                                                            <Dialog>
-                                                                                <DialogTrigger asChild>
-                                                                                    <Button variant="outline">
-                                                                                        View Details
-                                                                                    </Button>
-                                                                                </DialogTrigger>
+                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                                <Dialog>
+                                                                                    <DialogTrigger asChild>
+                                                                                        <Button variant="outline">
+                                                                                            View Details
+                                                                                        </Button>
+                                                                                    </DialogTrigger>
                                                                                 <DialogContent className="sm:max-w-[1400px]">
                                                                                     <DialogHeader>
                                                                                         <DialogTitle>
@@ -562,7 +612,17 @@ function Inventory() {
                                                                                     <DialogFooter />
                                                                                 </DialogContent>
                                                                             </Dialog>
-                                                                        </td>
+
+                                                                            <Button
+                                                                                variant="destructive"
+                                                                                size="sm"
+                                                                                disabled={deletingBillId === purchase.id}
+                                                                                onClick={() => handleDeleteBill(supplierName, purchase)}
+                                                                            >
+                                                                                {deletingBillId === purchase.id ? 'Deleting...' : 'Delete'}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>

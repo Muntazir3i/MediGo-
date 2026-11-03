@@ -108,6 +108,17 @@ export const addBillSql = async (billData) => {
   }
 };
 
+/** Delete a purchase bill and all of its related product rows. */
+export const deleteBillSql = async (billId) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL_BILL_SQL}/bills/${billId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting bill:", error.message);
+    throw error;
+  }
+};
+
 /**
  * Fetch a page of bills with their products from SQL.
  * Defaults to 5 bills. Filters: supplierName (exact), supplierSearch (partial),

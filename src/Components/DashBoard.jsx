@@ -77,7 +77,6 @@ function DashBoard() {
   // ==========================
 
   useEffect(() => {
-    fetchMedicines();
     fetchLowStock();
     fetchOutOfStock();
     fetchExpiryStock();
