@@ -108,6 +108,17 @@ export const addBillSql = async (billData) => {
   }
 };
 
+/** Update an existing purchase bill and its medicine rows. */
+export const updateBillSql = async (billId, billData) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL_BILL_SQL}/bills/${billId}`, billData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating bill:", error.response?.data?.error || error.message);
+    throw error;
+  }
+};
+
 /** Delete a purchase bill and all of its related product rows. */
 export const deleteBillSql = async (billId) => {
   try {

@@ -12,6 +12,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge.jsx';
 import './inventory.css';
 import TableData from './TableData.jsx';
+import EditPurchaseBillDialog from './EditPurchaseBillDialog.jsx';
 import { Button } from './ui/button.jsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs.jsx';
 import {
@@ -57,6 +58,7 @@ function Inventory() {
     const [purchaseDate, setPurchaseDate] = useState('');
     const [openSupplier, setOpenSupplier] = useState('');
     const [deletingBillId, setDeletingBillId] = useState(null);
+    const [editingBill, setEditingBill] = useState(null);
     // Per-supplier paginated bills: { [supplierName]: { bills, total, hasMore, ... } }
     const [supplierBills, setSupplierBills] = useState({});
 
@@ -281,6 +283,29 @@ function Inventory() {
             alert('Failed to delete the bill. Please try again.');
         } finally {
             setDeletingBillId(null);
+        }
+    };
+
+    // ----- Refresh the views after a purchase bill is edited -----
+    const handleBillUpdated = async ({ supplierName }) => {
+        // Medicine rows come from bill_products, so refresh All Products too.
+        await fetchMedicinesSql();
+
+        const updatedSuppliers = await loadSuppliers();
+        const supplierStillExists = updatedSuppliers.some(
+            (supplier) => supplier.supplierName === supplierName
+        );
+
+        if (supplierStillExists) {
+            // Reload from the first page so invoice/date/rate changes are reflected.
+            await loadSupplierBills(supplierName, { reset: true });
+        } else {
+            setOpenSupplier('');
+            setSupplierBills((prev) => {
+                const next = { ...prev };
+                delete next[supplierName];
+                return next;
+            });
         }
     };
 
@@ -614,6 +639,14 @@ function Inventory() {
                                                                             </Dialog>
 
                                                                             <Button
+                                                                                variant="secondary"
+                                                                                size="sm"
+                                                                                onClick={() => setEditingBill(purchase)}
+                                                                            >
+                                                                                Edit
+                                                                            </Button>
+
+                                                                            <Button
                                                                                 variant="destructive"
                                                                                 size="sm"
                                                                                 disabled={deletingBillId === purchase.id}
@@ -658,6 +691,15 @@ function Inventory() {
                     )}
                 </TabsContent>
             </Tabs>
+
+            <EditPurchaseBillDialog
+                bill={editingBill}
+                open={Boolean(editingBill)}
+                onOpenChange={(nextOpen) => {
+                    if (!nextOpen) setEditingBill(null);
+                }}
+                onSaved={handleBillUpdated}
+            />
         </main>
     );
 }
