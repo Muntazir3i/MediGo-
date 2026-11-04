@@ -304,8 +304,8 @@ export const generateInvoicePdf = ({
         const sourceHeight = Number(prescription.height) || 0;
         const ratio = sourceWidth > 0 && sourceHeight > 0 ? sourceHeight / sourceWidth : 1.4;
 
-        const maxImageWidth = 78;
-        const maxImageHeight = 98;
+        const maxImageWidth = 112;
+        const maxImageHeight = 125;
         let drawWidth = maxImageWidth;
         let drawHeight = drawWidth * ratio;
 
@@ -316,7 +316,7 @@ export const generateInvoicePdf = ({
 
         const padding = 4;
         const blockHeight = 6 + drawHeight + padding * 2;
-        let blockY = summaryY + 44;
+        let blockY = summaryY + 40;
 
         if (blockY + blockHeight > footerY - 8) {
             doc.addPage();
