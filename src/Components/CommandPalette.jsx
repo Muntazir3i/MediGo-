@@ -9,7 +9,9 @@ import {
     CalendarClock,
     CornerDownLeft,
     CreditCard,
+    FilePlus2,
     LayoutDashboard,
+    PackagePlus,
     PlusCircle,
     Receipt,
     Search,
@@ -64,28 +66,44 @@ const navigateCommands = [
 
 const actionCommands = [
     {
-        id: 'add-supplier',
-        title: 'Add supplier',
-        description: 'Create a new supplier account',
-        keywords: 'supplier vendor party create new',
-        to: '/add?tab=add-supplier',
-        icon: Users,
+        id: 'add-item',
+        title: 'Add item',
+        description: 'Add products to a new purchase bill',
+        keywords: 'add item items product medicine purchase bill stock new entry',
+        to: '/add?tab=add-purchase',
+        icon: PackagePlus,
     },
     {
         id: 'add-payment',
-        title: 'Record payment',
-        description: 'Log a payment against a supplier',
-        keywords: 'payment paid supplier invoice record new',
+        title: 'Add payment',
+        description: 'Record a payment made to a supplier',
+        keywords: 'add payment paid supplier invoice record new',
         to: '/add?tab=add-payment',
         icon: CreditCard,
     },
     {
+        id: 'add-supplier',
+        title: 'Add supplier',
+        description: 'Create a new supplier account',
+        keywords: 'add supplier vendor party create new',
+        to: '/add?tab=add-supplier',
+        icon: Users,
+    },
+    {
         id: 'add-expiry',
-        title: 'Record expiry',
-        description: 'Add expired or returned stock',
-        keywords: 'expiry expired return stock new',
+        title: 'Add expiry',
+        description: 'Record expired or returned stock',
+        keywords: 'add expiry expired return stock new',
         to: '/add?tab=add-expiry',
         icon: CalendarClock,
+    },
+    {
+        id: 'new-invoice',
+        title: 'Create invoice',
+        description: 'Start a new billing invoice',
+        keywords: 'create invoice bill sale billing new',
+        to: '/billing',
+        icon: FilePlus2,
     },
 ];
 
@@ -239,7 +257,7 @@ const CommandPalette = ({ open, onOpenChange }) => {
                                 </div>
                                 <p className="mt-3 text-sm font-semibold text-slate-800">No results found</p>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    Try searching for “billing”, “add” or “ledger”.
+                                    Try searching for “add”, “payment” or “ledger”.
                                 </p>
                             </Command.Empty>
 
