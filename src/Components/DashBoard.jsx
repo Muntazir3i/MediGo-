@@ -200,7 +200,7 @@ function DashBoard() {
 
     <main
       id='main-top-container'
-      className="h-screen min-w-0 flex-1 overflow-auto bg-blue-50 p-4"
+      className="h-full min-w-0 flex-1 overflow-auto bg-blue-50 p-4 pb-24 lg:pb-4"
     >
 
       <Tabs defaultValue="sales">

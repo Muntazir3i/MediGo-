@@ -403,7 +403,7 @@ const Ledger = () => {
   );
 
   return (
-    <main id='main-top-container' className="h-[90vh] min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:h-screen lg:pb-6">
+    <main id='main-top-container' className="h-full min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:pb-6">
       <div className="mx-auto max-w-[1600px] space-y-5">
         <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-6 py-6 text-white shadow-sm">
           <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-blue-500/20 blur-2xl" />

@@ -369,7 +369,7 @@ function Inventory() {
         purchaseDate !== '';
 
     return (
-        <main className="h-[90vh] min-w-0 flex-1 overflow-auto lg:h-screen bg-blue-50 p-4">
+        <main className="h-full min-w-0 flex-1 overflow-auto bg-blue-50 p-4 pb-24 lg:pb-4">
             <Tabs defaultValue="all-product">
                 <TabsList>
                     <TabsTrigger value="all-product">All Product</TabsTrigger>

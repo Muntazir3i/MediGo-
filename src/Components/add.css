@@ -1,17 +1,5 @@
-form{
-
-    input,select{
-        padding: 8px;
-        font-size: 20px;
-        border: 1px solid black;
-        border-radius: 10px;
-    }
-
-   
-
-    label{
-        font-size: 20px;
-    }
-
-}
-
+/*
+ * The Add workspace is styled with Tailwind utility classes so it stays
+ * consistent with the rest of the app. Keep page-specific overrides here only
+ * when a utility class cannot express them.
+ */

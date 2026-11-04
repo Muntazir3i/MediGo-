@@ -1,153 +1,242 @@
-import React from 'react'
+import React from 'react';
+import {
+  CalendarClock,
+  Plus,
+  Save,
+  Trash2,
+  Truck,
+} from 'lucide-react';
 import { Label } from '../ui/label.jsx';
 import { Input } from '../ui/input.jsx';
+import { Button } from '../ui/button.jsx';
+import { Badge } from '../ui/badge.jsx';
+
+const inputClass =
+  'h-9 border-slate-200 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20';
 
 const TabContentAddExpiry = ({
-    expiryFormData,
-    handleChangeExpiry,
-    handleSupplierSelect,
-    allSuppliersSql,
-    setExpiryFormData,
-    expiryProducts,
-    handleInputChangeExpiry,
-    handleDeleteExpiry,
-    handleAddProduct,
-    setExpiryProducts,
-    handleExpiryData,
+  expiryFormData,
+  handleChangeExpiry,
+  handleSupplierSelect,
+  allSuppliersSql,
+  setExpiryFormData,
+  expiryProducts,
+  handleInputChangeExpiry,
+  handleDeleteExpiry,
+  handleAddProduct,
+  setExpiryProducts,
+  handleExpiryData,
 }) => {
-    return (
-        <div>
-            <h1 className='text-3xl'>Record Expiry</h1>
-            <p>Enter the details of the Expiry for a supplier</p>
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Expiry</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Record expiry</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Track expired or returned stock against the supplier it came from.
+        </p>
+      </div>
 
-            <div id="bill-details-container" className='border-b-2 border-gray-400 py-2'>
-                <h2 className='text-2xl'>Bill Details</h2>
-                <div id="bill-details-inner-container" className='flex flex-col gap-2 lg:gap-0 lg:flex-row mt-2 justify-between'>
-
-
-                    <div className='w-full lg:w-[49%]'>
-                        <Label htmlFor='date'>Bill Date</Label>
-                        <Input name='date' value={expiryFormData.date} className='border-black' type='date' onChange={handleChangeExpiry}></Input>
-                    </div>
-                </div>
-            </div>
-
-            <div id="supplier-details-container" className='border-b-2 border-gray-400 py-2'>
-                <h2 className='text-2xl'>Supplier Details</h2>
-                <div id="supplier-details-inner-container" className='flex flex-col gap-4 lg:flex-row lg:gap-2  '>
-
-                    <div className='w-[100%]'>
-                        <Label htmlFor='supplierDrugLn'>Supplier Name</Label>
-                        <Input
-                            list="supplierList"
-                            className="border p-2 w-full border-black"
-                            name="supplierName"
-                            value={expiryFormData.supplierName}
-                            onChange={(e) => handleSupplierSelect(e, allSuppliersSql, setExpiryFormData, true)}
-                        />
-                        <datalist id="supplierList">
-                            {allSuppliersSql.map(s => (
-                                <option key={s.id} value={s.supplierName} />
-                            ))}
-                        </datalist>
-                    </div>
-
-                    <div className='w-[100%]'>
-                        <Label htmlFor='supplierDrugLn'>Supplier Drug L/N</Label>
-                        <Input name='supplierDrugLn' value={expiryFormData.supplierDrugLn} className='border-black' type='text' onChange={handleChangeExpiry}></Input>
-                    </div>
-
-                    <div className='w-[100%]'>
-                        <Label htmlFor='supplierContact'>Supplier Contact</Label>
-                        <Input name='supplierContact' value={expiryFormData.supplierContact} className='border-black' type='tel' onChange={handleChangeExpiry}></Input>
-                    </div>
-                </div>
-            </div>
-
-            <div id="product-details-container" className='border-b-2 border-gray-400 py-2'>
-                <h2 className="text-2xl mb-4">Product Details</h2>
-                <div id="product-details-inner-container" className='border overflow-auto'>
-                    <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
-                        <thead className="bg-gray-50 overflow-auto">
-                            <tr >
-                                <th className="px-4 py-2 text-black">Product Name</th>
-                                <th className="px-4 py-2 text-black">Batch Number</th>
-                                <th className="px-4 py-2 text-black">EXP Date</th>
-                                <th className="px-4 py-2 text-black">Quantity</th>
-                                <th className="px-4 py-2 text-black">MRP</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 border-t border-gray-100 ">
-                            {expiryProducts.map((item) => (
-                                <tr key={item.id}  >
-                                    <td className="px-4 py-2">
-                                        <Input
-                                            type="text"
-                                            className="border border-black p-1 w-40 lg:w-full text-black font-bold"
-                                            value={item.name}
-                                            onChange={(e) => handleInputChangeExpiry(item.id, "name", e.target.value)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <Input
-                                            type="text"
-                                            className="border border-black p-1 w-40 lg:w-full text-black"
-                                            value={item.batchNumber}
-                                            onChange={(e) => handleInputChangeExpiry(item.id, "batchNumber", e.target.value)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <Input
-                                            type="date"
-                                            className="border border-black p-1 w-40 lg:w-full text-black"
-                                            value={item.expiryDate}
-                                            onChange={(e) => handleInputChangeExpiry(item.id, "expiryDate", e.target.value)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <Input
-                                            type="number"
-                                            className="border border-black p-1 w-40 lg:w-full text-black"
-                                            value={item.quantity}
-                                            onChange={(e) => handleInputChangeExpiry(item.id, "stock", e.target.value)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <Input
-                                            type="number"
-                                            className="border border-black p-1 w-40 lg:w-full text-black"
-                                            value={item.mrp}
-                                            onChange={(e) => handleInputChangeExpiry(item.id, "mrp", e.target.value)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <button onClick={() => handleDeleteExpiry(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    <div className="mt-4 flex gap-4">
-                        <button
-                            onClick={() => handleAddProduct(expiryProducts, setExpiryProducts)}
-                            className="px-4 py-2 bg-blue-500 text-white rounded"
-                        >
-                            Add Product
-                        </button>
-
-                    </div>
-                </div>
-            </div>
-
-            <button
-                onClick={handleExpiryData}
-                className="px-4 py-2 bg-green-500 text-white rounded mt-2"
-            >
-                Save
-            </button>
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-start gap-3">
+          <div className="rounded-lg bg-amber-50 p-2 text-amber-600">
+            <CalendarClock className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Bill and supplier</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Capture the expiry date and supplier details.</p>
+          </div>
         </div>
-    )
-}
 
-export default TabContentAddExpiry
+        <div className="grid gap-4 md:grid-cols-4">
+          <div>
+            <Label htmlFor="expiry-date" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Bill date
+            </Label>
+            <Input
+              id="expiry-date"
+              name="date"
+              value={expiryFormData.date}
+              className={inputClass}
+              type="date"
+              onChange={handleChangeExpiry}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="expiry-supplier" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Supplier name
+            </Label>
+            <Input
+              id="expiry-supplier"
+              list="expirySupplierList"
+              className={inputClass}
+              name="supplierName"
+              placeholder="Search suppliers"
+              value={expiryFormData.supplierName}
+              onChange={(e) => handleSupplierSelect(e, allSuppliersSql, setExpiryFormData, true)}
+            />
+            <datalist id="expirySupplierList">
+              {allSuppliersSql.map((s) => (
+                <option key={s.id ?? s.supplierName} value={s.supplierName} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
+            <Label htmlFor="expiry-drug" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Supplier drug licence
+            </Label>
+            <Input
+              id="expiry-drug"
+              name="supplierDrugLn"
+              value={expiryFormData.supplierDrugLn}
+              className={inputClass}
+              type="text"
+              placeholder="D.L. number"
+              onChange={handleChangeExpiry}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="expiry-contact" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Supplier contact
+            </Label>
+            <Input
+              id="expiry-contact"
+              name="supplierContact"
+              value={expiryFormData.supplierContact}
+              className={inputClass}
+              type="tel"
+              placeholder="Phone number"
+              onChange={handleChangeExpiry}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+          <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-rose-50 p-2 text-rose-600">
+              <Truck className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Expired products</h3>
+              <p className="mt-0.5 text-xs text-slate-500">Add every product included in this expiry record.</p>
+            </div>
+          </div>
+          <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+            {expiryProducts.length} line{expiryProducts.length === 1 ? '' : 's'}
+          </Badge>
+        </div>
+
+        <div className="mx-5 overflow-hidden rounded-lg border border-slate-200">
+          <div className="max-h-[48vh] overflow-auto">
+            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-3 py-2.5 font-semibold">Product name</th>
+                  <th className="px-3 py-2.5 font-semibold">Batch</th>
+                  <th className="px-3 py-2.5 font-semibold">Expiry</th>
+                  <th className="px-3 py-2.5 font-semibold">Quantity</th>
+                  <th className="px-3 py-2.5 font-semibold">MRP</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {expiryProducts.map((item, index) => (
+                  <tr key={item.id} className="transition hover:bg-slate-50/60">
+                    <td className="px-3 py-2">
+                      <Input
+                        type="text"
+                        aria-label={`Expired product name for line ${index + 1}`}
+                        className={`${inputClass} min-w-[190px] font-semibold`}
+                        value={item.name}
+                        placeholder="Medicine name"
+                        onChange={(e) => handleInputChangeExpiry(item.id, 'name', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Input
+                        type="text"
+                        aria-label={`Batch for line ${index + 1}`}
+                        className={`${inputClass} min-w-[120px]`}
+                        value={item.batchNumber}
+                        placeholder="Batch"
+                        onChange={(e) => handleInputChangeExpiry(item.id, 'batchNumber', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Input
+                        type="date"
+                        aria-label={`Expiry date for line ${index + 1}`}
+                        className={`${inputClass} min-w-[140px]`}
+                        value={item.expiryDate}
+                        onChange={(e) => handleInputChangeExpiry(item.id, 'expiryDate', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Input
+                        type="number"
+                        aria-label={`Quantity for line ${index + 1}`}
+                        className={`${inputClass} min-w-[90px]`}
+                        value={item.stock}
+                        min="0"
+                        onChange={(e) => handleInputChangeExpiry(item.id, 'stock', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <Input
+                        type="number"
+                        aria-label={`MRP for line ${index + 1}`}
+                        className={`${inputClass} min-w-[100px]`}
+                        value={item.mrp}
+                        min="0"
+                        onChange={(e) => handleInputChangeExpiry(item.id, 'mrp', e.target.value)}
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteExpiry(item.id)}
+                        aria-label={`Delete line ${index + 1}`}
+                        className="h-8 w-8 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="m-5 flex flex-wrap items-center justify-between gap-3">
+          <Button
+            type="button"
+            onClick={() => handleAddProduct(setExpiryProducts)}
+            className="gap-2 bg-slate-900 text-white hover:bg-slate-800"
+          >
+            <Plus className="h-4 w-4" />
+            Add product
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleExpiryData}
+            className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <Save className="h-4 w-4" />
+            Save expiry
+          </Button>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default TabContentAddExpiry;

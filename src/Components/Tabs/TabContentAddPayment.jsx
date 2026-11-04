@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
+import { CreditCard, Receipt, Save, Wallet } from 'lucide-react';
 import { Label } from '../ui/label.jsx';
 import { Input } from '../ui/input.jsx';
+import { Button } from '../ui/button.jsx';
+
+const inputClass =
+  'h-9 border-slate-200 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20';
 
 // Returns today's date in local timezone as YYYY-MM-DD
 // (the format <input type="date"> expects)
@@ -50,75 +55,122 @@ const TabContentAddPayment = ({
   };
 
   return (
-    <div>
-      <form className="flex flex-col gap-3" onSubmit={handleSave}>
-        <label htmlFor="date">Receipt Date</label>
-        <input
-          className="border-1"
-          type="date"
-          name="date"
-          value={newPaymentDetails.date}
-          onChange={handleChangePayment}
-          required
-        />
+    <div className="space-y-5">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Payments</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Record a payment</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Log an amount paid to a supplier and keep their ledger balance up to date.
+        </p>
+      </div>
 
-        <label htmlFor="invoice">Receipt Number</label>
-        <input
-          className="border-1"
-          type="tel"
-          name="invoice"
-          value={newPaymentDetails.invoice}
-          onChange={handleChangePayment}
-          required
-        />
-
-        <div className="w-[100%]">
-          <Label htmlFor="supplierDrugLn">Supplier Name</Label>
-          <Input
-            list="supplierList"
-            className="border p-2 w-full border-black"
-            name="supplierName"
-            value={newPaymentDetails.supplierName}
-            onChange={(e) =>
-              handleSupplierSelect(
-                e,
-                allSuppliersSql,
-                setNewPaymentDetails,
-                false
-              )
-            }
-          />
-          <datalist id="supplierList">
-            {allSuppliersSql.map((s) => (
-              <option key={s.id} value={s.supplierName} />
-            ))}
-          </datalist>
+      <form onSubmit={handleSave} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-5 flex items-start gap-3">
+          <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600">
+            <CreditCard className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Payment details</h3>
+            <p className="mt-0.5 text-xs text-slate-500">The receipt date defaults to today.</p>
+          </div>
         </div>
 
-        <label htmlFor="drugLicenseNumber">Drug License Number</label>
-        <input
-          className="border-1"
-          type="text"
-          name="drugLicenseNumber"
-          value={newPaymentDetails.drugLicenseNumber}
-          onChange={handleChangePayment}
-        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label htmlFor="payment-date" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Receipt date
+            </Label>
+            <Input
+              id="payment-date"
+              className={inputClass}
+              type="date"
+              name="date"
+              value={newPaymentDetails.date}
+              onChange={handleChangePayment}
+              required
+            />
+          </div>
 
-        <label htmlFor="total">Amount Paid</label>
-        <input
-          className="border-1"
-          type="number"
-          name="total"
-          value={newPaymentDetails.total}
-          onChange={handleChangePayment}
-          required
-        />
+          <div>
+            <Label htmlFor="payment-invoice" className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-600">
+              <Receipt className="h-3.5 w-3.5 text-slate-400" />
+              Receipt number
+            </Label>
+            <Input
+              id="payment-invoice"
+              className={inputClass}
+              type="text"
+              name="invoice"
+              placeholder="Invoice or receipt reference"
+              value={newPaymentDetails.invoice}
+              onChange={handleChangePayment}
+              required
+            />
+          </div>
 
-        <input
-          className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-          type="submit"
-          value="Save"
-        />
+          <div className="md:col-span-2">
+            <Label htmlFor="payment-supplier" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Supplier name
+            </Label>
+            <Input
+              id="payment-supplier"
+              list="paymentSupplierList"
+              className={inputClass}
+              name="supplierName"
+              placeholder="Search suppliers"
+              value={newPaymentDetails.supplierName}
+              onChange={(e) =>
+                handleSupplierSelect(e, allSuppliersSql, setNewPaymentDetails, false)
+              }
+            />
+            <datalist id="paymentSupplierList">
+              {allSuppliersSql.map((s) => (
+                <option key={s.id ?? s.supplierName} value={s.supplierName} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
+            <Label htmlFor="payment-drug" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Drug licence number
+            </Label>
+            <Input
+              id="payment-drug"
+              className={inputClass}
+              type="text"
+              name="drugLicenseNumber"
+              placeholder="D.L. number"
+              value={newPaymentDetails.drugLicenseNumber}
+              onChange={handleChangePayment}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="payment-total" className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-600">
+              <Wallet className="h-3.5 w-3.5 text-slate-400" />
+              Amount paid (₹)
+            </Label>
+            <Input
+              id="payment-total"
+              className={inputClass}
+              type="number"
+              name="total"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={newPaymentDetails.total}
+              onChange={handleChangePayment}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+          <Button type="submit" className="gap-2 bg-slate-900 text-white hover:bg-slate-800">
+            <Save className="h-4 w-4" />
+            Save payment
+          </Button>
+        </div>
       </form>
     </div>
   );
