@@ -479,9 +479,7 @@ function Home() {
                   </div>
                   <div>
                     <h2 className="text-sm font-semibold text-slate-900">Available products</h2>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {filterMedicine.length} medicine{filterMedicine.length === 1 ? '' : 's'} found
-                    </p>
+
                   </div>
                 </div>
                 <Badge variant="secondary" className="bg-slate-100 text-slate-600">

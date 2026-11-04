@@ -240,7 +240,7 @@ export const addMedicines = async (medicineData) => {
 /** Delete a medicine by ID. */
 export const deleteMedicine = async (id) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/del-medi/${id}`);
+    const response = await axios.delete(`${API_BASE_URL_MEDICINES_SQL}/medicines/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting medicine:', error.message);
@@ -274,7 +274,7 @@ export const increaseStock = async (id) => {
 export const updateMedicine = async (id, updatedData) => {
   try {
     const response = await axios.put(
-      `${API_BASE_URL}/upt-medi/${id}`,
+      `${API_BASE_URL_MEDICINES_SQL}/medicines/${id}`,
       updatedData,
       { headers: { "Content-Type": "application/json" } }
     );

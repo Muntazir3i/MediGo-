@@ -1,7 +1,3 @@
-tbody{
-    tr{
-        td{
-            font-size: 18px;
-        }
-    }
-}
+/* Inventory styles are handled with Tailwind utility classes in the components.
+   Keep this file empty (or add inventory-scoped rules here) to avoid leaking
+   global element styles such as an oversized table font size. */
