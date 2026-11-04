@@ -3,6 +3,7 @@ import {
   Boxes,
   CheckCircle2,
   Clock3,
+  ImagePlus,
   Loader2,
   Minus,
   PackageSearch,
@@ -11,7 +12,9 @@ import {
   Search,
   ShoppingCart,
   Trash2,
+  UploadCloud,
   Users,
+  X,
 } from 'lucide-react';
 
 import { Input } from './ui/input.jsx';
@@ -70,6 +73,64 @@ const lineTotal = (item) => lineSubtotal(item) - lineDiscountAmount(item);
 
 const createInvoiceNumber = () => `INV-${Math.floor(100000 + Math.random() * 900000)}`;
 
+const MAX_PRESCRIPTION_BYTES = 8 * 1024 * 1024;
+const PRESCRIPTION_MAX_DIMENSION = 1600;
+
+const formatFileSize = (bytes) => {
+  const value = Number(bytes) || 0;
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+/**
+ * Reads the selected image, downscales it and re-encodes it as JPEG so the
+ * preview, stored invoice and PDF stay reasonably small.
+ */
+const preparePrescriptionImage = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error('Could not read the selected image.'));
+
+    reader.onload = () => {
+      const image = new Image();
+
+      image.onerror = () => reject(new Error('That file is not a valid image.'));
+
+      image.onload = () => {
+        const scale = Math.min(
+          1,
+          PRESCRIPTION_MAX_DIMENSION / Math.max(image.width, image.height)
+        );
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+
+        resolve({
+          dataUrl: canvas.toDataURL('image/jpeg', 0.88),
+          name: file.name,
+          mimeType: 'image/jpeg',
+          size: file.size,
+          width,
+          height
+        });
+      };
+
+      image.src = String(reader.result || '');
+    };
+
+    reader.readAsDataURL(file);
+  });
+
 function Home() {
 
   const [open, setOpen] = useState(false);
@@ -92,9 +153,15 @@ function Home() {
     address: ''
   });
 
+  const [prescription, setPrescription] = useState(null);
+  const [prescriptionError, setPrescriptionError] = useState('');
+  const [prescriptionLoading, setPrescriptionLoading] = useState(false);
+  const [prescriptionDragging, setPrescriptionDragging] = useState(false);
+
   const [invoiceNumber, setInvoiceNumber] = useState(createInvoiceNumber);
 
   const searchRequestRef = useRef(0);
+  const prescriptionInputRef = useRef(null);
 
   useEffect(() => {
     fetchMedicinesSql();
@@ -173,6 +240,50 @@ function Home() {
 
   const statusCheck = (e) => {
     setStatus(e.target.value);
+  };
+
+  const handlePrescriptionFile = async (file) => {
+    if (!file || prescriptionLoading) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setPrescriptionError('Please choose a JPG, PNG or WebP image.');
+      return;
+    }
+
+    if (file.size > MAX_PRESCRIPTION_BYTES) {
+      setPrescriptionError('Use an image smaller than 8 MB.');
+      return;
+    }
+
+    setPrescriptionLoading(true);
+    setPrescriptionError('');
+
+    try {
+      const prepared = await preparePrescriptionImage(file);
+      setPrescription(prepared);
+    } catch (error) {
+      setPrescriptionError(error.message || 'Could not attach that image.');
+    } finally {
+      setPrescriptionLoading(false);
+    }
+  };
+
+  const handlePrescriptionChange = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    handlePrescriptionFile(file);
+  };
+
+  const handlePrescriptionDrop = (event) => {
+    event.preventDefault();
+    setPrescriptionDragging(false);
+    handlePrescriptionFile(event.dataTransfer.files?.[0]);
+  };
+
+  const removePrescription = () => {
+    setPrescription(null);
+    setPrescriptionError('');
+    if (prescriptionInputRef.current) prescriptionInputRef.current.value = '';
   };
 
   const onAddClick = (med) => {
@@ -279,6 +390,7 @@ function Home() {
 
   const clearCart = () => {
     setCart([]);
+    removePrescription();
   };
 
   const subtotal = round2(
@@ -346,7 +458,16 @@ function Home() {
       totalDiscount,
       total: totalAmount,
       status,
-      date: invoiceDate
+      date: invoiceDate,
+      prescription: prescription
+        ? {
+            name: prescription.name,
+            mimeType: prescription.mimeType,
+            width: prescription.width,
+            height: prescription.height,
+            dataUrl: prescription.dataUrl
+          }
+        : null
     };
 
     setSaving(true);
@@ -366,7 +487,8 @@ function Home() {
         subtotal,
         totalDiscount,
         total: totalAmount,
-        status
+        status,
+        prescription
       });
 
       // RESET
@@ -381,6 +503,8 @@ function Home() {
       setStatus('completed');
 
       setSearch('');
+
+      removePrescription();
 
       setOpen(false);
 
@@ -814,6 +938,109 @@ function Home() {
                     />
                   </div>
                 </div>
+
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <ImagePlus className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="text-xs font-medium text-slate-600">
+                        Prescription image
+                        <span className="ml-1 font-normal text-slate-400">(optional)</span>
+                      </span>
+                    </div>
+
+                    {prescription && (
+                      <button
+                        type="button"
+                        onClick={removePrescription}
+                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-medium text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                      >
+                        <X className="h-3 w-3" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <input
+                    ref={prescriptionInputRef}
+                    id="prescription-image"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={prescriptionLoading}
+                    onChange={handlePrescriptionChange}
+                    className="sr-only"
+                  />
+
+                  {prescription ? (
+                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5">
+                      <img
+                        src={prescription.dataUrl}
+                        alt="Prescription preview"
+                        className="h-16 w-16 shrink-0 rounded-lg border border-slate-200 bg-white object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-slate-800">
+                          {prescription.name}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-slate-500">
+                          {formatFileSize(prescription.size)} · attached to this invoice and its PDF
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={prescriptionLoading}
+                            onClick={() => prescriptionInputRef.current?.click()}
+                            className="h-7 gap-1.5 border-slate-200 bg-white px-2 text-[11px] text-slate-600 hover:bg-slate-100"
+                          >
+                            {prescriptionLoading ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <ImagePlus className="h-3 w-3" />
+                            )}
+                            Replace
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => prescriptionInputRef.current?.click()}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setPrescriptionDragging(true);
+                      }}
+                      onDragLeave={() => setPrescriptionDragging(false)}
+                      onDrop={handlePrescriptionDrop}
+                      disabled={prescriptionLoading}
+                      className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-5 text-center transition ${
+                        prescriptionDragging
+                          ? 'border-blue-400 bg-blue-50/70 ring-2 ring-blue-500/15'
+                          : 'border-slate-300 bg-slate-50/40 hover:border-blue-300 hover:bg-blue-50/40'
+                      }`}
+                    >
+                      {prescriptionLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      ) : (
+                        <UploadCloud className="h-5 w-5 text-slate-400" />
+                      )}
+                      <span className="text-xs font-medium text-slate-700">
+                        {prescriptionLoading
+                          ? 'Adding prescription…'
+                          : 'Drop a prescription image here or browse'}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        JPG, PNG or WebP · up to 8 MB
+                      </span>
+                    </button>
+                  )}
+
+                  {prescriptionError && (
+                    <p className="mt-2 text-xs font-medium text-rose-600">{prescriptionError}</p>
+                  )}
+                </div>
               </section>
             )}
 
@@ -905,6 +1132,12 @@ function Home() {
                         >
                           {status === 'completed' ? 'Paid' : 'Pending'}
                         </span>
+                        {prescription && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-blue-400/30 bg-blue-500/15 px-2.5 py-1 font-medium text-blue-200">
+                            <ImagePlus className="h-3 w-3" />
+                            Prescription attached
+                          </span>
+                        )}
                       </div>
                     </div>
 

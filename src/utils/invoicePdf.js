@@ -3,6 +3,12 @@ import autoTable from "jspdf-autotable";
 
 const money = (value) => (Number(value) || 0).toFixed(2);
 
+const imageFormat = (dataUrl) => {
+    if (/^data:image\/png/i.test(dataUrl)) return "PNG";
+    if (/^data:image\/webp/i.test(dataUrl)) return "WEBP";
+    return "JPEG";
+};
+
 const ONES = [
     "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
     "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
@@ -92,7 +98,8 @@ export const generateInvoicePdf = ({
     subtotal = 0,
     totalDiscount = 0,
     total = 0,
-    status = "completed"
+    status = "completed",
+    prescription = null
 }) => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
 
@@ -289,9 +296,86 @@ export const generateInvoicePdf = ({
     doc.setTextColor(107, 114, 128);
     doc.text(`${items.length} item${items.length === 1 ? "" : "s"} on this invoice`, boxX + 4, summaryY + 28);
 
-    // ── Footer ─────────────────────────────────────────────────────────
+    // ── Prescription attachment ────────────────────────────────────────
     const footerY = pageHeight - 34;
 
+    if (prescription?.dataUrl) {
+        const sourceWidth = Number(prescription.width) || 0;
+        const sourceHeight = Number(prescription.height) || 0;
+        const ratio = sourceWidth > 0 && sourceHeight > 0 ? sourceHeight / sourceWidth : 1.4;
+
+        const maxImageWidth = 78;
+        const maxImageHeight = 98;
+        let drawWidth = maxImageWidth;
+        let drawHeight = drawWidth * ratio;
+
+        if (drawHeight > maxImageHeight) {
+            drawHeight = maxImageHeight;
+            drawWidth = drawHeight / ratio;
+        }
+
+        const padding = 4;
+        const blockHeight = 6 + drawHeight + padding * 2;
+        let blockY = summaryY + 44;
+
+        if (blockY + blockHeight > footerY - 8) {
+            doc.addPage();
+            blockY = 22;
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(107, 114, 128);
+        doc.text("ATTACHED PRESCRIPTION", margin, blockY);
+
+        const frameX = margin;
+        const frameY = blockY + 4;
+
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(229, 231, 235);
+        doc.roundedRect(frameX, frameY, drawWidth + padding * 2, drawHeight + padding * 2, 2, 2, "FD");
+
+        try {
+            doc.addImage(
+                prescription.dataUrl,
+                imageFormat(prescription.dataUrl),
+                frameX + padding,
+                frameY + padding,
+                drawWidth,
+                drawHeight,
+                undefined,
+                "FAST"
+            );
+        } catch (error) {
+            console.error("Could not embed prescription image:", error);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            doc.setTextColor(107, 114, 128);
+            doc.text("Prescription image could not be rendered.", frameX + padding, frameY + 10);
+        }
+
+        const noteX = frameX + drawWidth + padding * 2 + 10;
+        const noteWidth = right - noteX;
+
+        if (noteWidth > 32) {
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.setTextColor(17, 24, 39);
+            doc.text("Prescription on file", noteX, frameY + 6);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            doc.setTextColor(107, 114, 128);
+            const noteLines = doc.splitTextToSize(
+                "The image above was attached to this sale and is stored with the invoice record. Please retain it for your records.",
+                noteWidth
+            );
+            doc.text(noteLines, noteX, frameY + 12);
+            doc.setTextColor(17, 24, 39);
+        }
+    }
+
+    // ── Footer ─────────────────────────────────────────────────────────
     doc.setDrawColor(229, 231, 235);
     doc.line(margin, footerY, right, footerY);
 
