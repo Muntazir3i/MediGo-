@@ -300,6 +300,7 @@ function Add() {
               discount: "",
               gstPercentage: "",
               category: "",
+              salts: undefined,
             }
             : product
         )
@@ -325,6 +326,9 @@ function Add() {
               category: selectedMed.category,
               [field]: value,
               supplier: formData.supplierName,
+              // Prefill the medicine's existing composition. undefined keeps it
+              // untouched when the payload is submitted.
+              salts: Array.isArray(selectedMed.salts) ? selectedMed.salts : undefined,
             }
             : product
         )
@@ -339,6 +343,19 @@ function Add() {
         )
       );
     }
+  };
+
+  // Salts are optional and attach to the medicine, not the batch. This is kept
+  // separate from handleInputChange because typing a product name drives the
+  // search box, while editing salts must not.
+  const handleSaltsChange = (id, salts) => {
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === id
+          ? { ...product, salts: Array.isArray(salts) ? salts : undefined }
+          : product
+      )
+    );
   };
 
 
@@ -595,6 +612,7 @@ function Add() {
                 searchedMed={searchedMed}
                 handleInputChange={handleInputChange}
                 handleDelete={handleDelete}
+                onSaltsChange={handleSaltsChange}
                 onAddProduct={addProductAndFocus}
                 setProducts={setProducts}
                 totalAmount={totalAmount}

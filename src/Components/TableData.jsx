@@ -22,6 +22,7 @@ import {
 import { Input } from './ui/input.jsx';
 import { Label } from './ui/label.jsx';
 import { Badge } from './ui/badge.jsx';
+import SaltEditor from './SaltEditor.jsx';
 
 const inputClass =
   'h-9 border-slate-200 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20';
@@ -87,6 +88,7 @@ function TableData({
   formData,
   isSaving = false,
   error = '',
+  onSaltsChange,
 }) {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -426,6 +428,17 @@ function TableData({
                   className={inputClass}
                 />
               </Field>
+
+              <div className="sm:col-span-2">
+                <SaltEditor
+                  id="edit-salts"
+                  value={formData.salts ?? []}
+                  onChange={onSaltsChange}
+                  disabled={isSaving}
+                  label="Salts (optional)"
+                  hint="Shared by every batch of this medicine. Leave empty if the composition is unknown."
+                />
+              </div>
             </div>
 
             {error && (

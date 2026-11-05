@@ -369,6 +369,7 @@ function Inventory() {
             mrp: medicine?.mrp ?? '',
             discount: medicine?.discount ?? '',
             gstPercentage: medicine?.gstPercentage ?? '',
+            salts: Array.isArray(medicine?.salts) ? medicine.salts : [],
         });
         setIsOpen(true);
     };
@@ -376,6 +377,10 @@ function Inventory() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSaltsChange = (salts) => {
+        setFormData((prev) => ({ ...prev, salts: Array.isArray(salts) ? salts : [] }));
     };
 
     const handleUpdate = async () => {
@@ -399,6 +404,8 @@ function Inventory() {
             mrp: Number(formData.mrp) || 0,
             discount: Number(formData.discount) || 0,
             gstPercentage: Number(formData.gstPercentage) || 0,
+            // Optional: [] clears the composition, and a populated list replaces it.
+            salts: Array.isArray(formData.salts) ? formData.salts : [],
         };
 
         setUpdateSaving(true);
@@ -562,6 +569,7 @@ function Inventory() {
                 formData={formData}
                 isSaving={updateSaving}
                 error={updateError}
+                onSaltsChange={handleSaltsChange}
               />
             </div>
           </TabsContent>

@@ -236,6 +236,30 @@ export const getAllMedicines = async () => {
   }
 };
 
+/** Search the salt catalogue. */
+export const searchSalts = async (term = '') => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/salts`, {
+      params: { search: term },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error searching salts:', error.message);
+    throw error;
+  }
+};
+
+/** Create a salt, or reuse the existing one with the same name. */
+export const createSalt = async (name) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL_MEDICINES_SQL}/salts`, { name });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating salt:', error.response?.data?.error || error.message);
+    throw error;
+  }
+};
+
 // ─── Medicines (Legacy API) ───────────────────────────────────────────────────
 
 /** Get all medicines. */

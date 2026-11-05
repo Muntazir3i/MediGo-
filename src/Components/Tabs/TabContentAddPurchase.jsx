@@ -14,6 +14,7 @@ import { Input } from '../ui/input.jsx';
 import { Button } from '../ui/button.jsx';
 import { Badge } from '../ui/badge.jsx';
 import SelectList from '../SelectList.jsx';
+import SaltEditor from '../SaltEditor.jsx';
 
 const inputClass =
     'h-9 border-slate-200 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20';
@@ -74,6 +75,7 @@ const TabContentAddPurchase = ({
     handleInputChange,
     handleDelete,
     onAddProduct,
+    onSaltsChange,
     setProducts,
     totalAmount,
     totalDiscount,
@@ -239,8 +241,8 @@ const TabContentAddPurchase = ({
 
                             <tbody className="divide-y divide-slate-100 bg-white">
                                 {products.map((item, index) => (
+                                    <React.Fragment key={item.id}>
                                     <tr
-                                        key={item.id}
                                         data-product-row
                                         className="group transition focus-within:bg-blue-50/40 hover:bg-slate-50/60"
                                     >
@@ -394,6 +396,21 @@ const TabContentAddPurchase = ({
                                             </Button>
                                         </td>
                                     </tr>
+
+                                    {String(item.name ?? '').trim() !== '' && (
+                                        <tr className="bg-slate-50/40">
+                                            <td colSpan={10} className="px-3 pb-3 pt-1">
+                                                <SaltEditor
+                                                    id={`purchase-salts-${item.id}`}
+                                                    value={item.salts ?? []}
+                                                    onChange={(salts) => onSaltsChange?.(item.id, salts)}
+                                                    label={`Salts for ${item.name} (optional)`}
+                                                    hint="Shared by every batch of this medicine. Leave empty if the composition is unknown."
+                                                />
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </React.Fragment>
                                 ))}
                             </tbody>
                         </table>
