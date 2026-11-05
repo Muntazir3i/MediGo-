@@ -105,6 +105,14 @@ const actionCommands = [
         to: '/billing',
         icon: FilePlus2,
     },
+    {
+        id: 'all-purchase',
+        title: 'View All Purchases',
+        description: 'View Purchases From Suppliers',
+        keywords: 'view purchases view purchases',
+        to: '/inventory?tab=all-purchase',
+        icon: FilePlus2,
+    },
 ];
 
 const CommandRow = ({ item, onSelect }) => {

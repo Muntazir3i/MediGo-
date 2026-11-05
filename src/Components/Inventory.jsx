@@ -1,28 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
-    Boxes,
-    PackageCheck,
-    PackageX,
-    Package,
-    ReceiptText,
-    Search,
-    FileText,
-    CalendarDays,
-    Loader2,
-    Truck,
-    Eye,
-    Pencil,
-    Trash2,
+  Boxes,
+  PackageCheck,
+  PackageX,
+  Package,
+  ReceiptText,
+  Search,
+  FileText,
+  CalendarDays,
+  Loader2,
+  Truck,
+  Eye,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import {
-    adjustMedicineStock,
-    deleteMedicine,
-    updateMedicine,
-    fetchBillsProductsSql,
-    getBillSuppliers,
-    deleteBillSql,
-    getAllMedicines,
-    findmedicineByName,
+  adjustMedicineStock,
+  deleteMedicine,
+  updateMedicine,
+  fetchBillsProductsSql,
+  getBillSuppliers,
+  deleteBillSql,
+  getAllMedicines,
+  findmedicineByName,
 } from '../services/medicineService.js';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge.jsx';
@@ -32,461 +33,479 @@ import EditPurchaseBillDialog from './EditPurchaseBillDialog.jsx';
 import { Button } from './ui/button.jsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs.jsx';
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from './ui/accordion.jsx';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from './ui/dialog';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHeader,
-    TableHead,
-    TableRow,
-    TableFooter,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableFooter,
 } from './ui/table.jsx';
 
 // How many bills to show when a supplier accordion is opened / "Load more" is clicked.
 const PURCHASE_BILL_PAGE_SIZE = 5;
 
 function Inventory() {
-    // ----- Medicines state -----
-    const [medicines, setMedicines] = useState([]);
-    const [filterMedicine, setFilterMedicine] = useState([]);
-    const [medicineSearch, setMedicineSearch] = useState('');
+  // ----- Medicines state -----
+  const [medicines, setMedicines] = useState([]);
+  const [filterMedicine, setFilterMedicine] = useState([]);
+  const [medicineSearch, setMedicineSearch] = useState('');
 
-    // ----- Purchases state -----
-    const [billSuppliers, setBillSuppliers] = useState([]);
-    const [suppliersLoading, setSuppliersLoading] = useState(false);
-    const [suppliersError, setSuppliersError] = useState('');
-    const [purchaseSearch, setPurchaseSearch] = useState('');
-    const [invoiceSearch, setInvoiceSearch] = useState('');
-    const [purchaseDate, setPurchaseDate] = useState('');
-    const [openSupplier, setOpenSupplier] = useState('');
-    const [deletingBillId, setDeletingBillId] = useState(null);
-    const [editingBill, setEditingBill] = useState(null);
-    // Per-supplier paginated bills: { [supplierName]: { bills, total, hasMore, ... } }
-    const [supplierBills, setSupplierBills] = useState({});
+  // ----- Purchases state -----
+  const [billSuppliers, setBillSuppliers] = useState([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(false);
+  const [suppliersError, setSuppliersError] = useState('');
+  const [purchaseSearch, setPurchaseSearch] = useState('');
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [openSupplier, setOpenSupplier] = useState('');
+  const [deletingBillId, setDeletingBillId] = useState(null);
+  const [editingBill, setEditingBill] = useState(null);
+  // Per-supplier paginated bills: { [supplierName]: { bills, total, hasMore, ... } }
+  const [supplierBills, setSupplierBills] = useState({});
 
-    // ----- Edit dialog state -----
-    const [isOpen, setIsOpen] = useState(false);
-    const [selectedMedicine, setSelectedMedicine] = useState(null);
-    const [formData, setFormData] = useState({});
-    const [updateSaving, setUpdateSaving] = useState(false);
-    const [updateError, setUpdateError] = useState('');
+  // ----- Edit dialog state -----
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedMedicine, setSelectedMedicine] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [updateSaving, setUpdateSaving] = useState(false);
+  const [updateError, setUpdateError] = useState('');
 
-    // ----- Stock adjustment dialog state -----
-    const [adjustingMedicine, setAdjustingMedicine] = useState(null);
-    const [adjustForm, setAdjustForm] = useState({ quantity: '', reason: '' });
-    const [adjustSaving, setAdjustSaving] = useState(false);
-    const [adjustError, setAdjustError] = useState('');
+  // ----- Stock adjustment dialog state -----
+  const [adjustingMedicine, setAdjustingMedicine] = useState(null);
+  const [adjustForm, setAdjustForm] = useState({ quantity: '', reason: '' });
+  const [adjustSaving, setAdjustSaving] = useState(false);
+  const [adjustError, setAdjustError] = useState('');
 
-    // ----- Initial fetch -----
-    useEffect(() => {
-        fetchMedicinesSql();
-    }, []);
+  //tab 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'all-product');
 
-    // ----- Medicine search (debounced) -----
-    useEffect(() => {
-        const run = async () => {
-            try {
-                if (medicineSearch.trim() === '') {
-                    setFilterMedicine(medicines.slice(0, 50));
-                    return;
-                }
-                const response = await findmedicineByName(medicineSearch);
-                // normalize in case service returns { data: [...] }
-                const list = Array.isArray(response)
-                    ? response
-                    : Array.isArray(response?.data)
-                        ? response.data
-                        : [];
-                setFilterMedicine(list);
-            } catch (error) {
-                console.error('Search error:', error);
-                setFilterMedicine([]);
-            }
+  useEffect(() => {
+    const next = searchParams.get('tab');
+    if (next && next !== activeTab) setActiveTab(next);
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    // keep URL shareable / back-button friendly
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', value);
+    setSearchParams(next, { replace: true });
+  };
+
+  // ----- Initial fetch -----
+  useEffect(() => {
+    fetchMedicinesSql();
+  }, []);
+
+  // ----- Medicine search (debounced) -----
+  useEffect(() => {
+    const run = async () => {
+      try {
+        if (medicineSearch.trim() === '') {
+          setFilterMedicine(medicines.slice(0, 50));
+          return;
+        }
+        const response = await findmedicineByName(medicineSearch);
+        // normalize in case service returns { data: [...] }
+        const list = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
+        setFilterMedicine(list);
+      } catch (error) {
+        console.error('Search error:', error);
+        setFilterMedicine([]);
+      }
+    };
+    const t = setTimeout(run, 250);
+    return () => clearTimeout(t);
+  }, [medicineSearch, medicines]);
+
+  // ----- Purchase filters (debounced) -----
+  const loadSuppliers = useCallback(async () => {
+    setSuppliersLoading(true);
+    setSuppliersError('');
+    try {
+      const response = await getBillSuppliers({
+        search: purchaseSearch.trim(),
+        date: purchaseDate,
+        invoice: invoiceSearch.trim(),
+      });
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+      setBillSuppliers(list);
+      return list;
+    } catch (error) {
+      console.error('Error fetching purchase suppliers:', error);
+      setBillSuppliers([]);
+      setSuppliersError('Could not load suppliers. Please try again.');
+      return [];
+    } finally {
+      setSuppliersLoading(false);
+    }
+  }, [purchaseSearch, purchaseDate, invoiceSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Filters changed: drop previously loaded bills and collapse any open accordion.
+      setSupplierBills({});
+      setOpenSupplier('');
+      loadSuppliers();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [loadSuppliers]);
+
+  const clearPurchaseFilters = () => {
+    setPurchaseSearch('');
+    setInvoiceSearch('');
+    setPurchaseDate('');
+  };
+
+  // ----- Bills for a supplier (paged, 3 at a time) -----
+  const loadSupplierBills = async (supplierName, { reset = false } = {}) => {
+    const existing = supplierBills[supplierName];
+    const offset = reset ? 0 : (existing?.bills?.length ?? 0);
+
+    if (!reset && (!existing || existing.loading || existing.loadingMore || !existing.hasMore)) {
+      return;
+    }
+
+    setSupplierBills((prev) => ({
+      ...prev,
+      [supplierName]: {
+        bills: reset ? [] : (prev[supplierName]?.bills ?? []),
+        total: reset ? 0 : (prev[supplierName]?.total ?? 0),
+        hasMore: reset ? false : (prev[supplierName]?.hasMore ?? false),
+        loading: reset,
+        loadingMore: !reset,
+        loaded: false,
+        error: '',
+      },
+    }));
+
+    try {
+      const response = await fetchBillsProductsSql({
+        supplierName,
+        limit: PURCHASE_BILL_PAGE_SIZE,
+        offset,
+        date: purchaseDate,
+        invoice: invoiceSearch.trim(),
+      });
+
+      const list = Array.isArray(response?.bills)
+        ? response.bills
+        : Array.isArray(response)
+          ? response
+          : [];
+      const total = Number(response?.total ?? (offset + list.length));
+      const hasMore = typeof response?.hasMore === 'boolean'
+        ? response.hasMore
+        : offset + list.length < total;
+
+      setSupplierBills((prev) => {
+        const previousBills = prev[supplierName]?.bills ?? [];
+        const seen = new Set(previousBills.map((bill) => bill.id));
+        const merged = reset
+          ? list
+          : [...previousBills, ...list.filter((bill) => !seen.has(bill.id))];
+
+        return {
+          ...prev,
+          [supplierName]: {
+            bills: merged,
+            total,
+            hasMore,
+            loading: false,
+            loadingMore: false,
+            loaded: true,
+            error: '',
+          },
         };
-        const t = setTimeout(run, 250);
-        return () => clearTimeout(t);
-    }, [medicineSearch, medicines]);
+      });
+    } catch (error) {
+      console.error('Error fetching bills for supplier:', error);
+      setSupplierBills((prev) => ({
+        ...prev,
+        [supplierName]: {
+          ...(prev[supplierName] || { bills: [], total: 0, hasMore: false }),
+          loading: false,
+          loadingMore: false,
+          loaded: true,
+          error: 'Could not load bills for this supplier.',
+        },
+      }));
+    }
+  };
 
-    // ----- Purchase filters (debounced) -----
-    const loadSuppliers = useCallback(async () => {
-        setSuppliersLoading(true);
-        setSuppliersError('');
-        try {
-            const response = await getBillSuppliers({
-                search: purchaseSearch.trim(),
-                date: purchaseDate,
-                invoice: invoiceSearch.trim(),
-            });
-            const list = Array.isArray(response)
-                ? response
-                : Array.isArray(response?.data)
-                    ? response.data
-                    : [];
-            setBillSuppliers(list);
-            return list;
-        } catch (error) {
-            console.error('Error fetching purchase suppliers:', error);
-            setBillSuppliers([]);
-            setSuppliersError('Could not load suppliers. Please try again.');
-            return [];
-        } finally {
-            setSuppliersLoading(false);
-        }
-    }, [purchaseSearch, purchaseDate, invoiceSearch]);
+  // Single accordion root -> opening one supplier automatically closes the previous one.
+  const handleSupplierToggle = (value) => {
+    setOpenSupplier(value);
+    const state = supplierBills[value];
+    if (value && !state?.loaded && !state?.loading) {
+      loadSupplierBills(value, { reset: true });
+    }
+  };
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            // Filters changed: drop previously loaded bills and collapse any open accordion.
-            setSupplierBills({});
-            setOpenSupplier('');
-            loadSuppliers();
-        }, 250);
-        return () => clearTimeout(timer);
-    }, [loadSuppliers]);
+  // ----- Fetch medicines (normalized to array) -----
+  const fetchMedicinesSql = async () => {
+    try {
+      const response = await getAllMedicines();
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+      setMedicines(list);
+      setFilterMedicine(list.slice(0, 50));
+    } catch (error) {
+      console.error('Error fetching Sql medicines:', error);
+    }
+  };
 
-    const clearPurchaseFilters = () => {
-        setPurchaseSearch('');
-        setInvoiceSearch('');
-        setPurchaseDate('');
-    };
+  // ----- Void a purchase bill and reverse its stock when possible -----
+  const handleDeleteBill = async (supplierName, bill) => {
+    const label = bill.invoice || `#${bill.id}`;
+    const productCount = bill.products?.length ?? 0;
 
-    // ----- Bills for a supplier (paged, 3 at a time) -----
-    const loadSupplierBills = async (supplierName, { reset = false } = {}) => {
-        const existing = supplierBills[supplierName];
-        const offset = reset ? 0 : (existing?.bills?.length ?? 0);
+    const confirmed = window.confirm(
+      `Void bill ${label} and reverse stock for ${productCount} medicine line(s)?\n\nVoiding only works while all purchased units are still in stock. The bill stays in history as a voided record.`
+    );
 
-        if (!reset && (!existing || existing.loading || existing.loadingMore || !existing.hasMore)) {
-            return;
-        }
+    if (!confirmed || deletingBillId !== null) return;
 
-        setSupplierBills((prev) => ({
-            ...prev,
-            [supplierName]: {
-                bills: reset ? [] : (prev[supplierName]?.bills ?? []),
-                total: reset ? 0 : (prev[supplierName]?.total ?? 0),
-                hasMore: reset ? false : (prev[supplierName]?.hasMore ?? false),
-                loading: reset,
-                loadingMore: !reset,
-                loaded: false,
-                error: '',
-            },
-        }));
+    setDeletingBillId(bill.id);
 
-        try {
-            const response = await fetchBillsProductsSql({
-                supplierName,
-                limit: PURCHASE_BILL_PAGE_SIZE,
-                offset,
-                date: purchaseDate,
-                invoice: invoiceSearch.trim(),
-            });
+    try {
+      await deleteBillSql(bill.id);
 
-            const list = Array.isArray(response?.bills)
-                ? response.bills
-                : Array.isArray(response)
-                    ? response
-                    : [];
-            const total = Number(response?.total ?? (offset + list.length));
-            const hasMore = typeof response?.hasMore === 'boolean'
-                ? response.hasMore
-                : offset + list.length < total;
+      // Refresh the All Products tab because its rows come from bill_products.
+      await fetchMedicinesSql();
 
-            setSupplierBills((prev) => {
-                const previousBills = prev[supplierName]?.bills ?? [];
-                const seen = new Set(previousBills.map((bill) => bill.id));
-                const merged = reset
-                    ? list
-                    : [...previousBills, ...list.filter((bill) => !seen.has(bill.id))];
+      const updatedSuppliers = await loadSuppliers();
+      const supplierStillExists = updatedSuppliers.some(
+        (supplier) => supplier.supplierName === supplierName
+      );
 
-                return {
-                    ...prev,
-                    [supplierName]: {
-                        bills: merged,
-                        total,
-                        hasMore,
-                        loading: false,
-                        loadingMore: false,
-                        loaded: true,
-                        error: '',
-                    },
-                };
-            });
-        } catch (error) {
-            console.error('Error fetching bills for supplier:', error);
-            setSupplierBills((prev) => ({
-                ...prev,
-                [supplierName]: {
-                    ...(prev[supplierName] || { bills: [], total: 0, hasMore: false }),
-                    loading: false,
-                    loadingMore: false,
-                    loaded: true,
-                    error: 'Could not load bills for this supplier.',
-                },
-            }));
-        }
-    };
-
-    // Single accordion root -> opening one supplier automatically closes the previous one.
-    const handleSupplierToggle = (value) => {
-        setOpenSupplier(value);
-        const state = supplierBills[value];
-        if (value && !state?.loaded && !state?.loading) {
-            loadSupplierBills(value, { reset: true });
-        }
-    };
-
-    // ----- Fetch medicines (normalized to array) -----
-    const fetchMedicinesSql = async () => {
-        try {
-            const response = await getAllMedicines();
-            const list = Array.isArray(response)
-                ? response
-                : Array.isArray(response?.data)
-                    ? response.data
-                    : [];
-            setMedicines(list);
-            setFilterMedicine(list.slice(0, 50));
-        } catch (error) {
-            console.error('Error fetching Sql medicines:', error);
-        }
-    };
-
-    // ----- Void a purchase bill and reverse its stock when possible -----
-    const handleDeleteBill = async (supplierName, bill) => {
-        const label = bill.invoice || `#${bill.id}`;
-        const productCount = bill.products?.length ?? 0;
-
-        const confirmed = window.confirm(
-            `Void bill ${label} and reverse stock for ${productCount} medicine line(s)?\n\nVoiding only works while all purchased units are still in stock. The bill stays in history as a voided record.`
-        );
-
-        if (!confirmed || deletingBillId !== null) return;
-
-        setDeletingBillId(bill.id);
-
-        try {
-            await deleteBillSql(bill.id);
-
-            // Refresh the All Products tab because its rows come from bill_products.
-            await fetchMedicinesSql();
-
-            const updatedSuppliers = await loadSuppliers();
-            const supplierStillExists = updatedSuppliers.some(
-                (supplier) => supplier.supplierName === supplierName
-            );
-
-            if (supplierStillExists) {
-                // Reload from the first page so the gap left by the deleted bill is filled.
-                await loadSupplierBills(supplierName, { reset: true });
-            } else {
-                setOpenSupplier('');
-                setSupplierBills((prev) => {
-                    const next = { ...prev };
-                    delete next[supplierName];
-                    return next;
-                });
-            }
-
-            alert(`Bill ${label} voided successfully.`);
-        } catch (error) {
-            console.error('Error voiding bill:', error);
-            alert(
-                error?.response?.data?.error
-                || 'Failed to void the bill. Please try again.'
-            );
-        } finally {
-            setDeletingBillId(null);
-        }
-    };
-
-    // ----- Refresh the views after a purchase bill is edited -----
-    const handleBillUpdated = async ({ supplierName }) => {
-        // Medicine rows come from bill_products, so refresh All Products too.
-        await fetchMedicinesSql();
-
-        const updatedSuppliers = await loadSuppliers();
-        const supplierStillExists = updatedSuppliers.some(
-            (supplier) => supplier.supplierName === supplierName
-        );
-
-        if (supplierStillExists) {
-            // Reload from the first page so invoice/date/rate changes are reflected.
-            await loadSupplierBills(supplierName, { reset: true });
-        } else {
-            setOpenSupplier('');
-            setSupplierBills((prev) => {
-                const next = { ...prev };
-                delete next[supplierName];
-                return next;
-            });
-        }
-    };
-
-    // ----- Deactivate (soft delete) -----
-    const handleDelete = async (id) => {
-        if (!window.confirm(
-            'Deactivate this inventory batch?\n\nIt will be hidden from inventory and billing, but historical purchase and sales records are preserved.'
-        )) return;
-        try {
-            await deleteMedicine(id);
-            setMedicines((prev) => prev.filter((m) => m.id !== id));
-            setFilterMedicine((prev) => prev.filter((m) => m.id !== id));
-            alert('Medicine deactivated successfully.');
-        } catch (error) {
-            console.error('Error deactivating medicine:', error);
-            alert(error?.response?.data?.error || 'Failed to deactivate medicine.');
-        }
-    };
-
-    // ----- Edit -----
-    const handleEditClick = (medicine) => {
-        setSelectedMedicine(medicine);
-        setUpdateError('');
-        setUpdateSaving(false);
-        // Prefill every editable field so the dialog always shows all details.
-        setFormData({
-            name: medicine?.name ?? '',
-            category: medicine?.category ?? '',
-            supplier: medicine?.supplier ?? '',
-            batchNumber: medicine?.batchNumber ?? '',
-            expiryDate: medicine?.expiryDate ?? '',
-            stock: medicine?.stock ?? '',
-            unitPrice: medicine?.unitPrice ?? '',
-            mrp: medicine?.mrp ?? '',
-            discount: medicine?.discount ?? '',
-            gstPercentage: medicine?.gstPercentage ?? '',
-            salts: Array.isArray(medicine?.salts) ? medicine.salts : [],
+      if (supplierStillExists) {
+        // Reload from the first page so the gap left by the deleted bill is filled.
+        await loadSupplierBills(supplierName, { reset: true });
+      } else {
+        setOpenSupplier('');
+        setSupplierBills((prev) => {
+          const next = { ...prev };
+          delete next[supplierName];
+          return next;
         });
-        setIsOpen(true);
+      }
+
+      alert(`Bill ${label} voided successfully.`);
+    } catch (error) {
+      console.error('Error voiding bill:', error);
+      alert(
+        error?.response?.data?.error
+        || 'Failed to void the bill. Please try again.'
+      );
+    } finally {
+      setDeletingBillId(null);
+    }
+  };
+
+  // ----- Refresh the views after a purchase bill is edited -----
+  const handleBillUpdated = async ({ supplierName }) => {
+    // Medicine rows come from bill_products, so refresh All Products too.
+    await fetchMedicinesSql();
+
+    const updatedSuppliers = await loadSuppliers();
+    const supplierStillExists = updatedSuppliers.some(
+      (supplier) => supplier.supplierName === supplierName
+    );
+
+    if (supplierStillExists) {
+      // Reload from the first page so invoice/date/rate changes are reflected.
+      await loadSupplierBills(supplierName, { reset: true });
+    } else {
+      setOpenSupplier('');
+      setSupplierBills((prev) => {
+        const next = { ...prev };
+        delete next[supplierName];
+        return next;
+      });
+    }
+  };
+
+  // ----- Deactivate (soft delete) -----
+  const handleDelete = async (id) => {
+    if (!window.confirm(
+      'Deactivate this inventory batch?\n\nIt will be hidden from inventory and billing, but historical purchase and sales records are preserved.'
+    )) return;
+    try {
+      await deleteMedicine(id);
+      setMedicines((prev) => prev.filter((m) => m.id !== id));
+      setFilterMedicine((prev) => prev.filter((m) => m.id !== id));
+      alert('Medicine deactivated successfully.');
+    } catch (error) {
+      console.error('Error deactivating medicine:', error);
+      alert(error?.response?.data?.error || 'Failed to deactivate medicine.');
+    }
+  };
+
+  // ----- Edit -----
+  const handleEditClick = (medicine) => {
+    setSelectedMedicine(medicine);
+    setUpdateError('');
+    setUpdateSaving(false);
+    // Prefill every editable field so the dialog always shows all details.
+    setFormData({
+      name: medicine?.name ?? '',
+      category: medicine?.category ?? '',
+      supplier: medicine?.supplier ?? '',
+      batchNumber: medicine?.batchNumber ?? '',
+      expiryDate: medicine?.expiryDate ?? '',
+      stock: medicine?.stock ?? '',
+      unitPrice: medicine?.unitPrice ?? '',
+      mrp: medicine?.mrp ?? '',
+      discount: medicine?.discount ?? '',
+      gstPercentage: medicine?.gstPercentage ?? '',
+      salts: Array.isArray(medicine?.salts) ? medicine.salts : [],
+    });
+    setIsOpen(true);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaltsChange = (salts) => {
+    setFormData((prev) => ({ ...prev, salts: Array.isArray(salts) ? salts : [] }));
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedMedicine) return;
+
+    if (!String(formData.name ?? '').trim()) {
+      setUpdateError('Medicine name is required.');
+      return;
+    }
+
+    // Quantity is intentionally not sent here. Stock changes go through the
+    // audited "Adjust stock" action so they can never be confused with a
+    // purchase-history edit.
+    const payload = {
+      name: String(formData.name ?? '').trim(),
+      category: String(formData.category ?? '').trim(),
+      supplier: String(formData.supplier ?? '').trim(),
+      batchNumber: String(formData.batchNumber ?? '').trim(),
+      expiryDate: String(formData.expiryDate ?? '').trim(),
+      unitPrice: Number(formData.unitPrice) || 0,
+      mrp: Number(formData.mrp) || 0,
+      discount: Number(formData.discount) || 0,
+      gstPercentage: Number(formData.gstPercentage) || 0,
+      // Optional: [] clears the composition, and a populated list replaces it.
+      salts: Array.isArray(formData.salts) ? formData.salts : [],
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
+    setUpdateSaving(true);
+    setUpdateError('');
 
-    const handleSaltsChange = (salts) => {
-        setFormData((prev) => ({ ...prev, salts: Array.isArray(salts) ? salts : [] }));
-    };
+    try {
+      const response = await updateMedicine(selectedMedicine.id, payload);
+      const saved = response?.medicine ?? { ...selectedMedicine, ...payload };
 
-    const handleUpdate = async () => {
-        if (!selectedMedicine) return;
+      const merge = (list) =>
+        list.map((m) => (m.id === selectedMedicine.id ? { ...m, ...saved } : m));
+      setMedicines(merge);
+      setFilterMedicine(merge);
 
-        if (!String(formData.name ?? '').trim()) {
-            setUpdateError('Medicine name is required.');
-            return;
-        }
+      setIsOpen(false);
+      setSelectedMedicine(null);
+      setFormData({});
+    } catch (error) {
+      console.error('Error updating medicine:', error);
+      setUpdateError(
+        error?.response?.data?.error || 'Failed to update medicine. Please try again.'
+      );
+    } finally {
+      setUpdateSaving(false);
+    }
+  };
 
-        // Quantity is intentionally not sent here. Stock changes go through the
-        // audited "Adjust stock" action so they can never be confused with a
-        // purchase-history edit.
-        const payload = {
-            name: String(formData.name ?? '').trim(),
-            category: String(formData.category ?? '').trim(),
-            supplier: String(formData.supplier ?? '').trim(),
-            batchNumber: String(formData.batchNumber ?? '').trim(),
-            expiryDate: String(formData.expiryDate ?? '').trim(),
-            unitPrice: Number(formData.unitPrice) || 0,
-            mrp: Number(formData.mrp) || 0,
-            discount: Number(formData.discount) || 0,
-            gstPercentage: Number(formData.gstPercentage) || 0,
-            // Optional: [] clears the composition, and a populated list replaces it.
-            salts: Array.isArray(formData.salts) ? formData.salts : [],
-        };
+  // ----- Adjust stock (audited) -----
+  const handleAdjustClick = (medicine) => {
+    setAdjustingMedicine(medicine);
+    setAdjustForm({ quantity: medicine?.stock ?? 0, reason: '' });
+    setAdjustError('');
+    setAdjustSaving(false);
+  };
 
-        setUpdateSaving(true);
-        setUpdateError('');
+  const handleAdjustSave = async () => {
+    if (!adjustingMedicine || adjustSaving) return;
 
-        try {
-            const response = await updateMedicine(selectedMedicine.id, payload);
-            const saved = response?.medicine ?? { ...selectedMedicine, ...payload };
+    const quantity = Number(adjustForm.quantity);
 
-            const merge = (list) =>
-                list.map((m) => (m.id === selectedMedicine.id ? { ...m, ...saved } : m));
-            setMedicines(merge);
-            setFilterMedicine(merge);
+    if (!Number.isFinite(quantity) || quantity < 0) {
+      setAdjustError('Enter a stock quantity of zero or greater.');
+      return;
+    }
 
-            setIsOpen(false);
-            setSelectedMedicine(null);
-            setFormData({});
-        } catch (error) {
-            console.error('Error updating medicine:', error);
-            setUpdateError(
-                error?.response?.data?.error || 'Failed to update medicine. Please try again.'
-            );
-        } finally {
-            setUpdateSaving(false);
-        }
-    };
+    setAdjustSaving(true);
+    setAdjustError('');
 
-    // ----- Adjust stock (audited) -----
-    const handleAdjustClick = (medicine) => {
-        setAdjustingMedicine(medicine);
-        setAdjustForm({ quantity: medicine?.stock ?? 0, reason: '' });
-        setAdjustError('');
-        setAdjustSaving(false);
-    };
+    try {
+      const response = await adjustMedicineStock(adjustingMedicine.id, {
+        quantity,
+        reason: String(adjustForm.reason ?? '').trim() || 'Manual stock adjustment',
+      });
+      const saved = response?.medicine;
 
-    const handleAdjustSave = async () => {
-        if (!adjustingMedicine || adjustSaving) return;
+      if (saved) {
+        const merge = (list) =>
+          list.map((m) => (m.id === saved.id ? { ...m, ...saved } : m));
+        setMedicines(merge);
+        setFilterMedicine(merge);
+      }
 
-        const quantity = Number(adjustForm.quantity);
+      setAdjustingMedicine(null);
+      setAdjustForm({ quantity: '', reason: '' });
+      alert('Stock adjusted successfully.');
+    } catch (error) {
+      console.error('Error adjusting stock:', error);
+      setAdjustError(
+        error?.response?.data?.error
+        || 'Failed to adjust stock. Please try again.'
+      );
+    } finally {
+      setAdjustSaving(false);
+    }
+  };
 
-        if (!Number.isFinite(quantity) || quantity < 0) {
-            setAdjustError('Enter a stock quantity of zero or greater.');
-            return;
-        }
-
-        setAdjustSaving(true);
-        setAdjustError('');
-
-        try {
-            const response = await adjustMedicineStock(adjustingMedicine.id, {
-                quantity,
-                reason: String(adjustForm.reason ?? '').trim() || 'Manual stock adjustment',
-            });
-            const saved = response?.medicine;
-
-            if (saved) {
-                const merge = (list) =>
-                    list.map((m) => (m.id === saved.id ? { ...m, ...saved } : m));
-                setMedicines(merge);
-                setFilterMedicine(merge);
-            }
-
-            setAdjustingMedicine(null);
-            setAdjustForm({ quantity: '', reason: '' });
-            alert('Stock adjusted successfully.');
-        } catch (error) {
-            console.error('Error adjusting stock:', error);
-            setAdjustError(
-                error?.response?.data?.error
-                || 'Failed to adjust stock. Please try again.'
-            );
-        } finally {
-            setAdjustSaving(false);
-        }
-    };
-
-    // ----- Group purchases by supplier (defensive) -----
-    const hasPurchaseFilters =
-        purchaseSearch.trim() !== '' ||
-        invoiceSearch.trim() !== '' ||
-        purchaseDate !== '';
+  // ----- Group purchases by supplier (defensive) -----
+  const hasPurchaseFilters =
+    purchaseSearch.trim() !== '' ||
+    invoiceSearch.trim() !== '' ||
+    purchaseDate !== '';
 
   return (
     <main className="h-full min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:pb-6">
@@ -514,7 +533,7 @@ function Inventory() {
           </div>
         </header>
 
-        <Tabs defaultValue="all-product" className="w-full gap-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full gap-4">
           <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
             <TabsTrigger
               value="all-product"
