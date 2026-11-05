@@ -21,9 +21,10 @@ const inputClass =
 
 const formatMoney = (value) => {
     const number = Number(value) || 0;
-    return `₹ ${number.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+    const rounded = Math.round(number);
+    return `₹ ${rounded.toLocaleString('en-IN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     })}`;
 };
 
