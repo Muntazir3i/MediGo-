@@ -113,6 +113,14 @@ const actionCommands = [
         to: '/inventory?tab=all-purchase',
         icon: FilePlus2,
     },
+    {
+        id: 'all-payment',
+        title: 'View All Payment',
+        description: 'View All Payments To Suppliers',
+        keywords: 'view payment payment',
+        to: '/ledger?tab=all-payment',
+        icon: FilePlus2,
+    },
 ];
 
 const CommandRow = ({ item, onSelect }) => {

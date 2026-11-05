@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BookOpen, CalendarClock, FileText, Landmark, Loader2, Pencil, Wallet } from 'lucide-react';
 import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql } from '@/services/medicineService.js';
 import { generateSupplierStatementPdf } from '@/utils/supplierStatementPdf.js';
@@ -54,6 +55,26 @@ const Ledger = () => {
   const paymentsRequestRef = useRef(0);
   const transactionsRequestRef = useRef(0);
   const expiryRequestRef = useRef(0);
+
+  //tabs
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') || 'general-ledger'
+  );
+
+  // Sync tab when the URL changes (e.g. palette navigation while already on /ledger)
+  useEffect(() => {
+    const next = searchParams.get('tab');
+    if (next && next !== activeTab) setActiveTab(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', value);
+    setSearchParams(next, { replace: true });
+  };
 
   const loadPaymentsForDate = async (date, { showLoading = true } = {}) => {
     const requestId = ++dailyPaymentsRequestRef.current;
@@ -434,12 +455,12 @@ const Ledger = () => {
                   {suppliersLoading ? '—' : allSupplier.length}
                 </p>
               </div>
-            
+
             </div>
           </div>
         </header>
 
-        <Tabs defaultValue="general-ledger" className="w-full gap-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full gap-4">
           <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
             <TabsTrigger
               value="general-ledger"
