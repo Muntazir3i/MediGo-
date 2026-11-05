@@ -15,6 +15,7 @@ import {
     Trash2,
 } from 'lucide-react';
 import {
+    adjustMedicineStock,
     deleteMedicine,
     updateMedicine,
     fetchBillsProductsSql,
@@ -83,6 +84,12 @@ function Inventory() {
     const [formData, setFormData] = useState({});
     const [updateSaving, setUpdateSaving] = useState(false);
     const [updateError, setUpdateError] = useState('');
+
+    // ----- Stock adjustment dialog state -----
+    const [adjustingMedicine, setAdjustingMedicine] = useState(null);
+    const [adjustForm, setAdjustForm] = useState({ quantity: '', reason: '' });
+    const [adjustSaving, setAdjustSaving] = useState(false);
+    const [adjustError, setAdjustError] = useState('');
 
     // ----- Initial fetch -----
     useEffect(() => {
@@ -258,13 +265,13 @@ function Inventory() {
         }
     };
 
-    // ----- Delete a purchase bill and its related product rows -----
+    // ----- Void a purchase bill and reverse its stock when possible -----
     const handleDeleteBill = async (supplierName, bill) => {
         const label = bill.invoice || `#${bill.id}`;
         const productCount = bill.products?.length ?? 0;
 
         const confirmed = window.confirm(
-            `Delete bill ${label} and ${productCount} related medicine line(s)?\n\nThis cannot be undone.`
+            `Void bill ${label} and reverse stock for ${productCount} medicine line(s)?\n\nVoiding only works while all purchased units are still in stock. The bill stays in history as a voided record.`
         );
 
         if (!confirmed || deletingBillId !== null) return;
@@ -294,10 +301,13 @@ function Inventory() {
                 });
             }
 
-            alert(`Bill ${label} deleted successfully.`);
+            alert(`Bill ${label} voided successfully.`);
         } catch (error) {
-            console.error('Error deleting bill:', error);
-            alert('Failed to delete the bill. Please try again.');
+            console.error('Error voiding bill:', error);
+            alert(
+                error?.response?.data?.error
+                || 'Failed to void the bill. Please try again.'
+            );
         } finally {
             setDeletingBillId(null);
         }
@@ -326,17 +336,19 @@ function Inventory() {
         }
     };
 
-    // ----- Delete -----
+    // ----- Deactivate (soft delete) -----
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this medicine?')) return;
+        if (!window.confirm(
+            'Deactivate this inventory batch?\n\nIt will be hidden from inventory and billing, but historical purchase and sales records are preserved.'
+        )) return;
         try {
             await deleteMedicine(id);
             setMedicines((prev) => prev.filter((m) => m.id !== id));
             setFilterMedicine((prev) => prev.filter((m) => m.id !== id));
-            alert('Medicine deleted successfully!');
+            alert('Medicine deactivated successfully.');
         } catch (error) {
-            console.error('Error deleting medicine:', error);
-            alert('Failed to delete medicine.');
+            console.error('Error deactivating medicine:', error);
+            alert(error?.response?.data?.error || 'Failed to deactivate medicine.');
         }
     };
 
@@ -374,13 +386,15 @@ function Inventory() {
             return;
         }
 
+        // Quantity is intentionally not sent here. Stock changes go through the
+        // audited "Adjust stock" action so they can never be confused with a
+        // purchase-history edit.
         const payload = {
             name: String(formData.name ?? '').trim(),
             category: String(formData.category ?? '').trim(),
             supplier: String(formData.supplier ?? '').trim(),
             batchNumber: String(formData.batchNumber ?? '').trim(),
             expiryDate: String(formData.expiryDate ?? '').trim(),
-            stock: Number(formData.stock) || 0,
             unitPrice: Number(formData.unitPrice) || 0,
             mrp: Number(formData.mrp) || 0,
             discount: Number(formData.discount) || 0,
@@ -412,16 +426,60 @@ function Inventory() {
         }
     };
 
+    // ----- Adjust stock (audited) -----
+    const handleAdjustClick = (medicine) => {
+        setAdjustingMedicine(medicine);
+        setAdjustForm({ quantity: medicine?.stock ?? 0, reason: '' });
+        setAdjustError('');
+        setAdjustSaving(false);
+    };
+
+    const handleAdjustSave = async () => {
+        if (!adjustingMedicine || adjustSaving) return;
+
+        const quantity = Number(adjustForm.quantity);
+
+        if (!Number.isFinite(quantity) || quantity < 0) {
+            setAdjustError('Enter a stock quantity of zero or greater.');
+            return;
+        }
+
+        setAdjustSaving(true);
+        setAdjustError('');
+
+        try {
+            const response = await adjustMedicineStock(adjustingMedicine.id, {
+                quantity,
+                reason: String(adjustForm.reason ?? '').trim() || 'Manual stock adjustment',
+            });
+            const saved = response?.medicine;
+
+            if (saved) {
+                const merge = (list) =>
+                    list.map((m) => (m.id === saved.id ? { ...m, ...saved } : m));
+                setMedicines(merge);
+                setFilterMedicine(merge);
+            }
+
+            setAdjustingMedicine(null);
+            setAdjustForm({ quantity: '', reason: '' });
+            alert('Stock adjusted successfully.');
+        } catch (error) {
+            console.error('Error adjusting stock:', error);
+            setAdjustError(
+                error?.response?.data?.error
+                || 'Failed to adjust stock. Please try again.'
+            );
+        } finally {
+            setAdjustSaving(false);
+        }
+    };
+
     // ----- Group purchases by supplier (defensive) -----
     const hasPurchaseFilters =
         purchaseSearch.trim() !== '' ||
         invoiceSearch.trim() !== '' ||
         purchaseDate !== '';
-
-    // ----- Header stats -----
-    const totalItems = medicines.length;
-    const inStockCount = medicines.filter((m) => Number(m.stock) > 0).length;
-    const outOfStockCount = medicines.filter((m) => Number(m.stock) <= 0).length;
 
   return (
     <main className="h-full min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:pb-6">
@@ -495,6 +553,7 @@ function Inventory() {
                 medicines={filterMedicine}
                 handleDelete={handleDelete}
                 handleEditClick={handleEditClick}
+                handleAdjustClick={handleAdjustClick}
                 isOpen={isOpen}
                 setIsOpen={setIsOpen}
                 selectedMedicine={selectedMedicine}
@@ -866,7 +925,7 @@ function Inventory() {
                                                   className="h-8 gap-1.5"
                                                 >
                                                   <Trash2 className="h-3.5 w-3.5" />
-                                                  {deletingBillId === purchase.id ? 'Deleting…' : 'Delete'}
+                                                  {deletingBillId === purchase.id ? 'Voiding…' : 'Void'}
                                                 </Button>
                                               </div>
                                             </td>
@@ -907,6 +966,103 @@ function Inventory() {
             </div>
           </TabsContent>
         </Tabs>
+
+        <Dialog
+          open={Boolean(adjustingMedicine)}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen && !adjustSaving) {
+              setAdjustingMedicine(null);
+              setAdjustError('');
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[460px]">
+            <DialogHeader>
+              <DialogTitle>Adjust stock</DialogTitle>
+              <DialogDescription>
+                {adjustingMedicine?.name}
+                {adjustingMedicine?.batchNumber ? ` · Batch ${adjustingMedicine.batchNumber}` : ''}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                Current stock:{' '}
+                <span className="font-semibold text-slate-900">
+                  {Number(adjustingMedicine?.stock) || 0}
+                </span>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="adjust-quantity"
+                  className="mb-1.5 block text-xs font-medium text-slate-600"
+                >
+                  New stock quantity
+                </label>
+                <Input
+                  id="adjust-quantity"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={adjustForm.quantity}
+                  onChange={(event) =>
+                    setAdjustForm((prev) => ({ ...prev, quantity: event.target.value }))
+                  }
+                  className="h-9 border-slate-200 bg-white text-sm shadow-none"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="adjust-reason"
+                  className="mb-1.5 block text-xs font-medium text-slate-600"
+                >
+                  Reason
+                </label>
+                <Input
+                  id="adjust-reason"
+                  value={adjustForm.reason}
+                  onChange={(event) =>
+                    setAdjustForm((prev) => ({ ...prev, reason: event.target.value }))
+                  }
+                  placeholder="Physical count, damage, expiry…"
+                  className="h-9 border-slate-200 bg-white text-sm shadow-none"
+                />
+              </div>
+
+              <p className="rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2 text-xs text-blue-700">
+                Every adjustment is recorded in the stock movement ledger. Zero stock keeps the
+                batch visible in inventory.
+              </p>
+
+              {adjustError && (
+                <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                  {adjustError}
+                </p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={adjustSaving}
+                onClick={() => setAdjustingMedicine(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={adjustSaving}
+                onClick={handleAdjustSave}
+                className="bg-slate-900 text-white hover:bg-slate-800"
+              >
+                {adjustSaving ? 'Adjusting…' : 'Save adjustment'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <EditPurchaseBillDialog
           bill={editingBill}

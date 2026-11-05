@@ -37,6 +37,7 @@ const buildForm = (bill) => ({
         mrp: product.mrp ?? 0,
         discount: product.discount ?? 0,
         gstPercentage: product.gstPercentage ?? 0,
+        availableStock: product.availableStock ?? null,
     })),
 });
 
@@ -179,7 +180,8 @@ const EditPurchaseBillDialog = ({ bill, open, onOpenChange, onSaved }) => {
                 <DialogHeader>
                     <DialogTitle>Edit Purchase Bill</DialogTitle>
                     <DialogDescription>
-                        Change the bill details or medicine values. Totals update as you type.
+                        Change the bill details or medicine values. Quantity edits apply a stock
+                        delta and are rejected if those units have already been sold.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -283,6 +285,7 @@ const EditPurchaseBillDialog = ({ bill, open, onOpenChange, onSaved }) => {
                                             type="number"
                                             min="1"
                                             step="1"
+                                            title={product.availableStock !== null ? `Currently in stock: ${product.availableStock}` : undefined}
                                             className="h-8 min-w-[70px] bg-white text-black"
                                             value={product.stock}
                                             onChange={(event) => handleProductChange(product.id, 'stock', event.target.value)}

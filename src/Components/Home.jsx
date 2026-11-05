@@ -434,26 +434,20 @@ function Home() {
 
     const invoiceDate = new Date().toISOString();
 
-    const invoiceItems = cart.map((item) => ({
-      id: item.id,
-      name: item.name,
-      qty: Number(item.qty) || 0,
-      mrp: Number(item.mrp) || 0,
-      price: itemPrice(item),
-      discount: itemDiscount(item),
-      discountAmount: round2(lineDiscountAmount(item)),
-      lineTotal: round2(lineTotal(item)),
-      batchNumber: item.batchNumber,
-      expiryDate: item.expiryDate
-    }));
-
-    const newInvoice = {
+    const invoicePayload = {
       invoiceNumber,
+      // Retrying the same checkout must not deduct stock twice.
+      idempotencyKey: invoiceNumber,
       customer: {
         ...customer,
         name: customer.name.trim()
       },
-      medicines: invoiceItems,
+      items: cart.map((item) => ({
+        inventoryItemId: item.inventoryItemId ?? item.id,
+        qty: Number(item.qty) || 0,
+        price: itemPrice(item),
+        discount: itemDiscount(item)
+      })),
       subtotal,
       totalDiscount,
       total: totalAmount,
@@ -474,21 +468,38 @@ function Home() {
 
     try {
 
-      // Sales invoices are stored in the invoice files. They must not be added
-      // to the supplier bills table, which is only for purchase bills.
-      await saveInvoice(newInvoice);
+      // The server snapshots the lines, validates stock and deducts quantity
+      // inside one transaction. The PDF is built from that saved snapshot.
+      const response = await saveInvoice(invoicePayload);
+      const savedInvoice = response?.invoice;
 
-      // GENERATE PDF
+      if (!savedInvoice) {
+        throw new Error('The invoice was saved without a server snapshot.');
+      }
+
+      const pdfItems = (savedInvoice.items ?? savedInvoice.medicines ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        qty: Number(item.qty ?? item.quantity) || 0,
+        mrp: Number(item.mrp) || 0,
+        price: Number(item.price ?? item.unitPrice ?? item.mrp) || 0,
+        discount: Number(item.discount ?? item.discountPercent) || 0,
+        discountAmount: Number(item.discountAmount) || 0,
+        lineTotal: Number(item.lineTotal) || 0,
+        batchNumber: item.batchNumber ?? item.batchNumberSnapshot,
+        expiryDate: item.expiryDate ?? item.expiryDateSnapshot
+      }));
+
       generateInvoicePdf({
-        invoiceNumber,
-        date: invoiceDate,
-        customer: newInvoice.customer,
-        items: invoiceItems,
-        subtotal,
-        totalDiscount,
-        total: totalAmount,
-        status,
-        prescription
+        invoiceNumber: savedInvoice.invoiceNumber ?? invoiceNumber,
+        date: savedInvoice.date ?? invoiceDate,
+        customer: savedInvoice.customer ?? invoicePayload.customer,
+        items: pdfItems,
+        subtotal: savedInvoice.subtotal ?? subtotal,
+        totalDiscount: savedInvoice.totalDiscount ?? totalDiscount,
+        total: savedInvoice.total ?? totalAmount,
+        status: savedInvoice.status ?? status,
+        prescription: savedInvoice.prescription ?? prescription
       });
 
       // RESET
@@ -519,7 +530,19 @@ function Home() {
 
       console.error("Error saving invoice:", error);
 
-      alert("Failed to save invoice");
+      const message =
+        error?.response?.data?.message
+        || error?.response?.data?.error
+        || "Failed to save invoice";
+
+      if (error?.response?.status === 409) {
+        // Stock changed while the bill was open. Refresh the catalogue so the
+        // cashier can correct quantities before retrying.
+        await fetchMedicinesSql();
+        alert(`${message}\n\nThe product list has been refreshed.`);
+      } else {
+        alert(message);
+      }
 
     } finally {
 
@@ -583,7 +606,7 @@ function Home() {
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 className="h-11 rounded-xl border-slate-200 bg-white pl-10 pr-28 text-sm shadow-sm"
-                placeholder="Search medicine name or batch number…"
+                placeholder="Search medicine, salt or batch number…"
                 value={search}
                 onChange={handleSearchChange}
               />
@@ -632,6 +655,11 @@ function Home() {
                           <tr key={med.id} className="transition hover:bg-slate-50/70">
                             <td className="px-3 py-3 sm:px-4">
                               <div className="font-semibold text-slate-900">{med.name}</div>
+                              {med.saltSummary && (
+                                <div className="mt-0.5 text-[11px] font-medium text-blue-600">
+                                  {med.saltSummary}
+                                </div>
+                              )}
                               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                                 <span>Batch {med.batchNumber || '—'}</span>
                                 <span className="text-slate-300">·</span>
@@ -689,7 +717,7 @@ function Home() {
                           </div>
                           <p className="mt-3 text-sm font-semibold text-slate-800">No medicines found</p>
                           <p className="mt-1 text-sm text-slate-500">
-                            Try a different name or batch number.
+                            Try a different name, salt or batch number.
                           </p>
                         </td>
                       </tr>
@@ -734,6 +762,11 @@ function Home() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-900">{med.name}</p>
+                          {med.saltSummary && (
+                            <p className="mt-0.5 text-[11px] font-medium text-blue-600">
+                              {med.saltSummary}
+                            </p>
+                          )}
                           <p className="mt-0.5 text-xs text-slate-500">
                             Batch {med.batchNumber || '—'} · Stock {med.stock}
                           </p>

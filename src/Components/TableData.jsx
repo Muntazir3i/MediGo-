@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   AlertCircle,
+  ArrowUpDown,
   Info,
   Loader2,
   Package,
@@ -77,6 +78,7 @@ function TableData({
   medicines,
   handleDelete,
   handleEditClick,
+  handleAdjustClick,
   isOpen,
   setIsOpen,
   selectedMedicine,
@@ -99,7 +101,7 @@ function TableData({
             <div>
               <h2 className="text-sm font-semibold text-slate-900">Product catalogue</h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                Edit stock, pricing and supplier details for every medicine.
+                Edit batch, pricing and supplier details. Use Adjust stock for quantity changes.
               </p>
             </div>
           </div>
@@ -139,6 +141,11 @@ function TableData({
                     <tr key={med.id} className="transition hover:bg-slate-50/70">
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-900">{med.name}</div>
+                        {med.saltSummary && (
+                          <div className="mt-0.5 text-[11px] font-medium text-blue-600">
+                            {med.saltSummary}
+                          </div>
+                        )}
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 sm:hidden">
                           {med.batchNumber && <span>Batch {med.batchNumber}</span>}
                           {med.expiryDate && (
@@ -199,6 +206,18 @@ function TableData({
                             type="button"
                             variant="outline"
                             size="sm"
+                            onClick={() => handleAdjustClick?.(med)}
+                            aria-label={`Adjust stock for ${med.name}`}
+                            className="h-8 gap-1.5 border-slate-200 bg-white px-2.5 text-slate-700 shadow-sm hover:bg-slate-50"
+                          >
+                            <ArrowUpDown className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Adjust</span>
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleEditClick(med)}
                             aria-label={`Edit ${med.name}`}
                             className="h-8 gap-1.5 border-slate-200 bg-white px-2.5 text-slate-700 shadow-sm hover:bg-slate-50"
@@ -253,7 +272,7 @@ function TableData({
                     Edit medicine
                   </DialogTitle>
                   <DialogDescription className="mt-1 text-xs text-slate-500">
-                    Update product, stock, pricing and supplier details.
+                    Update batch, pricing and supplier details. Quantity is managed separately.
                   </DialogDescription>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
@@ -341,10 +360,14 @@ function TableData({
                   min="0"
                   step="1"
                   value={formData.stock ?? ''}
-                  onChange={handleChange}
+                  readOnly
+                  disabled
                   placeholder="0"
-                  className={inputClass}
+                  className={`${inputClass} bg-slate-50 text-slate-500`}
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Use “Adjust stock” to change quantity with an audit trail.
+                </p>
               </Field>
 
               <Field label="Unit price (₹)" htmlFor="edit-unit-price">
@@ -414,7 +437,7 @@ function TableData({
 
             <div className="mt-4 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2 text-xs text-blue-700">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <p>Changes are saved to this product row and reflected across inventory and search.</p>
+              <p>Name, category and salt composition are shared by all batches of this medicine. Prices, expiry and batch details belong to this batch only.</p>
             </div>
           </div>
 

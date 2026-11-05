@@ -10,6 +10,7 @@ const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment'
 const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines';
 const API_BASE_URL_SEARCH_MEDICINE = 'http://localhost:8008/api/searchMedicine';
 const API_BASE_URL_INVOICE = "http://localhost:8008/api/invoice";
+const API_BASE_URL_SALES = "http://localhost:8008/api/sales";
 
 
 
@@ -18,7 +19,7 @@ export const saveInvoice = async (invoiceData) => {
   try {
 
     const response = await axios.post(
-      `${API_BASE_URL_INVOICE}/save`,
+      `${API_BASE_URL_SALES}/invoices`,
       invoiceData
     );
 
@@ -28,6 +29,28 @@ export const saveInvoice = async (invoiceData) => {
 
     console.error(error);
 
+    throw error;
+  }
+};
+
+/** Void a finalized sale and restore its stock. */
+export const voidSaleInvoice = async (invoiceId) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL_SALES}/invoices/${invoiceId}/void`);
+    return response.data;
+  } catch (error) {
+    console.error('Error voiding invoice:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
+/** Fetch one sale invoice with its immutable line snapshots. */
+export const getSaleInvoice = async (invoiceId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_SALES}/invoices/${invoiceId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching invoice:', error.message);
     throw error;
   }
 };
@@ -266,6 +289,31 @@ export const increaseStock = async (id) => {
     return response.data;
   } catch (error) {
     console.error('Failed to increase stock:', error.message);
+    throw error;
+  }
+};
+
+/** Fetch one inventory batch by ID. */
+export const getInventoryItem = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/medicines/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching inventory item:', error.message);
+    throw error;
+  }
+};
+
+/** Apply an audited stock adjustment to one inventory batch. */
+export const adjustMedicineStock = async (id, { delta, quantity, reason = '' } = {}) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL_MEDICINES_SQL}/medicines/${id}/adjust`,
+      { delta, quantity, reason }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error adjusting stock:', error.response?.data?.error || error.message);
     throw error;
   }
 };
