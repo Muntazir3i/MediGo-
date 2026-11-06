@@ -357,10 +357,10 @@ export const updateMedicine = async (id, updatedData) => {
   }
 };
 
-/** Get medicines with low stock. */
+/** Get medicines with low stock (total across active batches). */
 export const getLowStock = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/low-stock`);
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/low-stock`);
     return response.data;
   } catch (error) {
     console.error('Error fetching low stock medicines:', error.message);
@@ -371,7 +371,7 @@ export const getLowStock = async () => {
 /** Get medicines that are out of stock. */
 export const getOutOfStock = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/out-of-stock`);
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/out-of-stock`);
     return response.data;
   } catch (error) {
     console.error('Error fetching out-of-stock medicines:', error.message);
@@ -379,10 +379,10 @@ export const getOutOfStock = async () => {
   }
 };
 
-/** Get medicines nearing expiry. */
+/** Get batches expiring within the next 3 months. */
 export const getExpiry = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/expiry-stock`);
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/expiry-stock`);
     return response.data;
   } catch (error) {
     console.error('Error fetching expiry stock:', error.message);
@@ -392,12 +392,15 @@ export const getExpiry = async () => {
 
 // ─── Payments (SQL) ───────────────────────────────────────────────────────────
 
-/** Get the first page of payments, optionally filtered by invoice number. */
-export const getAllPaymentsSql = async (invoice = '') => {
+/** Get the first page of payments, optionally filtered by invoice number and date range. */
+export const getAllPaymentsSql = async (invoice = '', { from = '', to = '' } = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments`, {
-      params: invoice ? { invoice } : {}
-    });
+    const params = {};
+    if (invoice) params.invoice = invoice;
+    if (from) params.from = from;
+    if (to) params.to = to;
+
+    const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments`, { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching payments:', error.message);
@@ -450,10 +453,15 @@ export const updatePaymentSql = async (paymentId, updatedPayment) => {
 };
 
 /** Load the next page of payments, optionally filtered by invoice number. */
-export const loadMorePaymentsSql = async (lastId, invoice = '') => {
+export const loadMorePaymentsSql = async (lastId, invoice = '', { from = '', to = '' } = {}) => {
   try {
+    const params = {};
+    if (invoice) params.invoice = invoice;
+    if (from) params.from = from;
+    if (to) params.to = to;
+
     const response = await axios.get(`${API_BASE_URL_PAYMENT_SQL}/payments/loadMore/${lastId}`, {
-      params: invoice ? { invoice } : {}
+      params
     });
     return response.data;
   } catch (error) {

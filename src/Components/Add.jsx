@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   CalendarClock,
   CreditCard,
@@ -36,6 +36,7 @@ const kbdClass =
 
 function Add() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const requestedTab = searchParams.get('tab');
   const activeTab = VALID_TABS.includes(requestedTab) ? requestedTab : 'add-purchase';
 
@@ -47,6 +48,53 @@ function Add() {
 
     setSearchParams({ tab: value }, { replace: true });
   };
+
+  // Command Palette navigation sets this flag so the section's primary input
+  // is focused as soon as the tab is on screen.
+  const focusPrimary = location.state?.focusPrimary;
+  const handledFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (!focusPrimary || handledFocusRef.current === focusPrimary) return undefined;
+
+    const selectors = {
+      'add-purchase': '[data-product-field="name"]',
+      'add-payment': '#payment-invoice',
+      'add-supplier': '#new-supplier-name',
+      'add-expiry': '#expiry-supplier',
+    };
+
+    const selector = selectors[activeTab];
+    if (!selector) return undefined;
+
+    const focusTarget = (force = false) => {
+      const input = document.querySelector(selector);
+      if (!input) return false;
+
+      // The first attempt is forced because the palette action explicitly asked
+      // for this input. The delayed retry must not steal focus if the cashier
+      // has already moved on to another field in the section.
+      const section = input.closest('main');
+      const active = document.activeElement;
+      if (!force && active && active !== document.body && section?.contains(active)) {
+        return false;
+      }
+
+      handledFocusRef.current = focusPrimary;
+      input.focus({ preventScroll: false });
+      if (typeof input.select === 'function') input.select();
+      return true;
+    };
+
+    // The palette closes (and Radix restores focus) slightly after navigation,
+    // so try once immediately and once more after the closing animation.
+    const timers = [
+      setTimeout(() => focusTarget(true), 80),
+      setTimeout(() => focusTarget(false), 280),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [activeTab, focusPrimary]);
 
 
   const [formData, setFormData] = useState({

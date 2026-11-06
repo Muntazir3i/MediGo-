@@ -716,9 +716,17 @@ function DashBoard() {
 
             <TabsContent value="low-stock">
 
-              <h1 className="text-3xl font-bold mb-5">
-                Low Stock
-              </h1>
+              <div className="mb-5">
+                <h1 className="text-3xl font-bold">
+                  Low Stock
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Products with more than 0 and less than 2 units in stock across all active batches.
+                </p>
+                <p className="mt-1 text-xs font-medium text-slate-400">
+                  {lowStock.length} product{lowStock.length === 1 ? '' : 's'} need restocking.
+                </p>
+              </div>
 
               <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
 
@@ -776,6 +784,14 @@ function DashBoard() {
 
                   ))}
 
+                  {lowStock.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                        No low-stock products right now.
+                      </td>
+                    </tr>
+                  )}
+
                 </tbody>
 
               </table>
@@ -786,9 +802,17 @@ function DashBoard() {
 
             <TabsContent value="out-of-stock">
 
-              <h1 className="text-3xl font-bold mb-5">
-                Out Of Stock
-              </h1>
+              <div className="mb-5">
+                <h1 className="text-3xl font-bold">
+                  Out Of Stock
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Products with no live stock across all active batches.
+                </p>
+                <p className="mt-1 text-xs font-medium text-slate-400">
+                  {outOfStock.length} product{outOfStock.length === 1 ? '' : 's'} out of stock.
+                </p>
+              </div>
 
               <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
 
@@ -846,6 +870,14 @@ function DashBoard() {
 
                   ))}
 
+                  {outOfStock.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                        No out-of-stock products right now.
+                      </td>
+                    </tr>
+                  )}
+
                 </tbody>
 
               </table>
@@ -862,9 +894,17 @@ function DashBoard() {
 
         <TabsContent value="expiry">
 
-          <h1 className="text-3xl font-bold mb-5">
-            Expiry Medicines
-          </h1>
+          <div className="mb-5">
+            <h1 className="text-3xl font-bold">
+              Expiry Medicines
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Active batches expiring within the next 3 months, starting today.
+            </p>
+            <p className="mt-1 text-xs font-medium text-slate-400">
+              {expiry.length} batch{expiry.length === 1 ? '' : 'es'} expiring soon.
+            </p>
+          </div>
 
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
 
@@ -921,6 +961,14 @@ function DashBoard() {
                 </tr>
 
               ))}
+
+              {expiry.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                    No batches expire in the next 3 months.
+                  </td>
+                </tr>
+              )}
 
             </tbody>
 

@@ -216,7 +216,9 @@ const CommandPalette = ({ open, onOpenChange }) => {
     const handleSelect = useCallback(
         (to) => {
             close();
-            navigate(to);
+            // A fresh state key makes the destination run its focus effect even
+            // when the palette is used from that same page/tab.
+            navigate(to, { state: { focusPrimary: Date.now() } });
         },
         [close, navigate]
     );

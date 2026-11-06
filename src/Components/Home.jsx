@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Boxes,
   CheckCircle2,
@@ -52,6 +52,14 @@ import {
 import './home.css';
 
 const round2 = (value) => Math.round((Number(value) || 0) * 100) / 100;
+
+// Stock can be fractional (for example 1.5 strips), so keep the decimal part
+// when showing quantities but drop meaningless trailing zeros.
+const formatQty = (value) => {
+  const num = Number(value) || 0;
+  if (Number.isInteger(num)) return String(num);
+  return num.toFixed(2).replace(/\.?0+$/, '');
+};
 
 const itemPrice = (item) => {
   const value = Number(item.price);
@@ -188,6 +196,14 @@ function Home() {
     }
   };
 
+  // Re-sync stock whenever the user returns to the tab so quantities sold in
+  // another window are reflected before the next checkout.
+  useEffect(() => {
+    const refreshOnFocus = () => fetchMedicinesSql();
+    window.addEventListener('focus', refreshOnFocus);
+    return () => window.removeEventListener('focus', refreshOnFocus);
+  }, []);
+
   useEffect(() => {
     const term = search.trim();
 
@@ -197,7 +213,6 @@ function Home() {
       setSearchLoading(false);
       return undefined;
     }
-
     const requestId = ++searchRequestRef.current;
     const timer = setTimeout(async () => {
       setSearchLoading(true);
@@ -223,6 +238,29 @@ function Home() {
 
     return () => clearTimeout(timer);
   }, [search, medicines]);
+
+  // Keep bill lines aligned with the latest catalogue stock after a refetch
+  // (for example when another till sells the same batch).
+  useEffect(() => {
+    if (medicines.length === 0) return;
+
+    setCart((prevCart) => {
+      let changed = false;
+
+      const nextCart = prevCart.map((item) => {
+        const latest = medicines.find((med) => String(med.id) === String(item.id));
+        if (!latest) return item;
+
+        const latestStock = Math.max(0, Number(latest.stock) || 0);
+        if (latestStock === Number(item.stock)) return item;
+
+        changed = true;
+        return { ...item, stock: latestStock };
+      });
+
+      return changed ? nextCart : prevCart;
+    });
+  }, [medicines]);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -286,7 +324,44 @@ function Home() {
     if (prescriptionInputRef.current) prescriptionInputRef.current.value = '';
   };
 
+  // Quantity currently reserved by the bill, keyed by inventory item id. Stock
+  // shown to the cashier is the catalogue stock minus whatever is in the cart,
+  // so adding/removing lines updates availability immediately.
+  const cartQtyByItemId = useMemo(() => {
+    const map = new Map();
+    cart.forEach((item) => {
+      map.set(String(item.id), Number(item.qty) || 0);
+    });
+    return map;
+  }, [cart]);
+
+  const availableStockFor = (med) => {
+    const total = Math.max(0, Number(med?.stock) || 0);
+    const reserved = cartQtyByItemId.get(String(med?.id)) || 0;
+    return Math.max(0, total - reserved);
+  };
+
   const onAddClick = (med) => {
+    const totalStock = Math.max(0, Number(med?.stock) || 0);
+    const reserved = cartQtyByItemId.get(String(med?.id)) || 0;
+    const available = Math.max(0, totalStock - reserved);
+
+    // One "Add" reserves a whole unit, so fractional leftovers below 1 cannot
+    // be added to the bill.
+    if (available < 1) {
+      if (totalStock <= 0) {
+        alert(`${med.name} is out of stock.`);
+      } else if (reserved > 0) {
+        alert(
+          `Only ${formatQty(totalStock)} unit${totalStock === 1 ? '' : 's'} of ${med.name} in stock; ${formatQty(reserved)} ${reserved === 1 ? 'is' : 'are'} already in the bill.`
+        );
+      } else {
+        alert(
+          `Only ${formatQty(available)} unit${available === 1 ? '' : 's'} of ${med.name} available in stock.`
+        );
+      }
+      return;
+    }
 
     setCart((prevCart) => {
 
@@ -296,7 +371,7 @@ function Home() {
 
       if (existingMed) {
 
-        if (existingMed.qty >= Number(med.stock)) {
+        if ((Number(existingMed.qty) || 0) + 1 > totalStock) {
           return prevCart;
         }
 
@@ -306,7 +381,7 @@ function Home() {
 
             ? {
               ...item,
-              qty: item.qty + 1
+              qty: (Number(item.qty) || 0) + 1
             }
 
             : item
@@ -336,24 +411,27 @@ function Home() {
   };
 
   const increaseQty = (id) => {
+    const item = cart.find((entry) => String(entry.id) === String(id));
+    if (!item) return;
+
+    const totalStock = Math.max(0, Number(item.stock) || 0);
+    const currentQty = Number(item.qty) || 0;
+
+    if (currentQty + 1 > totalStock) {
+      alert(
+        totalStock <= 0
+          ? `${item.name} is out of stock.`
+          : `Only ${formatQty(totalStock)} unit${totalStock === 1 ? '' : 's'} of ${item.name} available in stock.`
+      );
+      return;
+    }
 
     setCart((prevCart) =>
-
-      prevCart.map((item) => {
-
-        if (
-          String(item.id) === String(id) &&
-          item.qty < Number(item.stock)
-        ) {
-
-          return {
-            ...item,
-            qty: item.qty + 1
-          };
-        }
-
-        return item;
-      })
+      prevCart.map((entry) =>
+        String(entry.id) === String(id) && (Number(entry.qty) || 0) + 1 <= totalStock
+          ? { ...entry, qty: (Number(entry.qty) || 0) + 1 }
+          : entry
+      )
     );
   };
 
@@ -429,6 +507,22 @@ function Home() {
 
     if (invalidDiscount) {
       alert(`Discount for ${invalidDiscount.name} must be between 0 and 100.`);
+      return;
+    }
+
+    // Final guard against stale stock: the catalogue may have changed since the
+    // line was added (another till, a cancelled invoice, etc.).
+    const overStockItem = cart.find((item) => {
+      const stock = Number(item.stock);
+      const qty = Number(item.qty) || 0;
+      return !Number.isFinite(stock) || qty > stock + 1e-9;
+    });
+
+    if (overStockItem) {
+      const stock = Math.max(0, Number(overStockItem.stock) || 0);
+      alert(
+        `Only ${formatQty(stock)} unit${stock === 1 ? '' : 's'} of ${overStockItem.name} available in stock. Reduce the quantity before checkout.`
+      );
       return;
     }
 
@@ -639,7 +733,7 @@ function Home() {
                   <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-3 py-3 font-semibold sm:px-4">Medicine</th>
-                      <th className="px-2 py-3 font-semibold sm:px-3">Stock</th>
+                      <th className="px-2 py-3 font-semibold sm:px-3">Available</th>
                       <th className="hidden px-2 py-3 text-right font-semibold sm:table-cell sm:px-3">Price</th>
                       <th className="px-3 py-3 text-right font-semibold sm:px-4">Action</th>
                     </tr>
@@ -648,8 +742,12 @@ function Home() {
                   <tbody className="divide-y divide-slate-100">
                     {filterMedicine.length > 0 ? (
                       filterMedicine.map((med) => {
-                        const inStock = Number(med.stock) > 0;
-                        const inCart = cart.some((item) => String(item.id) === String(med.id));
+                        const totalStock = Math.max(0, Number(med.stock) || 0);
+                        const reservedQty = cartQtyByItemId.get(String(med.id)) || 0;
+                        const availableStock = availableStockFor(med);
+                        const inStock = totalStock > 0;
+                        const canAdd = availableStock >= 1;
+                        const inCart = reservedQty > 0;
 
                         return (
                           <tr key={med.id} className="transition hover:bg-slate-50/70">
@@ -669,7 +767,7 @@ function Home() {
                                 </span>
                                 {inCart && (
                                   <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
-                                    In bill
+                                    {formatQty(reservedQty)} in bill
                                   </span>
                                 )}
                               </div>
@@ -677,13 +775,20 @@ function Home() {
                             <td className="px-2 py-3 sm:px-3">
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                  inStock
+                                  canAdd
                                     ? 'bg-emerald-50 text-emerald-700'
-                                    : 'bg-rose-50 text-rose-600'
+                                    : inStock
+                                      ? 'bg-amber-50 text-amber-700'
+                                      : 'bg-rose-50 text-rose-600'
                                 }`}
                               >
-                                {med.stock}
+                                {formatQty(availableStock)}
                               </span>
+                              {reservedQty > 0 && (
+                                <p className="mt-1 whitespace-nowrap text-[10px] font-medium text-slate-400">
+                                  {formatQty(totalStock)} total
+                                </p>
+                              )}
                             </td>
                             <td className="hidden whitespace-nowrap px-2 py-3 text-right font-semibold text-slate-900 sm:table-cell sm:px-3">
                               ₹ {Number(med.mrp).toFixed(2)}
@@ -694,10 +799,16 @@ function Home() {
                                   type="button"
                                   size="sm"
                                   onClick={() => onAddClick(med)}
-                                  className="gap-1.5 bg-slate-900 text-white shadow-sm hover:bg-slate-800"
+                                  aria-disabled={!canAdd}
+                                  title={canAdd ? undefined : 'Stock limit reached'}
+                                  className={
+                                    canAdd
+                                      ? 'gap-1.5 bg-slate-900 text-white shadow-sm hover:bg-slate-800'
+                                      : 'gap-1.5 border border-amber-200 bg-amber-50 text-amber-700 shadow-none hover:bg-amber-100'
+                                  }
                                 >
                                   <Plus className="h-3.5 w-3.5" />
-                                  Add
+                                  {canAdd ? 'Add' : 'Max'}
                                 </Button>
                               ) : (
                                 <Badge variant="secondary" className="bg-rose-50 text-rose-600">
@@ -768,7 +879,12 @@ function Home() {
                             </p>
                           )}
                           <p className="mt-0.5 text-xs text-slate-500">
-                            Batch {med.batchNumber || '—'} · Stock {med.stock}
+                            Batch {med.batchNumber || '—'} · Stock {formatQty(med.stock)}
+                            {Number(med.stock) > 0 && (
+                              <span className="text-slate-400">
+                                {' '}· {formatQty(Math.max(0, (Number(med.stock) || 0) - (Number(med.qty) || 0)))} left after this bill
+                              </span>
+                            )}
                           </p>
                         </div>
                         <div className="shrink-0 text-right">
@@ -803,8 +919,18 @@ function Home() {
                             <button
                               type="button"
                               onClick={() => increaseQty(med.id)}
+                              aria-disabled={(Number(med.qty) || 0) + 1 > (Number(med.stock) || 0)}
+                              title={
+                                (Number(med.qty) || 0) + 1 > (Number(med.stock) || 0)
+                                  ? 'Stock limit reached'
+                                  : undefined
+                              }
                               aria-label={`Increase quantity for ${med.name}`}
-                              className="flex h-6 w-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                              className={`flex h-6 w-6 items-center justify-center rounded-md transition ${
+                                (Number(med.qty) || 0) + 1 > (Number(med.stock) || 0)
+                                  ? 'cursor-not-allowed text-slate-300'
+                                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                              }`}
                             >
                               <Plus className="h-3.5 w-3.5" />
                             </button>

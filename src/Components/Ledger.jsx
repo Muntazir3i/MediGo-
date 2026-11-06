@@ -20,12 +20,44 @@ const paymentFieldConfig = {
   type: { label: 'Payment type', type: 'text' },
 };
 
+// <input type="date"> uses the local calendar date, so build the string from
+// local getters instead of toISOString() (which can shift the day in IST).
+const formatInputDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getPaymentQuickRange = (range) => {
+  const today = new Date();
+  const to = formatInputDate(today);
+
+  if (range === 'today') return { from: to, to };
+
+  if (range === 'week') {
+    const monday = new Date(today);
+    const offset = (today.getDay() + 6) % 7; // Monday = 0
+    monday.setDate(today.getDate() - offset);
+    return { from: formatInputDate(monday), to };
+  }
+
+  if (range === 'month') {
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { from: formatInputDate(first), to };
+  }
+
+  return null;
+};
+
 
 const Ledger = () => {
   const [allSupplier, setAllSupplier] = useState([]);
   const [suppliersLoading, setSuppliersLoading] = useState(true);
   const [allPayments, setAllPayments] = useState([]);
   const [paymentInvoiceSearch, setPaymentInvoiceSearch] = useState('');
+  const [paymentFromDate, setPaymentFromDate] = useState('');
+  const [paymentToDate, setPaymentToDate] = useState('');
   const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [paymentsLoadingMore, setPaymentsLoadingMore] = useState(false);
   const [paymentsHasMore, setPaymentsHasMore] = useState(false);
@@ -130,7 +162,7 @@ const Ledger = () => {
     fetchAllSupplier();
   }, []);
 
-  // Load payments on mount and whenever the invoice search changes.
+  // Load payments on mount and whenever the invoice/date filters change.
   useEffect(() => {
     // Invalidate any in-flight payment request immediately.
     paymentsRequestRef.current += 1;
@@ -141,7 +173,10 @@ const Ledger = () => {
       setPaymentsError('');
 
       try {
-        const response = await getAllPaymentsSql(paymentInvoiceSearch.trim());
+        const response = await getAllPaymentsSql(paymentInvoiceSearch.trim(), {
+          from: paymentFromDate,
+          to: paymentToDate
+        });
 
         if (requestId !== paymentsRequestRef.current) return;
 
@@ -163,7 +198,7 @@ const Ledger = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [paymentInvoiceSearch, paymentsReloadKey]);
+  }, [paymentInvoiceSearch, paymentFromDate, paymentToDate, paymentsReloadKey]);
 
   async function loadMore() {
     if (allPayments.length === 0 || paymentsLoadingMore) return;
@@ -173,7 +208,10 @@ const Ledger = () => {
 
     try {
       const lastId = allPayments[allPayments.length - 1].id;
-      const response = await loadMorePaymentsSql(lastId, paymentInvoiceSearch.trim());
+      const response = await loadMorePaymentsSql(lastId, paymentInvoiceSearch.trim(), {
+        from: paymentFromDate,
+        to: paymentToDate
+      });
 
       if (requestId !== paymentsRequestRef.current) return;
 
@@ -187,6 +225,24 @@ const Ledger = () => {
     }
   }
 
+  const applyPaymentQuickRange = (range) => {
+    if (range === 'clear') {
+      setPaymentFromDate('');
+      setPaymentToDate('');
+      return;
+    }
+
+    const next = getPaymentQuickRange(range);
+    if (!next) return;
+
+    setPaymentFromDate(next.from);
+    setPaymentToDate(next.to);
+  };
+
+  const clearPaymentDateFilter = () => {
+    setPaymentFromDate('');
+    setPaymentToDate('');
+  };
 
 
 
@@ -535,6 +591,12 @@ const Ledger = () => {
               invoiceSearch={paymentInvoiceSearch}
               onInvoiceSearchChange={(e) => setPaymentInvoiceSearch(e.target.value)}
               onClearInvoiceSearch={() => setPaymentInvoiceSearch('')}
+              fromDate={paymentFromDate}
+              toDate={paymentToDate}
+              onFromDateChange={(e) => setPaymentFromDate(e.target.value)}
+              onToDateChange={(e) => setPaymentToDate(e.target.value)}
+              onQuickRange={applyPaymentQuickRange}
+              onClearDateFilter={clearPaymentDateFilter}
               loading={paymentsLoading}
               loadingMore={paymentsLoadingMore}
               hasMore={paymentsHasMore}
