@@ -36,6 +36,7 @@ const navigateCommands = [
         description: 'Supplier balances, statements and payments',
         keywords: 'ledger accounts finance supplier balance payment statement',
         to: '/ledger',
+        focus: 'supplier-search',
         icon: BookOpen,
     },
     {
@@ -71,6 +72,7 @@ const actionCommands = [
         description: 'Add products to a new purchase bill',
         keywords: 'add item items product medicine purchase bill stock new entry',
         to: '/add?tab=add-purchase',
+        focus: 'purchase-invoice',
         icon: PackagePlus,
     },
     {
@@ -79,6 +81,7 @@ const actionCommands = [
         description: 'Record a payment made to a supplier',
         keywords: 'add payment paid supplier invoice record new',
         to: '/add?tab=add-payment',
+        focus: 'payment-invoice',
         icon: CreditCard,
     },
     {
@@ -87,6 +90,7 @@ const actionCommands = [
         description: 'Create a new supplier account',
         keywords: 'add supplier vendor party create new',
         to: '/add?tab=add-supplier',
+        focus: 'new-supplier-name',
         icon: Users,
     },
     {
@@ -95,6 +99,7 @@ const actionCommands = [
         description: 'Record expired or returned stock',
         keywords: 'add expiry expired return stock new',
         to: '/add?tab=add-expiry',
+        focus: 'expiry-supplier',
         icon: CalendarClock,
     },
     {
@@ -119,6 +124,7 @@ const actionCommands = [
         description: 'View All Payments To Suppliers',
         keywords: 'view payment payment',
         to: '/ledger?tab=all-payment',
+        focus: 'payment-invoice-search',
         icon: FilePlus2,
     },
 ];
@@ -129,7 +135,7 @@ const CommandRow = ({ item, onSelect }) => {
     return (
         <Command.Item
             value={`${item.title} ${item.description} ${item.keywords}`}
-            onSelect={() => onSelect(item.to)}
+            onSelect={() => onSelect(item)}
             className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left outline-none transition data-[selected=true]:bg-blue-50 data-[selected=true]:text-blue-900"
         >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition group-data-[selected=true]:border-blue-200 group-data-[selected=true]:bg-blue-600 group-data-[selected=true]:text-white">
@@ -214,11 +220,17 @@ const CommandPalette = ({ open, onOpenChange }) => {
     }, [open, onOpenChange]);
 
     const handleSelect = useCallback(
-        (to) => {
+        (item) => {
             close();
             // A fresh state key makes the destination run its focus effect even
-            // when the palette is used from that same page/tab.
-            navigate(to, { state: { focusPrimary: Date.now() } });
+            // when the palette is used from that same page/tab. `focusTarget`
+            // lets the destination choose the exact input to focus.
+            navigate(item.to, {
+                state: {
+                    focusPrimary: Date.now(),
+                    focusTarget: item.focus,
+                },
+            });
         },
         [close, navigate]
     );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { BookOpen, CalendarClock, FileText, Landmark, Loader2, Pencil, Wallet } from 'lucide-react';
 import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql } from '@/services/medicineService.js';
 import { generateSupplierStatementPdf } from '@/utils/supplierStatementPdf.js';
+import { focusWhenPaletteClosed } from '@/utils/focusWhenPaletteClosed.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
@@ -87,8 +88,10 @@ const Ledger = () => {
   const paymentsRequestRef = useRef(0);
   const transactionsRequestRef = useRef(0);
   const expiryRequestRef = useRef(0);
+  const ledgerFocusRef = useRef(null);
 
   //tabs
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(
     searchParams.get('tab') || 'general-ledger'
@@ -96,10 +99,32 @@ const Ledger = () => {
 
   // Sync tab when the URL changes (e.g. palette navigation while already on /ledger)
   useEffect(() => {
-    const next = searchParams.get('tab');
-    if (next && next !== activeTab) setActiveTab(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+    const next = searchParams.get('tab') || 'general-ledger';
+    if (next !== activeTab) setActiveTab(next);
+  }, [searchParams, activeTab]);
+
+  const focusRequest = location.state?.focusPrimary;
+  const requestedFocus = location.state?.focusTarget;
+
+  // The command palette can request a specific search field after navigation.
+  useEffect(() => {
+    if (!focusRequest || !requestedFocus) return undefined;
+    if (ledgerFocusRef.current === focusRequest) return undefined;
+
+    const selectors = {
+      'supplier-search': '#supplier-search',
+      'payment-invoice-search': '#payment-invoice-search',
+    };
+
+    const selector = selectors[requestedFocus];
+    if (!selector) return undefined;
+
+    return focusWhenPaletteClosed(selector, {
+      onFocused: () => {
+        ledgerFocusRef.current = focusRequest;
+      },
+    });
+  }, [focusRequest, requestedFocus, activeTab]);
 
   const handleTabChange = (value) => {
     setActiveTab(value);

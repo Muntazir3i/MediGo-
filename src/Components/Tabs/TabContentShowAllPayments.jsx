@@ -96,6 +96,8 @@ const TabContentShowAllPayments = ({
                         <div className="relative min-w-0 flex-1 sm:w-80">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <Input
+                                id="payment-invoice-search"
+                                aria-label="Search payments by invoice"
                                 className="bg-slate-50 pl-9 pr-9 focus-visible:bg-white"
                                 placeholder="Search by invoice number"
                                 value={invoiceSearch}
