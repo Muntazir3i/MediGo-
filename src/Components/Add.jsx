@@ -20,6 +20,7 @@ import { handleSupplierSelect } from '@/utils/supplierHelpers.js';
 import { focusWhenPaletteClosed } from '@/utils/focusWhenPaletteClosed.js';
 import { handleAddProduct } from '@/utils/addProductHelper.js';
 import { calculateBillTotals } from '@/utils/billingCalculationsHelper.js';
+import { getExpiryStatus, parseIsoDate, todayIsoDate } from '@/utils/expiryHelpers.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
 import BillImageUpload from './BillImageUpload.jsx';
 
@@ -92,7 +93,7 @@ function Add() {
   const [searchedMedTxt, setSearchedMedTxt] = useState('');
   //for expiry
   const [expiryFormData, setExpiryFormData] = useState({
-    date: '',
+    date: todayIsoDate(),
     supplierName: '',
     supplierDrugLn: '',
     supplierContact: '',
@@ -457,48 +458,105 @@ function Add() {
 
 
   //handle add expiry
-
   const handleExpiryData = async () => {
-    // Filter valid products based on the criteria
-    const validProducts = expiryProducts.filter(product =>
-      product.name.trim() && // Ensure product name is not empty
-      product.batchNumber.trim() && // Ensure batch number is not empty
-      product.expiryDate.trim() && // Ensure expiry date is not empty
-      product.stock > 0 // Ensure stock is greater than 0
-    );
-
-    // Check if there are any valid products
-    if (validProducts.length === 0) {
-      alert("At least one valid product is required.");
+    const supplierName = String(expiryFormData.supplierName || '').trim();
+    if (!supplierName) {
+      alert('Distributor name is required.');
       return;
     }
 
+    const recordDate = String(expiryFormData.date || '').trim();
+    if (recordDate && !parseIsoDate(recordDate)) {
+      alert('Please enter a valid record date.');
+      return;
+    }
+
+    const errors = [];
+    const validProducts = [];
+
+    expiryProducts.forEach((product, index) => {
+      const lineNumber = index + 1;
+      const name = String(product.name || '').trim();
+      const batchNumber = String(product.batchNumber || '').trim();
+      const expiryDate = String(product.expiryDate || '').trim();
+      const stock = Number(product.stock);
+      const mrp = Number(product.mrp);
+
+      const isBlank =
+        !name &&
+        !batchNumber &&
+        !expiryDate &&
+        !Number(product.stock) &&
+        !Number(product.mrp);
+
+      if (isBlank) return;
+
+      if (!name) errors.push(`Line ${lineNumber}: medicine name is required.`);
+      if (!batchNumber) errors.push(`Line ${lineNumber}: batch number is required.`);
+      if (!getExpiryStatus(expiryDate)) {
+        errors.push(`Line ${lineNumber}: a valid expiry date is required.`);
+      }
+      if (!Number.isFinite(stock) || stock <= 0) {
+        errors.push(`Line ${lineNumber}: quantity must be greater than zero.`);
+      }
+      if (!Number.isFinite(mrp) || mrp <= 0) {
+        errors.push(`Line ${lineNumber}: MRP must be greater than zero.`);
+      }
+
+      validProducts.push({
+        name,
+        batchNumber: batchNumber.toUpperCase(),
+        expiryDate,
+        stock,
+        mrp,
+        supplier: supplierName,
+      });
+    });
+
+    if (errors.length > 0) {
+      alert(errors.join('\n'));
+      return;
+    }
+
+    if (validProducts.length === 0) {
+      alert('Add at least one medicine with a batch number, expiry date, quantity and MRP.');
+      return;
+    }
+
+    const hasMedicineInWindow = validProducts.some(
+      (product) => getExpiryStatus(product.expiryDate)?.key !== 'later'
+    );
+
+    if (!hasMedicineInWindow) {
+      const saveAnyway = window.confirm(
+        'None of these medicines expire within the next three months. Save the expiry record anyway?'
+      );
+      if (!saveAnyway) return;
+    }
+
     try {
-      // Create the payload for the API request
-      let allData = {
-        id: Date.now(), // Generate a unique ID
-        ...expiryFormData, // Include form data (e.g., supplier details)
-        products: validProducts, // Include the validated products
-        type: 'EXPIRY', // Set the type to 'EXPIRY'
+      const allData = {
+        id: Date.now(),
+        date: recordDate || todayIsoDate(),
+        supplierName,
+        supplierDrugLn: String(expiryFormData.supplierDrugLn || '').trim(),
+        supplierContact: String(expiryFormData.supplierContact || '').trim(),
+        products: validProducts,
+        type: 'EXPIRY',
       };
 
-      // Send the data to the backend using the addNewExpiry function
-      const response = await addNewExpiry(allData);
+      await addNewExpiry(allData);
 
-      console.log("Response from server:", response);
+      alert('Expiry record saved successfully!');
 
-      // Show success message to the user
-      alert('Expiry data added successfully!');
-
-      // Reset the form state
       setExpiryFormData({
-        date: '',
+        date: todayIsoDate(),
         supplierName: '',
-        supplierGstin: '',
+        supplierDrugLn: '',
         supplierContact: '',
+        products: []
       });
 
-      // Reset the products state
       setExpiryProducts([
         {
           id: Date.now(),
@@ -510,11 +568,8 @@ function Add() {
         },
       ]);
     } catch (error) {
-      // Log the error for debugging
       console.error("Error while adding expiry data:", error);
-
-      // Show an error message to the user
-      alert('Failed to process. Please check if the item already exists or try again later.');
+      alert(error.message || 'Failed to save the expiry record. Please try again.');
     }
   };
 

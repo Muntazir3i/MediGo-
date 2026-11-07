@@ -501,14 +501,15 @@ export const addNewExpiry = async (expiryData) => {
     return response.data;
   } catch (error) {
     console.error('Error adding new expiry:', error.message);
-    throw new Error('Failed to add new expiry. Please try again.');
+    const message = error.response?.data?.error || 'Failed to add new expiry. Please try again.';
+    throw new Error(message);
   }
 };
 
 /** Find expiry records by supplier name. */
 export const findSupplierExpiry = async (name) => {
   try {
-    const response = await axios.get(`${API_BASE_URL_EXPIRY}/find-exp/${name}`);
+    const response = await axios.get(`${API_BASE_URL_EXPIRY}/find-exp/${encodeURIComponent(name)}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching supplier expiry:", error.message);
