@@ -14,6 +14,7 @@ A modern, clean, and fast **medical shop ERP frontend** built with **React**, **
 - **Payments tracking** – Add payments, pending amounts, balance tracking
 - **Inventory management** – Add/update medicines, stock tracking
 - **Customer & vendor management**
+- **Supplier bill image upload** – choose a printed bill photo and prefill the purchase form via Gemini
 - **Dashboard with stats**
 - **Responsive UI** using Tailwind + shadcn/ui
 - Smooth UX with modals, forms, and tables
@@ -59,9 +60,11 @@ npm run build
 ```
 
 ## 🔗 Environment Variables
-Create a `.env` file in the project root:
+The frontend talks to the backend at `http://localhost:8008`. The Vite dev server proxies `/api` requests to that backend (see `vite.config.js`).
+
+If you use an environment variable, create a `.env` file in the project root:
 ```
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:8008
 ```
 Make sure this matches your backend server URL.
 
@@ -73,6 +76,37 @@ src/services/
 Example:
 ```js
 axios.get(`${import.meta.env.VITE_API_URL}/inventory`);
+```
+
+## 🧾 Bill Image Upload
+
+On the **Add** page, the **Import a bill image** card lets you upload a supplier bill.
+
+- Accepted formats: JPG, PNG, WebP
+- Maximum file size: 8 MB
+- The image is sent to `POST /api/bills/extract` on the backend.
+- The backend uses the **Gemini API** to extract the invoice number, bill date, supplier details, and product line items.
+- The returned values prefill the purchase form, and every value must be reviewed before saving.
+- This feature requires the backend to have `GEMINI_API_KEY` configured and needs an internet connection.
+
+The upload component is implemented in:
+```
+src/Components/BillImageUpload.jsx
+```
+
+The extracted product fields are:
+
+```json
+{
+  "name": "",
+  "batchNumber": "",
+  "expiryDate": "",
+  "stock": 0,
+  "unitPrice": 0,
+  "mrp": 0,
+  "discount": 0,
+  "gstPercentage": 0
+}
 ```
 
 ## 🧩 UI Components (shadcn/ui)
