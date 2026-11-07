@@ -122,3 +122,122 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * Dark-mode equivalents for the existing light-only neutral utilities.
+ * New components should prefer semantic tokens such as bg-card and text-foreground.
+ */
+@layer utilities {
+  .dark .bg-white {
+    background-color: var(--card);
+  }
+
+  .dark .bg-white\/95 {
+    background-color: color-mix(in oklab, var(--card) 95%, transparent);
+  }
+
+  .dark .bg-slate-50,
+  .dark .bg-gray-50 {
+    background-color: var(--background);
+  }
+
+  .dark .bg-slate-100,
+  .dark .bg-gray-100 {
+    background-color: var(--muted);
+  }
+
+  .dark .bg-slate-50\/40,
+  .dark .bg-slate-50\/50,
+  .dark .bg-slate-50\/60,
+  .dark .bg-slate-50\/70,
+  .dark .bg-slate-50\/80 {
+    background-color: color-mix(in oklab, var(--muted) 70%, transparent);
+  }
+
+  .dark .text-slate-900 {
+    color: var(--color-slate-50);
+  }
+
+  .dark .text-slate-800 {
+    color: var(--color-slate-100);
+  }
+
+  .dark .text-slate-700 {
+    color: var(--color-slate-200);
+  }
+
+  .dark .text-slate-600,
+  .dark .text-gray-600 {
+    color: var(--color-slate-300);
+  }
+
+  .dark .text-slate-500,
+  .dark .text-gray-500 {
+    color: var(--color-slate-400);
+  }
+
+  .dark .border-slate-100,
+  .dark .border-slate-200,
+  .dark .border-slate-300,
+  .dark .border-gray-100 {
+    border-color: var(--border);
+  }
+
+  .dark .divide-slate-100 > :not(:last-child),
+  .dark .divide-gray-100 > :not(:last-child) {
+    border-color: var(--border);
+  }
+
+  .dark .hover\:bg-white:hover,
+  .dark .hover\:bg-slate-50:hover,
+  .dark .hover\:bg-slate-100:hover,
+  .dark .hover\:bg-slate-200:hover,
+  .dark .hover\:bg-gray-50:hover {
+    background-color: var(--accent);
+  }
+
+  .dark .hover\:bg-slate-50\/60:hover,
+  .dark .hover\:bg-slate-50\/70:hover,
+  .dark .hover\:bg-slate-50\/80:hover {
+    background-color: color-mix(in oklab, var(--accent) 75%, transparent);
+  }
+
+  .dark .hover\:text-slate-700:hover,
+  .dark .hover\:text-slate-800:hover,
+  .dark .hover\:text-slate-900:hover,
+  .dark .group:hover .group-hover\:text-slate-700 {
+    color: var(--color-slate-100);
+  }
+
+  .dark .hover\:border-slate-300:hover {
+    border-color: var(--ring);
+  }
+
+  .dark .focus-visible\:bg-white:focus-visible,
+  .dark .group:hover .group-hover\:bg-white {
+    background-color: var(--card);
+  }
+
+  .dark .placeholder\:text-slate-400::placeholder {
+    color: var(--color-slate-500);
+  }
+
+  .dark .bg-blue-50 {
+    background-color: color-mix(in oklab, var(--color-blue-950) 45%, transparent);
+  }
+
+  .dark .text-blue-600 {
+    color: var(--color-blue-400);
+  }
+
+  .dark .text-blue-700,
+  .dark .text-blue-800,
+  .dark .text-blue-900 {
+    color: var(--color-blue-300);
+  }
+
+  .dark .border-blue-100,
+  .dark .border-blue-200 {
+    border-color: var(--color-blue-900);
+  }
+}

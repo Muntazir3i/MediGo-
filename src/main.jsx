@@ -9,6 +9,7 @@ import Inventory from './Components/Inventory.jsx'
 import {createBrowserRouter, createRoutesFromElements ,RouterProvider,Route} from 'react-router-dom'
 import DashBoard from './Components/DashBoard.jsx'
 import Ledger from './Components/Ledger.jsx'
+import { ThemeProvider } from './context/ThemeContext.jsx'
 
 let router = createBrowserRouter(
   createRoutesFromElements(
@@ -25,6 +26,8 @@ let router = createBrowserRouter(
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router= {router} />
+    <ThemeProvider>
+      <RouterProvider router= {router} />
+    </ThemeProvider>
   </StrictMode>,
 )

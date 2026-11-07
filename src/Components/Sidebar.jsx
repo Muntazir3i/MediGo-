@@ -9,6 +9,7 @@ import {
     Receipt,
     Search,
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle.jsx';
 
 const navGroups = [
     {
@@ -111,7 +112,12 @@ const Sidebar = ({ onOpenPalette }) => {
                     ))}
                 </nav>
 
-                <div className="mt-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3">
+                <ThemeToggle
+                    showLabel
+                    className="mt-4 w-full border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+                />
+
+                <div className="mt-3 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3 dark:from-slate-900 dark:to-slate-950">
                     <p className="text-xs font-semibold text-slate-700">Quick tip</p>
                     <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                         Press{' '}
@@ -126,6 +132,8 @@ const Sidebar = ({ onOpenPalette }) => {
                     </p>
                 </div>
             </aside>
+
+            <ThemeToggle className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-[4.25rem] z-40 h-11 w-11 rounded-full border-slate-200 bg-white text-slate-600 shadow-lg shadow-slate-900/10 hover:bg-slate-50 lg:hidden" />
 
             <button
                 type="button"
