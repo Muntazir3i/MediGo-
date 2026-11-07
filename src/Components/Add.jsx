@@ -3,13 +3,14 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   CalendarClock,
   CreditCard,
+  FileText,
   Keyboard,
   PackagePlus,
   PlusCircle,
   Users,
 } from 'lucide-react';
 import './add.css';
-import { TabContentAddPurchase, TabContentAddSupplier, TabContentAddPayment, TabContentAddExpiry } from './Tabs/index.js'
+import { TabContentAddPurchase, TabContentAddSupplier, TabContentAddPayment, TabContentAddExpiry, TabContentAddCreditNote } from './Tabs/index.js'
 import { addNewExpiry } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
@@ -22,6 +23,15 @@ import { handleAddProduct } from '@/utils/addProductHelper.js';
 import { calculateBillTotals } from '@/utils/billingCalculationsHelper.js';
 import { getExpiryStatus, parseIsoDate, todayIsoDate } from '@/utils/expiryHelpers.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.jsx"
+import { Button } from './ui/button.jsx';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog.jsx';
 import BillImageUpload from './BillImageUpload.jsx';
 
 const ADD_TABS = [
@@ -29,15 +39,39 @@ const ADD_TABS = [
   { value: 'add-supplier', label: 'Add Supplier', icon: Users },
   { value: 'add-payment', label: 'Add Payment', icon: CreditCard },
   { value: 'add-expiry', label: 'Add Expiry', icon: CalendarClock },
+  { value: 'add-credit-note', label: 'Credit Note', icon: FileText },
 ];
 
 const VALID_TABS = ADD_TABS.map((tab) => tab.value);
 
 const kbdClass =
-  'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-slate-200 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500 shadow-[0_1px_0_rgba(15,23,42,0.06)]';
+  'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-slate-300/80 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500 shadow-[0_1px_0_rgba(15,23,42,0.06)]';
+
+const SHORTCUTS = [
+  { keys: ['Alt', '↑', '↓'], label: 'Move between product rows' },
+  { keys: ['Alt', '←', '→'], label: 'Move between product fields' },
+  { keys: ['Ctrl', 'Enter'], label: 'Add a product line' },
+  { keys: ['Ctrl', 'Shift', 'A'], label: 'Add a product line' },
+  { keys: ['Ctrl', 'Shift', 'S'], label: 'Save purchase bill' },
+  { keys: ['Ctrl', 'K'], label: 'Open command palette' },
+];
+
+const ShortcutRow = ({ keys, label }) => (
+  <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+    <span className="text-xs text-slate-600">{label}</span>
+    <span className="flex shrink-0 items-center gap-1">
+      {keys.map((key) => (
+        <kbd key={key} className={kbdClass}>
+          {key}
+        </kbd>
+      ))}
+    </span>
+  </div>
+);
 
 function Add() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const location = useLocation();
   const requestedTab = searchParams.get('tab');
   const activeTab = VALID_TABS.includes(requestedTab) ? requestedTab : 'add-purchase';
@@ -65,10 +99,12 @@ function Add() {
       'add-payment': '#payment-invoice',
       'add-supplier': '#new-supplier-name',
       'add-expiry': '#expiry-supplier',
+      'add-credit-note': '#credit-note-number',
       'purchase-invoice': '#purchase-invoice',
       'payment-invoice': '#payment-invoice',
       'new-supplier-name': '#new-supplier-name',
       'expiry-supplier': '#expiry-supplier',
+      'credit-note-number': '#credit-note-number',
     };
 
     const selector = selectors[requestedFocus] || selectors[activeTab];
@@ -182,6 +218,8 @@ function Add() {
 
   // Ctrl/Cmd + Shift + A adds a product and focuses its first field.
   useEffect(() => {
+    if (activeTab !== 'add-purchase') return undefined;
+
     const handleKeyDown = (event) => {
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'a') {
         event.preventDefault();
@@ -194,10 +232,12 @@ function Add() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [addProductAndFocus]);
+  }, [activeTab, addProductAndFocus]);
 
   // Alt/Ctrl + Arrow moves focus between product rows and fields.
   useEffect(() => {
+    if (activeTab !== 'add-purchase') return undefined;
+
     const handleKeyDown = (event) => {
       const input = event.target?.closest?.('[data-product-input]');
       if (!input) return;
@@ -262,12 +302,14 @@ function Add() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [addProductAndFocus, focusProductField, setProducts]);
+  }, [activeTab, addProductAndFocus, focusProductField, setProducts]);
 
   const stateRef = useRef();
   stateRef.current = { formData, products, totalAmount, totalDiscount, totalGst };
 
   useEffect(() => {
+    if (activeTab !== 'add-purchase') return undefined;
+
     const handleKeyDown = (event) => {
       // Ctrl + Shift + S (Cmd + Shift + S on Mac)
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "s") {
@@ -292,7 +334,7 @@ function Add() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [activeTab]);
 
   // Fetch and load all suppliers from the custom hook on component mount
   useEffect(() => {
@@ -627,7 +669,7 @@ function Add() {
   return (
     <main className="h-full min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:pb-6">
       <div className="mx-auto max-w-[1500px] space-y-5">
-        <header className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <header className="relative overflow-hidden rounded-2xl border border-slate-300/80 bg-white px-6 py-5 shadow-sm">
           <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-blue-100/70 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 left-1/3 h-44 w-44 rounded-full bg-indigo-100/60 blur-3xl" />
 
@@ -642,21 +684,21 @@ function Add() {
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Add</h1>
                 <p className="mt-1 max-w-xl text-sm text-slate-500">
-                  Create purchase bills, suppliers, payments and expiry records from one clean workspace.
+                  Create purchase bills, suppliers, payments, expiry records and credit notes from one clean workspace.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                <Keyboard className="h-4 w-4 text-slate-400" />
-                <span className="font-medium text-slate-700">Fast entry</span>
-                <span className="hidden items-center gap-1 sm:flex">
-                  <kbd className={kbdClass}>Alt</kbd>
-                  <span>+</span>
-                  <kbd className={kbdClass}>↑↓</kbd>
-                </span>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShortcutsOpen(true)}
+                className="gap-2 border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                <Keyboard className="h-4 w-4 text-slate-500" />
+                Shortcuts
+              </Button>
               <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
                 <span className="hidden font-medium text-slate-700 sm:inline">Command palette</span>
                 <kbd className={kbdClass}>Ctrl</kbd>
@@ -668,7 +710,7 @@ function Add() {
         </header>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full gap-4">
-          <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-300/80 bg-white p-1.5 shadow-sm">
             {ADD_TABS.map((tab) => {
               const Icon = tab.icon;
 
@@ -746,8 +788,42 @@ function Add() {
               handleExpiryData={handleExpiryData}
             />
           </TabsContent>
+
+          <TabsContent value='add-credit-note' className="mt-1">
+            <TabContentAddCreditNote
+              allSuppliersSql={allSuppliersSql}
+              editingCreditNoteId={searchParams.get('creditNoteId')}
+              onSaved={() => setSearchParams({ tab: 'add-credit-note' }, { replace: true })}
+            />
+          </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <Keyboard className="h-5 w-5" />
+            </div>
+            <DialogTitle>Keyboard shortcuts</DialogTitle>
+            <DialogDescription>
+              Work through Add Item without leaving the keyboard.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-2">
+            {SHORTCUTS.map((shortcut) => (
+              <ShortcutRow key={shortcut.label + shortcut.keys.join('')} {...shortcut} />
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShortcutsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

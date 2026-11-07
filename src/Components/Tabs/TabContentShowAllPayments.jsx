@@ -47,6 +47,7 @@ const QUICK_RANGES = [
     { id: 'today', label: 'Today' },
     { id: 'week', label: 'This Week' },
     { id: 'month', label: 'This Month' },
+    { id: 'all', label: 'All time' },
 ];
 
 const TabContentShowAllPayments = ({
@@ -75,9 +76,16 @@ const TabContentShowAllPayments = ({
     );
 
     const hasDateFilter = Boolean(fromDate || toDate);
+    const todayRange = quickRangeBounds('today');
+    const isTodayRange = fromDate === todayRange.from && toDate === todayRange.to;
+    const activeRangeLabel =
+        QUICK_RANGES.find((range) => {
+            const bounds = quickRangeBounds(range.id);
+            return bounds && bounds.from === fromDate && bounds.to === toDate;
+        })?.label || (hasDateFilter ? 'Custom range' : 'All time');
 
     return (
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-xl border border-slate-300/80 bg-white shadow-sm">
             <div className="border-b border-slate-100 p-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div className="flex items-start gap-3">
@@ -85,9 +93,16 @@ const TabContentShowAllPayments = ({
                             <Wallet className="h-5 w-5" />
                         </div>
                         <div>
-                            <h2 className="text-base font-semibold text-slate-900">All payments</h2>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h2 className="text-base font-semibold text-slate-900">All payments</h2>
+                                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                                    {activeRangeLabel}
+                                </Badge>
+                            </div>
                             <p className="mt-0.5 text-sm text-slate-500">
-                                Search by invoice or narrow the list to a date range.
+                                {isTodayRange
+                                    ? 'Showing payments recorded today. Use the quick ranges or dates to change the view.'
+                                    : 'Search by invoice or adjust the date range.'}
                             </p>
                         </div>
                     </div>
@@ -118,7 +133,7 @@ const TabContentShowAllPayments = ({
                         {loading && (
                             <span className="inline-flex items-center gap-1.5 text-sm text-slate-500">
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Searching…
+                                Loading…
                             </span>
                         )}
                     </div>
@@ -155,9 +170,11 @@ const TabContentShowAllPayments = ({
                             {QUICK_RANGES.map((range) => {
                                 const bounds = quickRangeBounds(range.id);
                                 const active =
-                                    Boolean(bounds) &&
-                                    bounds.from === fromDate &&
-                                    bounds.to === toDate;
+                                    range.id === 'all'
+                                        ? !fromDate && !toDate
+                                        : Boolean(bounds) &&
+                                          bounds.from === fromDate &&
+                                          bounds.to === toDate;
 
                                 return (
                                     <Button
@@ -168,8 +185,8 @@ const TabContentShowAllPayments = ({
                                         onClick={() => onQuickRange?.(range.id)}
                                         className={
                                             active
-                                                ? 'h-8 bg-slate-900 px-2.5 text-xs text-white hover:bg-slate-800'
-                                                : 'h-8 border-slate-200 bg-white px-2.5 text-xs text-slate-600 hover:bg-slate-50'
+                                                ? 'h-8 border-blue-600 bg-blue-600 px-2.5 text-xs text-white hover:bg-blue-700'
+                                                : 'h-8 border-slate-300/80 bg-white px-2.5 text-xs text-slate-600 hover:bg-slate-50'
                                         }
                                     >
                                         {range.label}
@@ -177,7 +194,7 @@ const TabContentShowAllPayments = ({
                                 );
                             })}
 
-                            {hasDateFilter && (
+                            {!isTodayRange && (
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -186,18 +203,38 @@ const TabContentShowAllPayments = ({
                                     className="h-8 gap-1 px-2 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                                 >
                                     <RotateCcw className="h-3.5 w-3.5" />
-                                    Clear
+                                    Reset to today
                                 </Button>
                             )}
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {allPayments.length > 0 && (
-                        <p className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <CircleDollarSign className="h-3.5 w-3.5 text-emerald-500" />
-                            {allPayments.length} loaded · {formatCurrency(loadedTotal)}
-                        </p>
-                    )}
+            <div className="grid gap-3 border-b border-slate-100 bg-white p-5 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center gap-2 text-slate-500">
+                        <ReceiptText className="h-4 w-4" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wide">Loaded payments</span>
+                    </div>
+                    <p className="mt-2 text-2xl font-bold text-slate-900">{allPayments.length}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center gap-2 text-emerald-600">
+                        <CircleDollarSign className="h-4 w-4" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wide">Loaded amount</span>
+                    </div>
+                    <p className="mt-2 text-2xl font-bold text-emerald-700">{formatCurrency(loadedTotal)}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center gap-2 text-blue-600">
+                        <CalendarDays className="h-4 w-4" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wide">Active range</span>
+                    </div>
+                    <p className="mt-2 text-lg font-bold text-slate-900">{activeRangeLabel}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                        {fromDate && toDate ? `${formatLedgerDate(fromDate)} – ${formatLedgerDate(toDate)}` : 'All dates'}
+                    </p>
                 </div>
             </div>
 
@@ -257,7 +294,7 @@ const TabContentShowAllPayments = ({
                                         </div>
                                     </td>
                                     <td className="px-5 py-3">
-                                        <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">
+                                        <span className="inline-flex rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-mono text-sm font-bold text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
                                             {item.invoice || '—'}
                                         </span>
                                     </td>
@@ -305,11 +342,13 @@ const TabContentShowAllPayments = ({
                     <p className="mt-1 max-w-sm text-sm text-slate-500">
                         {invoiceSearch
                             ? `There are no payments for invoice “${invoiceSearch}”.`
-                            : hasDateFilter
-                                ? `No payments recorded between ${fromDate || 'the beginning'} and ${toDate || 'today'}.`
-                                : 'No payment entries are available yet.'}
+                            : isTodayRange
+                                ? 'No payments recorded today.'
+                                : hasDateFilter
+                                    ? `No payments recorded between ${fromDate || 'the beginning'} and ${toDate || 'today'}.`
+                                    : 'No payment entries are available yet.'}
                     </p>
-                    {(invoiceSearch || hasDateFilter) && (
+                    {(invoiceSearch || !isTodayRange) && (
                         <Button
                             variant="outline"
                             className="mt-4"
@@ -318,7 +357,7 @@ const TabContentShowAllPayments = ({
                                 onClearDateFilter?.();
                             }}
                         >
-                            Clear filters
+                            Reset filters
                         </Button>
                     )}
                 </div>

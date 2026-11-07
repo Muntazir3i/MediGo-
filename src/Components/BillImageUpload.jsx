@@ -4,7 +4,13 @@ import { Button } from './ui/button.jsx';
 
 const toNumber = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
 
-export default function BillImageUpload({ onExtracted }) {
+export default function BillImageUpload({
+  onExtracted,
+  title = 'Import a bill image',
+  description = 'Upload a JPG, PNG or WebP (under 8 MB). Gemini fills the form, then you review every value before saving.',
+  buttonLabel = 'Choose image',
+  inputId = 'bill-image',
+}) {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
@@ -63,16 +69,15 @@ export default function BillImageUpload({ onExtracted }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-dashed border-slate-300 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <section className="flex flex-col gap-4 rounded-xl border border-dashed border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
         <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
           <ScanLine className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">Import a bill image</h3>
-          <p className="mt-0.5 max-w-xl text-xs text-slate-500">
-            Upload a JPG, PNG or WebP (under 8 MB). Gemini fills the form, then you review every value before
-            saving.
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <p className="mt-0.5 max-w-xl text-xs text-muted-foreground">
+            {description}
           </p>
           {error && <p className="mt-2 text-xs font-medium text-rose-600">{error}</p>}
         </div>
@@ -80,7 +85,7 @@ export default function BillImageUpload({ onExtracted }) {
 
       <input
         ref={inputRef}
-        id="bill-image"
+        id={inputId}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         disabled={isScanning}
@@ -93,14 +98,14 @@ export default function BillImageUpload({ onExtracted }) {
         variant="outline"
         disabled={isScanning}
         onClick={() => inputRef.current?.click()}
-        className="shrink-0 gap-2 border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+        className="shrink-0 gap-2 border-border bg-background text-foreground shadow-sm hover:bg-accent"
       >
         {isScanning ? (
           <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
         ) : (
-          <ImagePlus className="h-4 w-4 text-slate-500" />
+          <ImagePlus className="h-4 w-4 text-muted-foreground" />
         )}
-        {isScanning ? 'Reading bill…' : 'Choose image'}
+        {isScanning ? 'Reading image…' : buttonLabel}
       </Button>
     </section>
   );

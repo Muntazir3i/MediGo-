@@ -1,8 +1,5 @@
 import React from 'react';
 import {
-    ArrowRight,
-    CornerDownLeft,
-    Keyboard,
     Plus,
     ReceiptText,
     Save,
@@ -17,7 +14,7 @@ import SelectList from '../SelectList.jsx';
 import SaltEditor from '../SaltEditor.jsx';
 
 const inputClass =
-    'h-9 border-slate-200 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20';
+    'h-9 border-slate-300/80 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20';
 
 const formatMoney = (value) => {
     const number = Number(value) || 0;
@@ -27,22 +24,6 @@ const formatMoney = (value) => {
         maximumFractionDigits: 0,
     })}`;
 };
-
-const ShortcutRow = ({ keys, label }) => (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
-        <span className="text-xs text-slate-600">{label}</span>
-        <span className="flex shrink-0 items-center gap-1">
-            {keys.map((key) => (
-                <kbd
-                    key={key}
-                    className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-slate-200 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500 shadow-[0_1px_0_rgba(15,23,42,0.06)]"
-                >
-                    {key}
-                </kbd>
-            ))}
-        </span>
-    </div>
-);
 
 const SectionHeading = ({ icon, title, description, tone = 'blue' }) => {
     const tones = {
@@ -82,62 +63,60 @@ const TabContentAddPurchase = ({
     totalDiscount,
     totalGst,
     addNewBill,
+    mode = 'purchase',
 }) => {
     const grandTotal = (Number(totalAmount) || 0) - (Number(totalDiscount) || 0) + (Number(totalGst) || 0);
+    const isCreditNote = mode === 'credit-note';
 
     return (
         <div className="space-y-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">
-                        Purchase entry
+                        {isCreditNote ? 'Credit note entry' : 'Purchase entry'}
                     </p>
                     <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-                        Record purchases
+                        {isCreditNote ? 'Record credit note' : 'Record purchases'}
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
-                        Enter the bill and supplier details, then add each line item.
+                        {isCreditNote
+                            ? 'Enter the credit note and distributor details, then add each returned or expired medicine.'
+                            : 'Enter the bill and supplier details, then add each line item.'}
                     </p>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 shadow-sm">
-                    <Keyboard className="h-4 w-4 text-slate-400" />
-                    <span>
-                        Use <span className="font-semibold text-slate-700">Alt + ↑ / ↓</span> to move between
-                        product rows
-                    </span>
                 </div>
             </div>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-300/80 bg-white p-5 shadow-sm">
                 <SectionHeading
                     icon={ReceiptText}
-                    title="Bill details"
-                    description="Invoice number and purchase date from the supplier bill."
+                    title={isCreditNote ? 'Credit note details' : 'Bill details'}
+                    description={isCreditNote
+                        ? 'Credit note number and date received from the distributor.'
+                        : 'Invoice number and purchase date from the supplier bill.'}
                 />
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                        <Label htmlFor="purchase-invoice" className="mb-1.5 block text-xs font-medium text-slate-600">
-                            Bill / Invoice number
+                        <Label htmlFor={isCreditNote ? 'credit-note-number' : 'purchase-invoice'} className="mb-1.5 block text-xs font-medium text-slate-600">
+                            {isCreditNote ? 'Credit note number' : 'Bill / Invoice number'}
                         </Label>
                         <Input
-                            id="purchase-invoice"
+                            id={isCreditNote ? 'credit-note-number' : 'purchase-invoice'}
                             name="invoice"
                             value={formData.invoice}
                             type="text"
-                            className={inputClass}
+                            className={`${inputClass} font-semibold tracking-wide`}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
                     <div>
-                        <Label htmlFor="purchase-date" className="mb-1.5 block text-xs font-medium text-slate-600">
-                            Bill date
+                        <Label htmlFor={isCreditNote ? 'credit-note-date' : 'purchase-date'} className="mb-1.5 block text-xs font-medium text-slate-600">
+                            {isCreditNote ? 'Credit note date' : 'Bill date'}
                         </Label>
                         <Input
-                            id="purchase-date"
+                            id={isCreditNote ? 'credit-note-date' : 'purchase-date'}
                             name="date"
                             value={formData.date}
                             type="date"
@@ -148,18 +127,20 @@ const TabContentAddPurchase = ({
                 </div>
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-300/80 bg-white p-5 shadow-sm">
                 <SectionHeading
                     icon={Truck}
-                    title="Supplier details"
-                    description="Select an existing supplier or type a new name."
+                    title={isCreditNote ? 'Distributor details' : 'Supplier details'}
+                    description={isCreditNote
+                        ? 'Select the distributor who issued the credit note.'
+                        : 'Select an existing supplier or type a new name.'}
                     tone="violet"
                 />
 
                 <div className="grid gap-4 md:grid-cols-3">
                     <div>
                         <Label htmlFor="supplier-name" className="mb-1.5 block text-xs font-medium text-slate-600">
-                            Supplier name
+                            {isCreditNote ? 'Distributor name' : 'Supplier name'}
                         </Label>
                         <Input
                             id="supplier-name"
@@ -209,12 +190,14 @@ const TabContentAddPurchase = ({
                 </div>
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section className="rounded-xl border border-slate-300/80 bg-white shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 p-5">
                     <SectionHeading
                         icon={Plus}
-                        title="Product details"
-                        description="Press Alt + ↓ on the last row to append a new line."
+                        title={isCreditNote ? 'Credit note items' : 'Product details'}
+                        description={isCreditNote
+                            ? 'Add the returned or expired medicine, batch, quantity, rate, MRP, discount and GST.'
+                            : 'Add each medicine with its batch, expiry, quantity, rate, MRP, discount and GST.'}
                         tone="emerald"
                     />
                     <Badge variant="secondary" className="mb-4 bg-slate-100 text-slate-600">
@@ -283,7 +266,7 @@ const TabContentAddPurchase = ({
                                                 aria-label={`Batch number for line ${index + 1}`}
                                                 data-product-input
                                                 data-product-field="batchNumber"
-                                                className={`${inputClass} min-w-[80px]`}
+                                                className={`${inputClass} min-w-[80px] font-semibold tracking-wide`}
                                                 value={(item.batchNumber || '').toUpperCase()}
                                                 placeholder="Batch"
                                                 onChange={(e) =>
@@ -398,7 +381,7 @@ const TabContentAddPurchase = ({
                                         </td>
                                     </tr>
 
-                                    {String(item.name ?? '').trim() !== '' && (
+                                    {!isCreditNote && String(item.name ?? '').trim() !== '' && (
                                         <tr className="bg-slate-50/40">
                                             <td colSpan={10} className="px-3 pb-3 pt-1">
                                                 <SaltEditor
@@ -436,64 +419,86 @@ const TabContentAddPurchase = ({
                         </Button>
 
                         <span className="hidden items-center gap-1 text-xs text-slate-400 sm:flex">
-                            <kbd className="inline-flex h-5 items-center rounded border border-slate-200 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500">
+                            <kbd className="inline-flex h-5 items-center rounded border border-slate-300/80 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500">
                                 Ctrl
                             </kbd>
                             <span>+</span>
-                            <kbd className="inline-flex h-5 items-center rounded border border-slate-200 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500">
+                            <kbd className="inline-flex h-5 items-center rounded border border-slate-300/80 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500">
                                 Enter
                             </kbd>
                         </span>
                     </div>
 
                     <p className="text-xs text-slate-400">
-                        Tip: press{' '}
-                        <span className="font-semibold text-slate-600">Alt + ↓</span> inside the last row to add
-                        another product.
+                        {isCreditNote
+                            ? 'The calculated credit total is deducted from the distributor balance.'
+                            : 'Review batch numbers, expiry dates and totals before saving.'}
                     </p>
                 </div>
             </section>
 
             <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
-                <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="flex items-start gap-3">
-                        <div className="rounded-lg bg-slate-100 p-2 text-slate-600">
-                            <Keyboard className="h-4 w-4" />
+                {isCreditNote ? (
+                    <section className="rounded-xl border border-slate-300/80 bg-white p-5 shadow-sm">
+                        <div className="flex items-start gap-3">
+                            <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600">
+                                <ReceiptText className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-900">Credit note impact</h3>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    This total is treated like a payment and reduces the distributor balance.
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-sm font-semibold text-slate-900">Keyboard shortcuts</h3>
-                            <p className="mt-0.5 text-xs text-slate-500">
-                                Move through the bill without reaching for the mouse.
+
+                        <div className="mt-4 space-y-2 rounded-lg border border-emerald-100 bg-emerald-50/70 p-4 text-sm">
+                            <div className="flex items-center justify-between text-emerald-800">
+                                <span>Total credit</span>
+                                <span className="text-lg font-bold">{formatMoney(grandTotal)}</span>
+                            </div>
+                            <p className="text-xs leading-relaxed text-emerald-700">
+                                The distributor ledger will show this credit note as a deduction, exactly like a
+                                payment entry.
                             </p>
                         </div>
-                    </div>
+                    </section>
+                ) : (
+                    <section className="rounded-xl border border-slate-300/80 bg-white p-5 shadow-sm">
+                        <div className="flex items-start gap-3">
+                            <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+                                <ReceiptText className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-900">Before you save</h3>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    A quick review keeps the purchase and inventory records accurate.
+                                </p>
+                            </div>
+                        </div>
 
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                        <ShortcutRow keys={['Alt', '↑', '↓']} label="Move between product rows" />
-                        <ShortcutRow keys={['Alt', '←', '→']} label="Move between product fields" />
-                        <ShortcutRow keys={['Ctrl', 'Enter']} label="Add a product line" />
-                        <ShortcutRow keys={['Ctrl', 'Shift', 'A']} label="Add a product line" />
-                        <ShortcutRow keys={['Ctrl', 'Shift', 'S']} label="Save purchase bill" />
-                        <ShortcutRow keys={['Ctrl', 'K']} label="Open command palette" />
-                    </div>
+                        <div className="mt-4 space-y-2 rounded-lg border border-blue-100 bg-blue-50/70 p-4 text-xs leading-relaxed text-blue-800">
+                            <p>• Confirm the invoice number, bill date and supplier.</p>
+                            <p>• Check every batch number and expiry date.</p>
+                            <p>• Review discount, GST and the final payable total.</p>
+                        </div>
 
-                    <div className="mt-4 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-700">
-                        <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <p>
-                            Use <span className="font-semibold">Alt + ↑ / ↓</span> first; the browser keeps normal
-                            Tab behaviour intact for accessibility.
+                        <p className="mt-3 text-xs text-slate-400">
+                            Keyboard shortcuts are available from the Shortcuts button in the page header.
                         </p>
-                    </div>
-                </section>
+                    </section>
+                )}
 
                 <aside className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-900 p-5 text-white shadow-md shadow-slate-900/10">
                     <div>
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                    Bill summary
+                                    {isCreditNote ? 'Credit note summary' : 'Bill summary'}
                                 </p>
-                                <h3 className="mt-1 text-lg font-semibold">Payment details</h3>
+                                <h3 className="mt-1 text-lg font-semibold">
+                                    {isCreditNote ? 'Credit details' : 'Payment details'}
+                                </h3>
                             </div>
                             <Badge className="border-white/10 bg-white/10 text-slate-200">
                                 {products.length} line{products.length === 1 ? '' : 's'}
@@ -520,7 +525,7 @@ const TabContentAddPurchase = ({
                         <div className="flex items-end justify-between gap-3">
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                    Total payable
+                                    {isCreditNote ? 'Total credit' : 'Total payable'}
                                 </p>
                                 <p className="mt-1 text-2xl font-semibold tracking-tight">{formatMoney(grandTotal)}</p>
                             </div>
@@ -543,13 +548,8 @@ const TabContentAddPurchase = ({
                             className="mt-4 w-full gap-2 bg-white text-slate-900 shadow-sm hover:bg-slate-100"
                         >
                             <Save className="h-4 w-4" />
-                            Save purchase
+                            {isCreditNote ? 'Save credit note' : 'Save purchase'}
                         </Button>
-
-                        <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-slate-400">
-                            <CornerDownLeft className="h-3 w-3" />
-                            or press Ctrl + Shift + S
-                        </p>
                     </div>
                 </aside>
             </div>

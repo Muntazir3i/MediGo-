@@ -10,6 +10,7 @@ import {
     CornerDownLeft,
     CreditCard,
     FilePlus2,
+    FileText,
     LayoutDashboard,
     PackagePlus,
     PlusCircle,
@@ -19,14 +20,14 @@ import {
 } from 'lucide-react';
 
 const kbdClass =
-    'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-slate-200 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500 shadow-[0_1px_0_rgba(15,23,42,0.06)]';
+    'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-border bg-background px-1 font-sans text-[10px] font-semibold text-muted-foreground shadow-[0_1px_0_rgba(15,23,42,0.06)]';
 
 const navigateCommands = [
     {
         id: 'add',
         title: 'Add Section',
-        description: 'Record purchases, suppliers, payments and expiry',
-        keywords: 'add new purchase item supplier payment expiry create',
+        description: 'Record purchases, suppliers, payments, expiry and credit notes',
+        keywords: 'add new purchase item supplier payment expiry credit note create',
         to: '/add',
         icon: PlusCircle,
     },
@@ -74,6 +75,7 @@ const actionCommands = [
         to: '/add?tab=add-purchase',
         focus: 'purchase-invoice',
         icon: PackagePlus,
+        group: 'add',
     },
     {
         id: 'add-payment',
@@ -83,6 +85,7 @@ const actionCommands = [
         to: '/add?tab=add-payment',
         focus: 'payment-invoice',
         icon: CreditCard,
+        group: 'add',
     },
     {
         id: 'add-supplier',
@@ -92,6 +95,7 @@ const actionCommands = [
         to: '/add?tab=add-supplier',
         focus: 'new-supplier-name',
         icon: Users,
+        group: 'add',
     },
     {
         id: 'add-expiry',
@@ -101,6 +105,34 @@ const actionCommands = [
         to: '/add?tab=add-expiry',
         focus: 'expiry-supplier',
         icon: CalendarClock,
+        group: 'add',
+    },
+    {
+        id: 'add-credit-note',
+        title: 'Add credit note',
+        description: 'Record a distributor credit note',
+        keywords: 'add credit note return expired distributor credit',
+        to: '/add?tab=add-credit-note',
+        focus: 'credit-note-number',
+        icon: FileText,
+        group: 'add',
+    },
+    {
+        id: 'view-expiry-ledger',
+        title: 'Expiry ledger',
+        description: 'Review distributor expiry records',
+        keywords: 'expiry ledger expired records distributor view',
+        to: '/ledger?tab=expiry-ledger',
+        focus: 'supplier-search',
+        icon: CalendarClock,
+    },
+    {
+        id: 'view-credit-notes',
+        title: 'Credit notes',
+        description: 'Review and manage distributor credit notes',
+        keywords: 'view credit notes returns ledger manage',
+        to: '/ledger?tab=credit-notes',
+        icon: FileText,
     },
     {
         id: 'new-invoice',
@@ -109,6 +141,7 @@ const actionCommands = [
         keywords: 'create invoice bill sale billing new',
         to: '/billing',
         icon: FilePlus2,
+        group: 'add',
     },
     {
         id: 'all-purchase',
@@ -136,22 +169,22 @@ const CommandRow = ({ item, onSelect }) => {
         <Command.Item
             value={`${item.title} ${item.description} ${item.keywords}`}
             onSelect={() => onSelect(item)}
-            className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left outline-none transition data-[selected=true]:bg-blue-50 data-[selected=true]:text-blue-900"
+            className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left outline-none transition data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
         >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition group-data-[selected=true]:border-blue-200 group-data-[selected=true]:bg-blue-600 group-data-[selected=true]:text-white">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground shadow-sm transition group-data-[selected=true]:border-blue-500 group-data-[selected=true]:bg-blue-600 group-data-[selected=true]:text-white">
                 <Icon className="h-4 w-4" />
             </span>
 
             <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-slate-900 group-data-[selected=true]:text-blue-900">
+                <span className="block truncate text-sm font-semibold text-foreground group-data-[selected=true]:text-accent-foreground">
                     {item.title}
                 </span>
-                <span className="mt-0.5 block truncate text-xs text-slate-500 group-data-[selected=true]:text-blue-700/80">
+                <span className="mt-0.5 block truncate text-xs text-muted-foreground group-data-[selected=true]:text-accent-foreground/80">
                     {item.description}
                 </span>
             </span>
 
-            <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 opacity-0 transition group-data-[selected=true]:text-blue-500 group-data-[selected=true]:opacity-100" />
+            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/50 opacity-0 transition group-data-[selected=true]:text-primary group-data-[selected=true]:opacity-100" />
         </Command.Item>
     );
 };
@@ -189,7 +222,7 @@ const rankItems = (items, query) => {
 };
 
 const groupHeadingClass =
-    '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.16em] [&_[cmdk-group-heading]]:text-slate-400';
+    '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.16em] [&_[cmdk-group-heading]]:text-muted-foreground';
 
 const CommandPalette = ({ open, onOpenChange }) => {
     const navigate = useNavigate();
@@ -244,6 +277,14 @@ const CommandPalette = ({ open, onOpenChange }) => {
 
     const filteredNavigate = useMemo(() => rankItems(navigateCommands, query), [query]);
     const filteredActions = useMemo(() => rankItems(actionCommands, query), [query]);
+    const addActions = useMemo(
+        () => filteredActions.filter((item) => item.group === 'add'),
+        [filteredActions]
+    );
+    const viewActions = useMemo(
+        () => filteredActions.filter((item) => item.group !== 'add'),
+        [filteredActions]
+    );
     const searchResults = useMemo(
         () => rankItems([...navigateCommands, ...actionCommands], query),
         [query]
@@ -254,26 +295,26 @@ const CommandPalette = ({ open, onOpenChange }) => {
             <DialogPrimitive.Portal>
                 <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/35 backdrop-blur-sm data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
 
-                <DialogPrimitive.Content className="fixed left-1/2 top-[9vh] z-50 w-[min(640px,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-950/20 outline-none backdrop-blur-xl data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
+                <DialogPrimitive.Content className="fixed left-1/2 top-[9vh] z-50 w-[min(640px,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card/95 text-card-foreground shadow-2xl shadow-slate-950/20 outline-none backdrop-blur-xl data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
                     <DialogPrimitive.Title className="sr-only">Command palette</DialogPrimitive.Title>
                     <DialogPrimitive.Description className="sr-only">
                         Search for a page or action and press Enter to open it.
                     </DialogPrimitive.Description>
 
                     <Command loop shouldFilter={false} className="bg-transparent">
-                        <div className="flex items-center gap-3 border-b border-slate-100 px-4">
-                            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                        <div className="flex items-center gap-3 border-b border-border px-4">
+                            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                             <Command.Input
                                 autoFocus
                                 value={query}
                                 onValueChange={setQuery}
                                 placeholder="Search pages and actions…"
-                                className="h-14 w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                                className="h-14 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                             />
                             <button
                                 type="button"
                                 onClick={close}
-                                className={`${kbdClass} shrink-0 transition hover:border-slate-300 hover:text-slate-700`}
+                                className={`${kbdClass} shrink-0 transition hover:border-ring hover:text-foreground`}
                                 aria-label="Close command palette"
                             >
                                 ESC
@@ -282,11 +323,11 @@ const CommandPalette = ({ open, onOpenChange }) => {
 
                         <Command.List key={query} className="max-h-[min(430px,55vh)] overflow-y-auto overscroll-contain p-2">
                             <Command.Empty className="flex flex-col items-center justify-center px-6 py-12 text-center">
-                                <div className="rounded-full bg-slate-100 p-3 text-slate-400">
+                                <div className="rounded-full bg-muted p-3 text-muted-foreground">
                                     <Search className="h-5 w-5" />
                                 </div>
-                                <p className="mt-3 text-sm font-semibold text-slate-800">No results found</p>
-                                <p className="mt-1 text-sm text-slate-500">
+                                <p className="mt-3 text-sm font-semibold text-foreground">No results found</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
                                     Try searching for “add”, “payment” or “ledger”.
                                 </p>
                             </Command.Empty>
@@ -307,18 +348,31 @@ const CommandPalette = ({ open, onOpenChange }) => {
                                         ))}
                                     </Command.Group>
 
-                                    <Command.Separator className="mx-2 my-1 h-px bg-slate-100" />
+                                    <Command.Separator className="mx-2 my-1 h-px bg-border" />
 
-                                    <Command.Group heading="Quick actions" className={groupHeadingClass}>
-                                        {filteredActions.map((item) => (
-                                            <CommandRow key={item.id} item={item} onSelect={handleSelect} />
-                                        ))}
-                                    </Command.Group>
+                                    {addActions.length > 0 && (
+                                        <Command.Group heading="Add" className={groupHeadingClass}>
+                                            {addActions.map((item) => (
+                                                <CommandRow key={item.id} item={item} onSelect={handleSelect} />
+                                            ))}
+                                        </Command.Group>
+                                    )}
+
+                                    {viewActions.length > 0 && (
+                                        <>
+                                            <Command.Separator className="mx-2 my-1 h-px bg-border" />
+                                            <Command.Group heading="View & manage" className={groupHeadingClass}>
+                                                {viewActions.map((item) => (
+                                                    <CommandRow key={item.id} item={item} onSelect={handleSelect} />
+                                                ))}
+                                            </Command.Group>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </Command.List>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/80 px-4 py-2.5 text-[11px] text-slate-500">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-muted/50 px-4 py-2.5 text-[11px] text-muted-foreground">
                             <div className="flex items-center gap-3">
                                 <span className="flex items-center gap-1">
                                     <kbd className={kbdClass}>↑</kbd>
@@ -336,7 +390,7 @@ const CommandPalette = ({ open, onOpenChange }) => {
                                     close
                                 </span>
                             </div>
-                            <span className="flex items-center gap-1 text-slate-400">
+                            <span className="flex items-center gap-1 text-muted-foreground">
                                 MediGo palette
                                 <kbd className={kbdClass}>{quickActionsLabel}</kbd>
                             </span>

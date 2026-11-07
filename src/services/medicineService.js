@@ -3,6 +3,7 @@ import axios from "axios";
 // ─── Base URLs ────────────────────────────────────────────────────────────────
 const API_BASE_URL = 'http://localhost:8008/api/medicines';
 const API_BASE_URL_EXPIRY = 'http://localhost:8008/api/expiry';
+const API_BASE_URL_CREDIT_NOTES = 'http://localhost:8008/api/credit-notes';
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier';
 const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills';
 const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment';
@@ -127,6 +128,35 @@ export const getBillPaymentSql = async (supplierName, { from = '', to = '' } = {
     console.error('Error fetching bills and payments from SQL:', error.message);
     return { transactions: [], summary: null };
   }
+};
+
+/** Aggregate ledger balance and totals for one supplier. */
+export const getLedgerSummary = async (supplierName, { from = '', to = '' } = {}) => {
+  const response = await axios.get(`${API_BASE_URL_BILL_PAYMENT_SQL}/summary`, {
+    params: {
+      supplierName,
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {})
+    }
+  });
+  return response.data;
+};
+
+/** Newest-first ledger transactions with cursor pagination. */
+export const getLedgerTransactions = async (
+  supplierName,
+  { from = '', to = '', limit = 50, cursor = '' } = {}
+) => {
+  const response = await axios.get(`${API_BASE_URL_BILL_PAYMENT_SQL}/transactions`, {
+    params: {
+      supplierName,
+      limit,
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
+      ...(cursor ? { cursor } : {})
+    }
+  });
+  return response.data;
 };
 
 // ─── Bills (SQL) ──────────────────────────────────────────────────────────────
@@ -506,7 +536,16 @@ export const addNewExpiry = async (expiryData) => {
   }
 };
 
-/** Find expiry records by supplier name. */
+/** Delete an expiry record and its medicine lines. */
+export const deleteExpiryRecord = async (id) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL_EXPIRY}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting expiry record:', error.message);
+    throw new Error(error.response?.data?.error || 'Failed to delete expiry record. Please try again.');
+  }
+};
 export const findSupplierExpiry = async (name) => {
   try {
     const response = await axios.get(`${API_BASE_URL_EXPIRY}/find-exp/${encodeURIComponent(name)}`);
@@ -514,5 +553,71 @@ export const findSupplierExpiry = async (name) => {
   } catch (error) {
     console.error("Error fetching supplier expiry:", error.message);
     throw new Error("Failed to fetch supplier expiry. Please try again.");
+  }
+};
+
+// ─── Credit notes ─────────────────────────────────────────────────────────────
+
+const getApiErrorMessage = (error, fallback) =>
+  error.response?.data?.error || fallback;
+
+/** List credit notes with optional search and date filters. */
+export const getCreditNotes = async ({ search = '', from = '', to = '', supplierName = '' } = {}) => {
+  try {
+    const params = {};
+    if (search) params.search = search;
+    if (from) params.from = from;
+    if (to) params.to = to;
+    if (supplierName) params.supplierName = supplierName;
+
+    const response = await axios.get(API_BASE_URL_CREDIT_NOTES, { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching credit notes:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to fetch credit notes. Please try again.'));
+  }
+};
+
+/** Get one credit note with its medicine lines. */
+export const getCreditNoteById = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_CREDIT_NOTES}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching credit note:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to fetch credit note. Please try again.'));
+  }
+};
+
+/** Create a credit note line. */
+export const addCreditNote = async (creditNote) => {
+  try {
+    const response = await axios.post(API_BASE_URL_CREDIT_NOTES, creditNote);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding credit note:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to add credit note. Please try again.'));
+  }
+};
+
+/** Update an existing credit note line. */
+export const updateCreditNote = async (id, creditNote) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL_CREDIT_NOTES}/${id}`, creditNote);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating credit note:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to update credit note. Please try again.'));
+  }
+};
+
+/** Delete a credit note line. */
+export const deleteCreditNote = async (id) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL_CREDIT_NOTES}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting credit note:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to delete credit note. Please try again.'));
   }
 };

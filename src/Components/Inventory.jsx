@@ -511,7 +511,7 @@ function Inventory() {
     <main className="h-full min-w-0 flex-1 overflow-auto bg-slate-50 p-4 pb-24 md:p-6 lg:pb-6">
       <div className="mx-auto max-w-[1500px] space-y-5">
 
-        <header className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <header className="relative overflow-hidden rounded-2xl border border-slate-300/80 bg-white px-6 py-5 shadow-sm">
           <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-blue-100/70 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 left-1/3 h-44 w-44 rounded-full bg-indigo-100/60 blur-3xl" />
 
@@ -534,7 +534,7 @@ function Inventory() {
         </header>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full gap-4">
-          <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-slate-300/80 bg-white p-1.5 shadow-sm">
             <TabsTrigger
               value="all-product"
               className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] justify-start gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm sm:flex-none sm:basis-auto sm:px-4"
@@ -567,7 +567,7 @@ function Inventory() {
                 <div className="relative w-full sm:max-w-sm">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
-                    className="h-10 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm"
+                    className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
                     placeholder="Search medicine name or batch number…"
                     value={medicineSearch}
                     onChange={(e) => setMedicineSearch(e.target.value)}
@@ -608,12 +608,12 @@ function Inventory() {
                 </p>
               </div>
 
-              <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="rounded-xl border border-slate-300/80 bg-white p-4 shadow-sm">
                 <div className="grid gap-3 md:grid-cols-3">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
-                      className="h-10 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm"
+                      className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
                       placeholder="Search supplier…"
                       value={purchaseSearch}
                       onChange={(e) => setPurchaseSearch(e.target.value)}
@@ -623,7 +623,7 @@ function Inventory() {
                   <div className="relative">
                     <FileText className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
-                      className="h-10 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm"
+                      className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
                       placeholder="Search invoice / bill no.…"
                       value={invoiceSearch}
                       onChange={(e) => setInvoiceSearch(e.target.value)}
@@ -633,7 +633,7 @@ function Inventory() {
                   <div className="relative">
                     <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
-                      className="h-10 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm"
+                      className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
                       type="date"
                       aria-label="Filter bills by date"
                       value={purchaseDate}
@@ -659,7 +659,7 @@ function Inventory() {
                       variant="outline"
                       size="sm"
                       onClick={clearPurchaseFilters}
-                      className="h-8 border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      className="h-8 border-slate-300/80 bg-white text-slate-600 hover:bg-slate-50"
                     >
                       Clear filters
                     </Button>
@@ -674,7 +674,7 @@ function Inventory() {
               )}
 
               {!suppliersLoading && !suppliersError && billSuppliers.length === 0 && (
-                <div className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+                <div className="rounded-xl border border-slate-300/80 bg-white px-6 py-14 text-center shadow-sm">
                   <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                     <ReceiptText className="h-5 w-5" />
                   </div>
@@ -704,7 +704,7 @@ function Inventory() {
                       <AccordionItem
                         value={supplierName}
                         key={supplierName}
-                        className="mb-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                        className="mb-3 overflow-hidden rounded-xl border border-slate-300/80 bg-white shadow-sm"
                       >
                         <AccordionTrigger className="px-5 py-4 hover:bg-slate-50 hover:no-underline">
                           <div className="flex flex-1 flex-col gap-3 pr-3 text-left md:flex-row md:items-center md:justify-between">
@@ -779,8 +779,10 @@ function Inventory() {
                                       <tbody className="divide-y divide-slate-100">
                                         {bills.map((purchase) => (
                                           <tr key={purchase.id} className="transition hover:bg-slate-50/70">
-                                            <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-900">
-                                              {purchase.invoice}
+                                            <td className="px-4 py-3">
+                                              <span className="inline-flex rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-mono text-sm font-bold text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
+                                                {purchase.invoice}
+                                              </span>
                                             </td>
                                             <td className="px-3 py-3 text-slate-600">
                                               {new Date(purchase.date).toLocaleDateString()}
@@ -806,7 +808,7 @@ function Inventory() {
                                                     <Button
                                                       variant="outline"
                                                       size="sm"
-                                                      className="h-8 gap-1.5 border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+                                                      className="h-8 gap-1.5 border-slate-300/80 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
                                                     >
                                                       <Eye className="h-3.5 w-3.5" />
                                                       View
@@ -873,8 +875,10 @@ function Inventory() {
                                                               <TableCell className="text-slate-500">
                                                                 {item.stock}
                                                               </TableCell>
-                                                              <TableCell className="font-mono text-xs text-slate-500">
-                                                                {item.batchNumber}
+                                                              <TableCell>
+                                                                <span className="inline-flex rounded-md border border-slate-300 bg-slate-50 px-2 py-1 font-mono text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                                  {item.batchNumber || '—'}
+                                                                </span>
                                                               </TableCell>
                                                               <TableCell className="text-right text-slate-600">
                                                                 ₹ {Number(item.unitPrice || 0).toFixed(2)}
@@ -973,7 +977,7 @@ function Inventory() {
                                       size="sm"
                                       disabled={state?.loadingMore}
                                       onClick={() => loadSupplierBills(supplierName)}
-                                      className="h-8 border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                                      className="h-8 border-slate-300/80 bg-white text-slate-600 hover:bg-slate-100"
                                     >
                                       {state?.loadingMore ? 'Loading…' : 'Load more bills'}
                                     </Button>
@@ -1036,7 +1040,7 @@ function Inventory() {
                   onChange={(event) =>
                     setAdjustForm((prev) => ({ ...prev, quantity: event.target.value }))
                   }
-                  className="h-9 border-slate-200 bg-white text-sm shadow-none"
+                  className="h-9 border-slate-300/80 bg-white text-sm shadow-none"
                 />
               </div>
 
@@ -1054,7 +1058,7 @@ function Inventory() {
                     setAdjustForm((prev) => ({ ...prev, reason: event.target.value }))
                   }
                   placeholder="Physical count, damage, expiry…"
-                  className="h-9 border-slate-200 bg-white text-sm shadow-none"
+                  className="h-9 border-slate-300/80 bg-white text-sm shadow-none"
                 />
               </div>
 

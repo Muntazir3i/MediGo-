@@ -52,13 +52,14 @@ export const generateSupplierStatementPdf = ({
     // ── Transactions ────────────────────────────────────────────────────
     autoTable(doc, {
         startY: detailY + 15,
-        head: [["Date", "Type", "Invoice", "Bill (Rs)", "Payment (Rs)", "Balance (Rs)"]],
+        head: [["Date", "Type", "Invoice", "Bill (Rs)", "Payment (Rs)", "Credit Note (Rs)", "Balance (Rs)"]],
         body: transactions.map((transaction) => [
             displayDate(transaction.date),
             transaction.type,
             transaction.invoice || "-",
             transaction.type === "Bill" ? money(transaction.total) : "",
             transaction.type === "Payment" ? money(transaction.total) : "",
+            transaction.type === "Credit Note" ? money(transaction.total) : "",
             money(transaction.balance)
         ]),
         styles: { fontSize: 8, cellPadding: 2 },
@@ -67,7 +68,8 @@ export const generateSupplierStatementPdf = ({
         columnStyles: {
             3: { halign: "right" },
             4: { halign: "right" },
-            5: { halign: "right" }
+            5: { halign: "right" },
+            6: { halign: "right" }
         },
         margin: { left: 14, right: 14 }
     });
@@ -77,11 +79,12 @@ export const generateSupplierStatementPdf = ({
     doc.setFontSize(10);
     doc.text(`Total Bills: Rs ${money(summary.totalBills)}`, 14, y);
     doc.text(`Total Payments: Rs ${money(summary.totalPayments)}`, 14, y + 6);
-    doc.text(`Transactions: ${summary.transactionCount ?? transactions.length}`, 14, y + 12);
+    doc.text(`Total Credit Notes: Rs ${money(summary.totalCreditNotes)}`, 14, y + 12);
+    doc.text(`Transactions: ${summary.transactionCount ?? transactions.length}`, 14, y + 18);
 
     doc.setFontSize(13);
     doc.setFont(undefined, "bold");
-    doc.text(`Closing Balance: Rs ${money(summary.closingBalance)}`, 14, y + 22);
+    doc.text(`Closing Balance: Rs ${money(summary.closingBalance)}`, 14, y + 28);
     doc.setFont(undefined, "normal");
 
     const safeName = String(supplierName || "supplier")

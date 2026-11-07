@@ -183,6 +183,10 @@
     border-color: var(--border);
   }
 
+  .dark .border-slate-300\/80 {
+    border-color: color-mix(in oklab, var(--border) 80%, transparent);
+  }
+
   .dark .divide-slate-100 > :not(:last-child),
   .dark .divide-gray-100 > :not(:last-child) {
     border-color: var(--border);

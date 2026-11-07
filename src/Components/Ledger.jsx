@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { BookOpen, CalendarClock, FileText, Landmark, Loader2, Pencil, Wallet } from 'lucide-react';
-import { findSupplierExpiry, getsupplierSql, findPaymentByDateSql, getBillPaymentSql, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql } from '@/services/medicineService.js';
+import { findSupplierExpiry, getsupplierSql, getBillPaymentSql, getLedgerSummary, getLedgerTransactions, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql, deleteExpiryRecord } from '@/services/medicineService.js';
 import { generateSupplierStatementPdf } from '@/utils/supplierStatementPdf.js';
 import { focusWhenPaletteClosed } from '@/utils/focusWhenPaletteClosed.js';
-import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments } from './Tabs/index.js';
+import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments, TabContentCreditNotes } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
-import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
 import { Label } from "./ui/label.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
@@ -57,8 +56,8 @@ const Ledger = () => {
   const [suppliersLoading, setSuppliersLoading] = useState(true);
   const [allPayments, setAllPayments] = useState([]);
   const [paymentInvoiceSearch, setPaymentInvoiceSearch] = useState('');
-  const [paymentFromDate, setPaymentFromDate] = useState('');
-  const [paymentToDate, setPaymentToDate] = useState('');
+  const [paymentFromDate, setPaymentFromDate] = useState(() => getPaymentQuickRange('today').from);
+  const [paymentToDate, setPaymentToDate] = useState(() => getPaymentQuickRange('today').to);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [paymentsLoadingMore, setPaymentsLoadingMore] = useState(false);
   const [paymentsHasMore, setPaymentsHasMore] = useState(false);
@@ -66,14 +65,13 @@ const Ledger = () => {
   const [paymentsReloadKey, setPaymentsReloadKey] = useState(0);
   const [filteredBill, setFilteredBill] = useState([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactionsLoadingMore, setTransactionsLoadingMore] = useState(false);
+  const [transactionsCursor, setTransactionsCursor] = useState(null);
+  const [transactionsHasMore, setTransactionsHasMore] = useState(false);
   const [fileredExpiry, setFilteredExpiry] = useState([]);
   const [expiryLoading, setExpiryLoading] = useState(false);
   const [filteredSupplier, setFilteredSupplier] = useState([]);
   const [search, setSearch] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [dailyPayments, setDailyPayments] = useState([]);
-  const [dailyPaymentSummary, setDailyPaymentSummary] = useState(null);
-  const [dailyPaymentsLoading, setDailyPaymentsLoading] = useState(false);
   const [selectedSupplierName, setSelectedSupplierName] = useState('');
   const [selectedSupplierBalance, setSelectedSupplierBalance] = useState(0);
   const [statementFrom, setStatementFrom] = useState('');
@@ -84,7 +82,6 @@ const Ledger = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [paymentSaving, setPaymentSaving] = useState(false);
 
-  const dailyPaymentsRequestRef = useRef(0);
   const paymentsRequestRef = useRef(0);
   const transactionsRequestRef = useRef(0);
   const expiryRequestRef = useRef(0);
@@ -132,56 +129,6 @@ const Ledger = () => {
     next.set('tab', value);
     setSearchParams(next, { replace: true });
   };
-
-  const loadPaymentsForDate = async (date, { showLoading = true } = {}) => {
-    const requestId = ++dailyPaymentsRequestRef.current;
-    if (showLoading) setDailyPaymentsLoading(true);
-
-    try {
-      const response = await findPaymentByDateSql(date);
-
-      // Ignore responses for a date that is no longer selected.
-      if (requestId !== dailyPaymentsRequestRef.current) return;
-
-      setDailyPayments(response.payments || []);
-      setDailyPaymentSummary(response.summary || null);
-    } catch (error) {
-      console.error("Error fetching payments by date:", error.message);
-    } finally {
-      if (requestId === dailyPaymentsRequestRef.current) {
-        setDailyPaymentsLoading(false);
-      }
-    }
-  };
-
-  const handleDateChange = (e) => {
-    const date = e.target.value;
-    setSelectedDate(date);
-
-    if (!date) {
-      // Invalidate any in-flight request.
-      dailyPaymentsRequestRef.current += 1;
-      setDailyPayments([]);
-      setDailyPaymentSummary(null);
-      setDailyPaymentsLoading(false);
-      return;
-    }
-
-    loadPaymentsForDate(date);
-  };
-
-  const handleClearDate = () => {
-    dailyPaymentsRequestRef.current += 1;
-    setSelectedDate('');
-    setDailyPayments([]);
-    setDailyPaymentSummary(null);
-    setDailyPaymentsLoading(false);
-  };
-
-  const totalDailyPayment = dailyPaymentSummary
-    ? Number(dailyPaymentSummary.total) || 0
-    : dailyPayments.reduce((sum, item) => sum + Number(item.total), 0);
-
 
   useEffect(() => {
     fetchAllSupplier();
@@ -251,9 +198,16 @@ const Ledger = () => {
   }
 
   const applyPaymentQuickRange = (range) => {
-    if (range === 'clear') {
+    if (range === 'all') {
       setPaymentFromDate('');
       setPaymentToDate('');
+      return;
+    }
+
+    if (range === 'clear') {
+      const today = getPaymentQuickRange('today');
+      setPaymentFromDate(today.from);
+      setPaymentToDate(today.to);
       return;
     }
 
@@ -265,8 +219,9 @@ const Ledger = () => {
   };
 
   const clearPaymentDateFilter = () => {
-    setPaymentFromDate('');
-    setPaymentToDate('');
+    const today = getPaymentQuickRange('today');
+    setPaymentFromDate(today.from);
+    setPaymentToDate(today.to);
   };
 
 
@@ -278,15 +233,10 @@ const Ledger = () => {
       const response = await deletePaymentSql(paymentId);
       console.log(response);
       // After deletion, you might want to refresh the payments list or update the state accordingly
-      setDailyPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
       setAllPayments((prevPayments) => prevPayments.filter((payment) => payment.id !== paymentId));
       setPaymentsReloadKey((key) => key + 1);
       alert('Payment Deleted Successfully!');
 
-      // Keep the selected date's list and totals in sync.
-      if (selectedDate) {
-        loadPaymentsForDate(selectedDate, { showLoading: false });
-      }
     } catch (error) {
       console.error('Error deleting payment from the database', error);
       alert('Failed To Delete Payment');
@@ -338,14 +288,6 @@ const Ledger = () => {
       console.log(response);
 
 
-      setDailyPayments((prevPayments) =>
-        prevPayments.map((payment) =>
-          payment.id === formData.id
-            ? { ...payment, ...formData }
-            : payment
-        )
-      );
-
       setAllPayments((prevPayments) =>
         prevPayments.map((payment) =>
           payment.id === formData.id
@@ -357,10 +299,6 @@ const Ledger = () => {
       // Re-query so an edited invoice/date also respects the active filter.
       setPaymentsReloadKey((key) => key + 1);
 
-      // Keep the selected date's list and totals in sync.
-      if (selectedDate) {
-        loadPaymentsForDate(selectedDate, { showLoading: false });
-      }
 
     } catch (error) {
       console.error(error);
@@ -392,11 +330,14 @@ const Ledger = () => {
   const showNameFn = async (name) => {
     const requestId = ++transactionsRequestRef.current;
     setTransactionsLoading(true);
+    setTransactionsLoadingMore(false);
 
     try {
       setSelectedSupplierName(name);
       setStatementSummary(null);
       setFilteredBill([]);
+      setTransactionsCursor(null);
+      setTransactionsHasMore(false);
 
       const selectedSupplier = allSupplier.find((item) => item.supplierName === name);
 
@@ -404,18 +345,48 @@ const Ledger = () => {
         setSelectedSupplierBalance(Number(selectedSupplier.supplierBalance));
       }
 
-      const response = await getBillPaymentSql(name);
+      const [summary, page] = await Promise.all([
+        getLedgerSummary(name),
+        getLedgerTransactions(name, { limit: 50 })
+      ]);
 
       if (requestId !== transactionsRequestRef.current) return;
 
-      setFilteredBill(response.transactions || []);
-      setStatementSummary(response.summary || null);
+      setStatementSummary(summary || null);
+      setFilteredBill(page.transactions || []);
+      setTransactionsCursor(page.nextCursor || null);
+      setTransactionsHasMore(Boolean(page.hasMore));
     } catch (error) {
       console.error('Error fetching supplier transactions:', error.message);
-      // Handle the error (e.g., show a toast or alert to the user)
     } finally {
       if (requestId === transactionsRequestRef.current) {
         setTransactionsLoading(false);
+      }
+    }
+  };
+
+  const loadMoreTransactions = async () => {
+    if (!selectedSupplierName || !transactionsCursor || transactionsLoadingMore) return;
+
+    const requestId = transactionsRequestRef.current;
+    setTransactionsLoadingMore(true);
+
+    try {
+      const page = await getLedgerTransactions(selectedSupplierName, {
+        limit: 50,
+        cursor: transactionsCursor
+      });
+
+      if (requestId !== transactionsRequestRef.current) return;
+
+      setFilteredBill((previous) => [...previous, ...(page.transactions || [])]);
+      setTransactionsCursor(page.nextCursor || null);
+      setTransactionsHasMore(Boolean(page.hasMore));
+    } catch (error) {
+      console.error('Error loading older transactions:', error);
+    } finally {
+      if (requestId === transactionsRequestRef.current) {
+        setTransactionsLoadingMore(false);
       }
     }
   };
@@ -500,6 +471,22 @@ const Ledger = () => {
     }
   };
 
+  const handleDeleteExpiryRecord = async (record) => {
+    if (!record?.id) return;
+    if (!window.confirm(`Delete this expiry record for ${record.supplierName}?`)) return;
+
+    try {
+      await deleteExpiryRecord(record.id);
+      alert('Expiry record deleted successfully.');
+      if (selectedSupplierName) {
+        await findExpiryFn(selectedSupplierName);
+      }
+    } catch (error) {
+      console.error('Error deleting expiry record:', error);
+      alert(error.message || 'Failed to delete the expiry record.');
+    }
+  };
+
   const editFields = Object.keys(formData || {}).filter(
     (key) => key !== 'id' && paymentFieldConfig[key]
   );
@@ -522,7 +509,7 @@ const Ledger = () => {
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-tight">Ledger</h1>
                 <p className="mt-1 max-w-2xl text-sm text-slate-300">
-                  Track supplier balances, daily payments, account statements and expiry credits.
+                  Track supplier balances, daily payments, account statements and credit notes.
                 </p>
               </div>
             </div>
@@ -582,20 +569,13 @@ const Ledger = () => {
               suppliersLoading={suppliersLoading}
               showNameFn={showNameFn}
 
-              selectedDate={selectedDate}
-              handleDateChange={handleDateChange}
-              onClearDate={handleClearDate}
-              dailyPayments={dailyPayments}
-              dailyPaymentsLoading={dailyPaymentsLoading}
-              dailyPaymentSummary={dailyPaymentSummary}
-              totalDailyPayment={totalDailyPayment}
-              handleDeletePaymentSql={handleDeletePaymentSql}
-              handleEditClick={handleEditClick}
-
               selectedSupplierName={selectedSupplierName}
               selectedSupplierBalance={selectedSupplierBalance}
               filteredBill={filteredBill}
               transactionsLoading={transactionsLoading}
+              transactionsLoadingMore={transactionsLoadingMore}
+              transactionsHasMore={transactionsHasMore}
+              onLoadMoreTransactions={loadMoreTransactions}
 
               statementFrom={statementFrom}
               statementTo={statementTo}
@@ -643,22 +623,19 @@ const Ledger = () => {
               selectedSupplierBalance={selectedSupplierBalance}
               fileredExpiry={fileredExpiry}
               expiryLoading={expiryLoading}
+              onDeleteExpiry={handleDeleteExpiryRecord}
             />
           </TabsContent>
 
           <TabsContent value="credit-notes">
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                <FileText className="h-6 w-6" />
-              </div>
-              <Badge variant="secondary" className="mt-4 bg-slate-100 text-slate-600">
-                No records
-              </Badge>
-              <h2 className="mt-3 text-lg font-semibold text-slate-900">Credit notes</h2>
-              <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-                Supplier return credit notes will appear here once they are recorded.
-              </p>
-            </div>
+            <TabContentCreditNotes
+              search={search}
+              handleSearchChange={handleSearchChange}
+              onClearSearch={handleClearSupplierSearch}
+              filteredSupplier={filteredSupplier}
+              allSupplier={allSupplier}
+              suppliersLoading={suppliersLoading}
+            />
           </TabsContent>
         </Tabs>
 

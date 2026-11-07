@@ -4,6 +4,7 @@ import {
     CalendarClock,
     Landmark,
     PackageSearch,
+    Trash2,
 } from 'lucide-react';
 import {
     Dialog,
@@ -36,7 +37,7 @@ const StatCard = ({ label, children, icon, tone = 'slate' }) => {
     };
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-300/80 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-2">
                 <div className={`rounded-lg p-1.5 ${tones[tone] || tones.slate}`}>
                     {React.createElement(icon, { className: 'h-4 w-4' })}
@@ -62,6 +63,7 @@ const TabContentExpiryLedger = ({
     fileredExpiry,
     expiryLoading = false,
     suppliersLoading = false,
+    onDeleteExpiry,
 }) => {
     return (
         <div className="space-y-5">
@@ -80,7 +82,7 @@ const TabContentExpiryLedger = ({
                     loading={suppliersLoading}
                 />
 
-                <section className="flex h-[430px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <section className="flex h-[430px] flex-col overflow-hidden rounded-xl border border-slate-300/80 bg-white shadow-sm">
                     <div className="flex items-start gap-3 border-b border-slate-100 p-5">
                         <div className="rounded-lg bg-amber-50 p-2.5 text-amber-600">
                             <CalendarClock className="h-5 w-5" />
@@ -131,7 +133,7 @@ const TabContentExpiryLedger = ({
                 </section>
             </div>
 
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section className="overflow-hidden rounded-xl border border-slate-300/80 bg-white shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5">
                     <div className="flex items-center gap-2">
                         <div className="rounded-lg bg-slate-100 p-2 text-slate-600">
@@ -208,7 +210,8 @@ const TabContentExpiryLedger = ({
                                         <td className="px-5 py-3 text-slate-600">
                                             {(bill.products ?? []).length} item{(bill.products ?? []).length === 1 ? '' : 's'}
                                         </td>
-                                        <td className="px-5 py-3 text-right">
+                                        <td className="px-5 py-3">
+                                            <div className="flex justify-end gap-1.5">
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button variant="outline" size="sm" className="h-8 text-xs">
@@ -249,8 +252,10 @@ const TabContentExpiryLedger = ({
                                                                     </TableCell>
                                                                     <TableCell>{formatLedgerDate(item.expiryDate)}</TableCell>
                                                                     <TableCell>{item.stock}</TableCell>
-                                                                    <TableCell className="font-mono text-xs">
-                                                                        {item.batchNumber || '—'}
+                                                                    <TableCell>
+                                                                        <span className="inline-flex rounded-md border border-slate-300 bg-slate-50 px-2 py-1 font-mono text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                                            {item.batchNumber || '—'}
+                                                                        </span>
                                                                     </TableCell>
                                                                     <TableCell className="text-right">
                                                                         {formatCurrency(item.mrp)}
@@ -263,6 +268,17 @@ const TabContentExpiryLedger = ({
                                                     <DialogFooter />
                                                 </DialogContent>
                                             </Dialog>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => onDeleteExpiry?.(bill)}
+                                                className="h-8 gap-1 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                                Delete
+                                            </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
