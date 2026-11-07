@@ -52,6 +52,7 @@ const SHORTCUTS = [
   { keys: ['Alt', '←', '→'], label: 'Move between product fields' },
   { keys: ['Ctrl', 'Enter'], label: 'Add a product line' },
   { keys: ['Ctrl', 'Shift', 'A'], label: 'Add a product line' },
+  { keys: ['Ctrl', 'Shift', 'Backspace'], label: 'Delete the focused product line' },
   { keys: ['Ctrl', 'Shift', 'S'], label: 'Save purchase bill' },
   { keys: ['Ctrl', 'K'], label: 'Open command palette' },
 ];
@@ -484,18 +485,21 @@ function Add() {
 
 
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this medicine?")) {
-      setProducts(products.filter((med) => med.id !== id));
+  const handleDelete = (id) => {
+    const rowIndex = products.findIndex((medicine) => medicine.id === id);
 
+    if (rowIndex >= 0) {
+      pendingProductFocus.current = {
+        rowIndex: Math.max(0, rowIndex - 1),
+        fieldIndex: 0,
+      };
     }
+
+    setProducts((previous) => previous.filter((medicine) => medicine.id !== id));
   };
 
-  const handleDeleteExpiry = async (id) => {
-    if (window.confirm("Are you sure you want to delete this medicine?")) {
-      setExpiryProducts(expiryProducts.filter((med) => med.id !== id));
-
-    }
+  const handleDeleteExpiry = (id) => {
+    setExpiryProducts((previous) => previous.filter((medicine) => medicine.id !== id));
   };
 
 

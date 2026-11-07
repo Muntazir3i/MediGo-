@@ -163,9 +163,27 @@ const TabContentAddCreditNote = ({
     );
   };
 
+  const focusPreviousItem = (deletedIndex) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const rows = Array.from(document.querySelectorAll('[data-product-row]'));
+        const targetRow = rows[Math.max(0, deletedIndex - 1)];
+        const targetInput = targetRow?.querySelector('[data-product-input]');
+
+        if (targetInput) {
+          targetInput.focus({ preventScroll: false });
+          if (typeof targetInput.select === 'function') targetInput.select();
+        }
+      });
+    });
+  };
+
   const handleDeleteItem = (id) => {
-    if (!window.confirm('Remove this medicine from the credit note?')) return;
+    const deletedIndex = items.findIndex((item) => item.id === id);
+    if (deletedIndex === -1) return;
+
     setItems((previous) => previous.filter((item) => item.id !== id));
+    focusPreviousItem(deletedIndex);
   };
 
   const resetForm = () => {

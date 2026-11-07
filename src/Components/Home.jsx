@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Boxes,
   CheckCircle2,
@@ -29,6 +30,7 @@ import {
 } from '../services/medicineService.js';
 
 import { generateInvoicePdf } from '../utils/invoicePdf.js';
+import { focusWhenPaletteClosed } from '../utils/focusWhenPaletteClosed.js';
 
 import {
   Dialog,
@@ -141,6 +143,7 @@ const preparePrescriptionImage = (file) =>
 
 function Home() {
 
+  const location = useLocation();
   const [open, setOpen] = useState(false);
 
   const [medicines, setMedicines] = useState([]);
@@ -170,6 +173,10 @@ function Home() {
 
   const searchRequestRef = useRef(0);
   const prescriptionInputRef = useRef(null);
+
+  useEffect(() => {
+    return focusWhenPaletteClosed('#billing-search');
+  }, [location.key]);
 
   useEffect(() => {
     fetchMedicinesSql();
@@ -699,6 +706,7 @@ function Home() {
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
+                id="billing-search"
                 className="h-11 rounded-xl border-slate-200 bg-white pl-10 pr-28 text-sm shadow-sm"
                 placeholder="Search medicine, salt or batch number…"
                 value={search}

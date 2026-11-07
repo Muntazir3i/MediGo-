@@ -16,14 +16,14 @@ const navGroups = [
         label: 'Overview',
         items: [
             { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-            { to: '/billing', label: 'Billing', icon: Receipt },
+            { to: '/billing', label: 'Billing', icon: Receipt, focus: 'billing-search' },
         ],
     },
     {
         label: 'Operations',
         items: [
             { to: '/add', label: 'Add', icon: PlusCircle },
-            { to: '/inventory', label: 'Inventory', icon: Boxes },
+            { to: '/inventory?tab=all-product', label: 'Inventory', icon: Boxes, focus: 'inventory-search' },
         ],
     },
     {
@@ -78,6 +78,7 @@ const Sidebar = ({ onOpenPalette }) => {
                                             <NavLink
                                                 to={item.to}
                                                 end={item.end}
+                                                state={item.focus ? { focusPrimary: Date.now(), focusTarget: item.focus } : undefined}
                                                 className={({ isActive }) =>
                                                     `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                                                         isActive
@@ -154,6 +155,7 @@ const Sidebar = ({ onOpenPalette }) => {
                                 key={item.to}
                                 to={item.to}
                                 end={item.end}
+                                state={item.focus ? { focusPrimary: Date.now(), focusTarget: item.focus } : undefined}
                                 className={({ isActive }) =>
                                     `flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition ${
                                         isActive ? 'text-blue-700' : 'text-slate-500 hover:text-slate-800'

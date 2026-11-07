@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import {
   Boxes,
   PackageCheck,
@@ -56,6 +56,7 @@ import {
   TableRow,
   TableFooter,
 } from './ui/table.jsx';
+import { focusWhenPaletteClosed } from '../utils/focusWhenPaletteClosed.js';
 
 // How many bills to show when a supplier accordion is opened / "Load more" is clicked.
 const PURCHASE_BILL_PAGE_SIZE = 5;
@@ -94,6 +95,7 @@ function Inventory() {
 
   //tab 
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const tabFromUrl = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'all-product');
 
@@ -101,6 +103,21 @@ function Inventory() {
     const next = searchParams.get('tab');
     if (next && next !== activeTab) setActiveTab(next);
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const requested = location.state?.focusTarget;
+
+    if (requested === 'inventory-search' && activeTab !== 'all-product') return undefined;
+    if (requested === 'inventory-purchase-search' && activeTab !== 'all-purchase') return undefined;
+
+    const selector =
+      requested === 'inventory-purchase-search' ||
+      (!requested && activeTab === 'all-purchase')
+        ? '#inventory-purchase-search'
+        : '#inventory-product-search';
+
+    return focusWhenPaletteClosed(selector);
+  }, [location.key, location.state?.focusTarget, activeTab]);
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -567,6 +584,8 @@ function Inventory() {
                 <div className="relative w-full sm:max-w-sm">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
+                    id="inventory-product-search"
+                    aria-label="Search medicines"
                     className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
                     placeholder="Search medicine name or batch number…"
                     value={medicineSearch}
@@ -613,6 +632,8 @@ function Inventory() {
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
+                      id="inventory-purchase-search"
+                      aria-label="Search purchase suppliers"
                       className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
                       placeholder="Search supplier…"
                       value={purchaseSearch}

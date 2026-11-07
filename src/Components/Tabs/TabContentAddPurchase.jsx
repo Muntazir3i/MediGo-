@@ -229,6 +229,17 @@ const TabContentAddPurchase = ({
                                     <tr
                                         data-product-row
                                         className="group transition focus-within:bg-blue-50/40 hover:bg-slate-50/60"
+                                        onKeyDown={(event) => {
+                                            const isDeleteCombo =
+                                                (event.ctrlKey || event.metaKey) &&
+                                                event.shiftKey &&
+                                                (event.key === 'Backspace' || event.key === 'Delete');
+
+                                            if (!isDeleteCombo) return;
+
+                                            event.preventDefault();
+                                            handleDelete(item.id);
+                                        }}
                                     >
                                         <td className="px-2 py-2">
                                             <Input
@@ -374,6 +385,7 @@ const TabContentAddPurchase = ({
                                                 size="icon"
                                                 onClick={() => handleDelete(item.id)}
                                                 aria-label={`Delete line ${index + 1}`}
+                                                title="Delete line (Ctrl/Cmd + Shift + Backspace)"
                                                 className="h-8 w-8 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                                             >
                                                 <Trash2 className="h-4 w-4" />

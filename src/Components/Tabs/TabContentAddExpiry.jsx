@@ -51,6 +51,26 @@ const TabContentAddExpiry = ({
     0
   );
 
+  const focusPreviousExpiryRow = (deletedIndex) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const rows = Array.from(document.querySelectorAll('[data-expiry-row]'));
+        const targetRow = rows[Math.max(0, deletedIndex - 1)];
+        const targetInput = targetRow?.querySelector('input');
+
+        if (targetInput) {
+          targetInput.focus({ preventScroll: false });
+          if (typeof targetInput.select === 'function') targetInput.select();
+        }
+      });
+    });
+  };
+
+  const handleDeleteWithFocus = (id, index) => {
+    handleDeleteExpiry(id);
+    focusPreviousExpiryRow(index);
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -196,7 +216,7 @@ const TabContentAddExpiry = ({
                   const status = getExpiryStatus(item.expiryDate);
 
                   return (
-                    <tr key={item.id} className="transition hover:bg-slate-50/60">
+                    <tr key={item.id} data-expiry-row className="transition hover:bg-slate-50/60">
                       <td className="px-3 py-2">
                         <Input
                           type="text"
@@ -264,7 +284,7 @@ const TabContentAddExpiry = ({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteExpiry(item.id)}
+                          onClick={() => handleDeleteWithFocus(item.id, index)}
                           aria-label={`Delete line ${index + 1}`}
                           className="h-8 w-8 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
                         >

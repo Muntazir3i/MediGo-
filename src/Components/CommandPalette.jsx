@@ -45,7 +45,8 @@ const navigateCommands = [
         title: 'Inventory',
         description: 'Stock, products and purchase history',
         keywords: 'inventory stock products purchase bills',
-        to: '/inventory',
+        to: '/inventory?tab=all-product',
+        focus: 'inventory-search',
         icon: Boxes,
     },
     {
@@ -62,6 +63,7 @@ const navigateCommands = [
         description: 'Create invoices and print bills',
         keywords: 'billing invoice sales cart checkout bill',
         to: '/billing',
+        focus: 'billing-search',
         icon: Receipt,
     },
 ];
@@ -140,6 +142,7 @@ const actionCommands = [
         description: 'Start a new billing invoice',
         keywords: 'create invoice bill sale billing new',
         to: '/billing',
+        focus: 'billing-search',
         icon: FilePlus2,
         group: 'add',
     },
@@ -149,6 +152,7 @@ const actionCommands = [
         description: 'View Purchases From Suppliers',
         keywords: 'view purchases view purchases',
         to: '/inventory?tab=all-purchase',
+        focus: 'inventory-purchase-search',
         icon: FilePlus2,
     },
     {
