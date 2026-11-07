@@ -9,6 +9,7 @@ import Inventory from './Components/Inventory.jsx'
 import {createBrowserRouter, createRoutesFromElements ,RouterProvider,Route} from 'react-router-dom'
 import DashBoard from './Components/DashBoard.jsx'
 import Ledger from './Components/Ledger.jsx'
+import Insights from './Components/Insights.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 
 let router = createBrowserRouter(
@@ -19,6 +20,7 @@ let router = createBrowserRouter(
       <Route path = 'add' element= {<Add/>}/>
       <Route path = 'inventory' element = {<Inventory/>}/>
       <Route path = 'ledger' element = {<Ledger/>}/>
+      <Route path = 'insights' element = {<Insights/>}/>
     </Route>
   )
 );

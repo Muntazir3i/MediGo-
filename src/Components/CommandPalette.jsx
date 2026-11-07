@@ -16,6 +16,7 @@ import {
     PlusCircle,
     Receipt,
     Search,
+    Sparkles,
     Users,
 } from 'lucide-react';
 
@@ -135,6 +136,14 @@ const actionCommands = [
         keywords: 'view credit notes returns ledger manage',
         to: '/ledger?tab=credit-notes',
         icon: FileText,
+    },
+    {
+        id: 'hidden-insights',
+        title: 'Insights & suggestions',
+        description: 'Hidden statistics, buying patterns and reorder ideas',
+        keywords: 'hidden insights analytics statistics average monthly sales purchases payments suggestions reorder trends last year medicines',
+        to: '/insights',
+        icon: Sparkles,
     },
     {
         id: 'new-invoice',

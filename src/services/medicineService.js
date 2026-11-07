@@ -4,6 +4,7 @@ import axios from "axios";
 const API_BASE_URL = 'http://localhost:8008/api/medicines';
 const API_BASE_URL_EXPIRY = 'http://localhost:8008/api/expiry';
 const API_BASE_URL_CREDIT_NOTES = 'http://localhost:8008/api/credit-notes';
+const API_BASE_URL_INSIGHTS = 'http://localhost:8008/api/insights';
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier';
 const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills';
 const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment';
@@ -619,5 +620,17 @@ export const deleteCreditNote = async (id) => {
   } catch (error) {
     console.error('Error deleting credit note:', error.message);
     throw new Error(getApiErrorMessage(error, 'Failed to delete credit note. Please try again.'));
+  }
+};
+
+// ─── Hidden insights ─────────────────────────────────────────────────────────
+
+export const getInsights = async () => {
+  try {
+    const response = await axios.get(API_BASE_URL_INSIGHTS);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching insights:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to load insights. Please try again.'));
   }
 };
