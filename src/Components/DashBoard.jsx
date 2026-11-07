@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 
 import { Button } from './ui/button.jsx';
 
 import {
+  deleteSaleInvoice,
   getLowStock,
   getOutOfStock,
   getExpiry,
@@ -71,6 +73,8 @@ function DashBoard() {
   const [outOfStock, setOutOfStock] = useState([]);
 
   const [expiry, setExpiry] = useState([]);
+
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState(null);
 
   // ==========================
   // FETCH MEDICINES
@@ -173,6 +177,55 @@ function DashBoard() {
     } finally {
 
       setLoading(false);
+    }
+  };
+
+  // ==========================
+  // DELETE INVOICE
+  // ==========================
+
+  const handleDeleteInvoice = async (invoice) => {
+
+    if (deletingInvoiceId !== null) return;
+
+    const label = invoice.invoiceNumber || `#${invoice.id}`;
+    const lineCount = invoice.medicines?.length ?? 0;
+
+    const confirmed = window.confirm(
+      `Delete invoice ${label} and restore stock for ${lineCount} medicine line(s)?\n\n` +
+      'The medicines will be returned to the exact batches and quantities recorded on this invoice.'
+    );
+
+    if (!confirmed) return;
+
+    setDeletingInvoiceId(invoice.id);
+
+    try {
+
+      const response = await deleteSaleInvoice(invoice.id);
+
+      // Remove the row immediately so the list reflects the deletion even
+      // before the refreshed search comes back.
+      setFilteredBill((prev) =>
+        prev.filter((item) => item.id !== invoice.id)
+      );
+
+      alert(response?.message || `Invoice ${label} deleted successfully.`);
+
+      await fetchInvoices();
+
+    } catch (error) {
+
+      console.error('Error deleting invoice:', error);
+
+      alert(
+        error?.response?.data?.message
+        || 'Failed to delete the invoice. Please try again.'
+      );
+
+    } finally {
+
+      setDeletingInvoiceId(null);
     }
   };
 
@@ -660,6 +713,20 @@ function DashBoard() {
                             </DialogContent>
 
                           </Dialog>
+
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            disabled={deletingInvoiceId === med.id}
+                            onSelect={() => handleDeleteInvoice(med)}
+                          >
+
+                            <Trash2 className="mr-2 h-4 w-4" />
+
+                            {deletingInvoiceId === med.id
+                              ? 'Deleting…'
+                              : 'Delete Invoice'}
+
+                          </DropdownMenuItem>
 
                         </DropdownMenuContent>
 

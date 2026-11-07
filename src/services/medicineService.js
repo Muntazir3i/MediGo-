@@ -44,6 +44,17 @@ export const voidSaleInvoice = async (invoiceId) => {
   }
 };
 
+/** Delete a customer invoice and restore each line's exact stock quantity. */
+export const deleteSaleInvoice = async (invoiceId) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL_SALES}/invoices/${invoiceId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting invoice:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
 /** Fetch one sale invoice with its immutable line snapshots. */
 export const getSaleInvoice = async (invoiceId) => {
   try {
