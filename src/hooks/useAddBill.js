@@ -29,7 +29,7 @@ export const addNewBill = async (formData,products,setFormData,setProducts,total
         type: 'Bill'
       };
 
-      const billResponse = await addBillSql(billData);
+      await addBillSql(billData);
       
       alert('Bill added successfully!');
 
@@ -49,6 +49,7 @@ export const addNewBill = async (formData,products,setFormData,setProducts,total
           batchNumber: "",
           expiryDate: "",
           stock: 0,
+          free: 0,
           unitPrice: 0,
           mrp: 0,
           discount: 0,

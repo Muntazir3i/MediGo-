@@ -55,6 +55,7 @@ export default function BillImageUpload({
           batchNumber: product.batchNumber || '',
           expiryDate: product.expiryDate || '',
           stock: toNumber(product.stock),
+          free: toNumber(product.free),
           unitPrice: toNumber(product.unitPrice),
           mrp: toNumber(product.mrp),
           discount: toNumber(product.discount),

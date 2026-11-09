@@ -873,6 +873,7 @@ function Inventory() {
                                                             <TableHead>Category</TableHead>
                                                             <TableHead>EXP</TableHead>
                                                             <TableHead>Qty</TableHead>
+                                                            <TableHead>Free</TableHead>
                                                             <TableHead>Batch no.</TableHead>
                                                             <TableHead className="text-right">Rate</TableHead>
                                                             <TableHead className="text-right">MRP</TableHead>
@@ -895,6 +896,9 @@ function Inventory() {
                                                               </TableCell>
                                                               <TableCell className="text-slate-500">
                                                                 {item.stock}
+                                                              </TableCell>
+                                                              <TableCell className="text-slate-500">
+                                                                {item.free ?? 0}
                                                               </TableCell>
                                                               <TableCell>
                                                                 <span className="inline-flex rounded-md border border-slate-300 bg-slate-50 px-2 py-1 font-mono text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
@@ -923,7 +927,7 @@ function Inventory() {
                                                               Sub total
                                                             </TableCell>
                                                             <TableCell
-                                                              colSpan={6}
+                                                              colSpan={7}
                                                               className="text-right text-base font-semibold text-slate-900"
                                                             >
                                                               ₹ {Number(purchase.totalAmount || 0).toFixed(2)}
@@ -934,7 +938,7 @@ function Inventory() {
                                                               Sub GST
                                                             </TableCell>
                                                             <TableCell
-                                                              colSpan={6}
+                                                              colSpan={7}
                                                               className="text-right text-base font-semibold text-slate-900"
                                                             >
                                                               ₹ {Number(purchase.totalGst || 0).toFixed(2)}
@@ -945,7 +949,7 @@ function Inventory() {
                                                               Total
                                                             </TableCell>
                                                             <TableCell
-                                                              colSpan={6}
+                                                              colSpan={7}
                                                               className="text-right text-lg font-bold text-slate-900"
                                                             >
                                                               ₹ {Number(purchase.total || 0).toFixed(2)}

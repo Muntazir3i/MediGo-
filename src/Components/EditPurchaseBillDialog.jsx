@@ -33,6 +33,7 @@ const buildForm = (bill) => ({
         batchNumber: product.batchNumber ?? '',
         expiryDate: dateValue(product.expiryDate),
         stock: product.stock ?? 0,
+        free: product.free ?? 0,
         unitPrice: product.unitPrice ?? 0,
         mrp: product.mrp ?? 0,
         discount: product.discount ?? 0,
@@ -125,6 +126,7 @@ const EditPurchaseBillDialog = ({ bill, open, onOpenChange, onSaved }) => {
             batchNumber: String(product.batchNumber ?? '').trim(),
             expiryDate: product.expiryDate,
             stock: toNumber(product.stock),
+            free: toNumber(product.free),
             unitPrice: toNumber(product.unitPrice),
             mrp: toNumber(product.mrp),
             discount: toNumber(product.discount),
@@ -236,6 +238,7 @@ const EditPurchaseBillDialog = ({ bill, open, onOpenChange, onSaved }) => {
                                 <th className="px-3 py-2">Batch No.</th>
                                 <th className="px-3 py-2">Expiry</th>
                                 <th className="px-3 py-2">Qty</th>
+                                <th className="px-3 py-2">Free</th>
                                 <th className="px-3 py-2">Rate</th>
                                 <th className="px-3 py-2">MRP</th>
                                 <th className="px-3 py-2">Disc %</th>
@@ -289,6 +292,18 @@ const EditPurchaseBillDialog = ({ bill, open, onOpenChange, onSaved }) => {
                                             className="h-8 min-w-[70px] bg-white text-black"
                                             value={product.stock}
                                             onChange={(event) => handleProductChange(product.id, 'stock', event.target.value)}
+                                        />
+                                    </td>
+                                    <td className="w-[80px] px-3 py-2">
+                                        <Input
+                                            aria-label={`Free quantity for ${product.name}`}
+                                            type="number"
+                                            min="0"
+                                            step="1"
+                                            title="Optional free quantity. Free units are added to stock but not charged."
+                                            className="h-8 min-w-[60px] bg-white text-black"
+                                            value={product.free}
+                                            onChange={(event) => handleProductChange(product.id, 'free', event.target.value)}
                                         />
                                     </td>
                                     <td className="w-[100px] px-3 py-2">

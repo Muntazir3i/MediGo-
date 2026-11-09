@@ -197,7 +197,7 @@ const TabContentAddPurchase = ({
                         title={isCreditNote ? 'Credit note items' : 'Product details'}
                         description={isCreditNote
                             ? 'Add the returned or expired medicine, batch, quantity, rate, MRP, discount and GST.'
-                            : 'Add each medicine with its batch, expiry, quantity, rate, MRP, discount and GST.'}
+                            : 'Add each medicine with its batch, expiry, quantity, free quantity, rate, MRP, discount and GST.'}
                         tone="emerald"
                     />
                     <Badge variant="secondary" className="mb-4 bg-slate-100 text-slate-600">
@@ -207,7 +207,7 @@ const TabContentAddPurchase = ({
 
                 <div className="mx-5 mb-0 overflow-hidden rounded-lg border border-slate-200">
                     <div className="max-h-[52vh] overflow-auto">
-                        <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+                        <table className={`w-full ${isCreditNote ? 'min-w-[980px]' : 'min-w-[1040px]'} border-collapse text-left text-sm`}>
                             <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                                 <tr>
                                     <th className="px-2 py-2.5 font-semibold">Product name</th>
@@ -215,6 +215,7 @@ const TabContentAddPurchase = ({
                                     <th className="px-2 py-2.5 font-semibold">Batch</th>
                                     <th className="px-2 py-2.5 font-semibold">Expiry</th>
                                     <th className="px-2 py-2.5 font-semibold">Qty</th>
+                                    {!isCreditNote && <th className="px-2 py-2.5 font-semibold">Free</th>}
                                     <th className="px-2 py-2.5 font-semibold">Rate</th>
                                     <th className="px-2 py-2.5 font-semibold">MRP</th>
                                     <th className="px-2 py-2.5 font-semibold">Disc %</th>
@@ -319,6 +320,25 @@ const TabContentAddPurchase = ({
                                             />
                                         </td>
 
+                                        {!isCreditNote && (
+                                            <td className="px-2 py-2">
+                                                <Input
+                                                    type="number"
+                                                    aria-label={`Free quantity for line ${index + 1}`}
+                                                    data-product-input
+                                                    data-product-field="free"
+                                                    className={`${inputClass} min-w-[65px]`}
+                                                    value={item.free ?? 0}
+                                                    min="0"
+                                                    placeholder="0"
+                                                    title="Optional free quantity. Free units are added to stock but not charged."
+                                                    onChange={(e) =>
+                                                        handleInputChange(item.id, 'free', e.target.value)
+                                                    }
+                                                />
+                                            </td>
+                                        )}
+
                                         <td className="px-2 py-2">
                                             <Input
                                                 type="number"
@@ -395,7 +415,7 @@ const TabContentAddPurchase = ({
 
                                     {!isCreditNote && String(item.name ?? '').trim() !== '' && (
                                         <tr className="bg-slate-50/40">
-                                            <td colSpan={10} className="px-3 pb-3 pt-1">
+                                            <td colSpan={isCreditNote ? 10 : 11} className="px-3 pb-3 pt-1">
                                                 <SaltEditor
                                                     id={`purchase-salts-${item.id}`}
                                                     value={item.salts ?? []}
