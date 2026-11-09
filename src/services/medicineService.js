@@ -634,3 +634,17 @@ export const getInsights = async () => {
     throw new Error(getApiErrorMessage(error, 'Failed to load insights. Please try again.'));
   }
 };
+
+export const getMedicinePurchaseStats = async (search = '') => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_INSIGHTS}/medicines`, {
+      params: { search },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching medicine purchase stats:', error.message);
+    throw new Error(
+      getApiErrorMessage(error, 'Failed to load medicine purchase stats. Please try again.'),
+    );
+  }
+};

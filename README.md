@@ -199,6 +199,7 @@ The extracted product fields include:
 ### Insights
 
 - Purchase trends and monthly summaries.
+- Medicine order lookup with order count, total quantity, average rate and total purchase value.
 - Top products and supplier activity.
 - Outstanding payables and business metrics.
 

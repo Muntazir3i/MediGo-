@@ -11,14 +11,16 @@ import {
   PackageSearch,
   ReceiptText,
   Repeat2,
+  Search,
   Sparkles,
   TrendingUp,
   Wallet,
 } from 'lucide-react';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
+import { Input } from './ui/input.jsx';
 import { formatCurrency, formatLedgerDate } from '../utils/ledgerFormat.js';
-import { getInsights } from '../services/medicineService.js';
+import { getInsights, getMedicinePurchaseStats } from '../services/medicineService.js';
 
 const StatCard = ({ label, value, hint, icon, tone = 'blue' }) => {
   const tones = {
@@ -47,11 +49,18 @@ const StatCard = ({ label, value, hint, icon, tone = 'blue' }) => {
   );
 };
 
+const formatQuantity = (value) =>
+  Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
 const Insights = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const [medicineQuery, setMedicineQuery] = useState('');
+  const [medicineResults, setMedicineResults] = useState([]);
+  const [medicineLoading, setMedicineLoading] = useState(true);
+  const [medicineError, setMedicineError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +85,37 @@ const Insights = () => {
       cancelled = true;
     };
   }, [reloadKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const timer = setTimeout(() => {
+      setMedicineLoading(true);
+      setMedicineError('');
+
+      getMedicinePurchaseStats(medicineQuery.trim())
+        .then((response) => {
+          if (!cancelled) setMedicineResults(response?.medicines ?? []);
+        })
+        .catch((requestError) => {
+          if (!cancelled) {
+            console.error(requestError);
+            setMedicineResults([]);
+            setMedicineError(
+              requestError.message || 'Could not load medicine purchase history.',
+            );
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setMedicineLoading(false);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [medicineQuery]);
 
   const derived = useMemo(() => {
     if (!data) return null;
@@ -318,6 +358,108 @@ const Insights = () => {
             icon={Flame}
             tone="amber"
           />
+        </section>
+
+        <section className="overflow-hidden rounded-xl border border-slate-300/80 bg-white shadow-sm">
+          <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+                <Search className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">Medicine order lookup</h2>
+                <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                  Search any medicine to see how many purchase bills included it, how much you
+                  bought, and the total purchase value. All non-voided bills are included.
+                </p>
+              </div>
+            </div>
+
+            <div className="relative w-full lg:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                aria-label="Search medicine purchase history"
+                placeholder="Search medicine, e.g. Dolo 650"
+                value={medicineQuery}
+                onChange={(event) => setMedicineQuery(event.target.value)}
+                className="bg-slate-50 pl-9 focus-visible:bg-white"
+              />
+            </div>
+          </div>
+
+          {medicineLoading ? (
+            <div className="flex items-center gap-2 px-5 py-10 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading medicine purchase history…
+            </div>
+          ) : medicineError ? (
+            <div className="flex items-start gap-2 px-5 py-10 text-sm text-rose-600">
+              <Brain className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{medicineError}</span>
+            </div>
+          ) : medicineResults.length === 0 ? (
+            <div className="px-5 py-10 text-center text-sm text-slate-500">
+              No medicine purchases found
+              {medicineQuery.trim() ? ` for “${medicineQuery.trim()}”` : ''}.
+            </div>
+          ) : (
+            <div className="max-h-[430px] overflow-auto">
+              <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+                <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-5 py-3 font-semibold">Medicine</th>
+                    <th className="px-4 py-3 text-right font-semibold">Orders</th>
+                    <th className="px-4 py-3 text-right font-semibold">Total qty</th>
+                    <th className="px-4 py-3 text-right font-semibold">Free</th>
+                    <th className="px-4 py-3 text-right font-semibold">Total amount</th>
+                    <th className="px-4 py-3 text-right font-semibold">Avg rate</th>
+                    <th className="px-5 py-3 text-right font-semibold">Last ordered</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {medicineResults.map((medicine, index) => (
+                    <tr
+                      key={`${medicine.productId ?? medicine.name}-${index}`}
+                      className="transition hover:bg-slate-50/80"
+                    >
+                      <td className="px-5 py-3">
+                        <p className="font-semibold text-slate-900">{medicine.name}</p>
+                        <p className="mt-0.5 text-[10px] text-slate-400">
+                          {medicine.lineCount} purchase line
+                          {medicine.lineCount === 1 ? '' : 's'}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-800">
+                        {medicine.orderCount}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600">
+                        {formatQuantity(medicine.totalQuantity)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600">
+                        {formatQuantity(medicine.freeQuantity)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                        {formatCurrency(medicine.totalAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600">
+                        {formatCurrency(medicine.averageRate)}
+                      </td>
+                      <td className="px-5 py-3 text-right text-slate-600">
+                        {formatLedgerDate(medicine.lastOrderedDate)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] text-slate-500">
+            {medicineQuery.trim()
+              ? `Showing matches for “${medicineQuery.trim()}”.`
+              : 'Showing the most frequently ordered medicines.'}{' '}
+            Total amount includes discount and GST; free units are not charged.
+          </div>
         </section>
 
         <section className="rounded-xl border border-slate-300/80 bg-white p-5 shadow-sm">
