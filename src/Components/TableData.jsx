@@ -346,6 +346,35 @@ function TableData({
                 </p>
               </Field>
 
+              <Field label="Units per pack" htmlFor="edit-units-per-pack">
+                <Input
+                  id="edit-units-per-pack"
+                  name="unitsPerPack"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={formData.unitsPerPack ?? 1}
+                  onChange={handleChange}
+                  placeholder="1"
+                  className={inputClass}
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Set 10 for a 10-tablet strip, 15 for 15, and so on. Applies to other batches of
+                  this medicine that don’t already have a pack size.
+                </p>
+              </Field>
+
+              <Field label="Selling unit" htmlFor="edit-unit-label">
+                <Input
+                  id="edit-unit-label"
+                  name="unitLabel"
+                  value={formData.unitLabel ?? ''}
+                  onChange={handleChange}
+                  placeholder="TAB, CAP, ML"
+                  className={`${inputClass} font-mono`}
+                />
+              </Field>
+
               <Field label="Batch number" htmlFor="edit-batch">
                 <Input
                   id="edit-batch"

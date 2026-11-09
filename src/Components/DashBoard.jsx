@@ -630,7 +630,8 @@ function DashBoard() {
                                       </TableCell>
 
                                       <TableCell>
-                                        x{item.qty}
+                                        x{Number(item.qty) || 0}
+                                        {item.saleUnit ? ` ${item.saleUnit}` : ''}
                                       </TableCell>
 
                                       <TableCell>

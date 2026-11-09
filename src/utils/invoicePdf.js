@@ -192,14 +192,15 @@ export const generateInvoicePdf = ({
             "Medicine",
             "Batch No.",
             "Expiry",
-            "Qty",
-            "Price (Rs)",
+            "Qty / Unit",
+            "Rate (Rs)",
             "Disc.",
             "Amount (Rs)"
         ]],
         body: items.map((item, index) => {
-            const price = Number(item.price ?? item.mrp) || 0;
-            const qty = Number(item.qty) || 0;
+            const saleQuantity = Number(item.saleQuantity ?? item.qty ?? item.quantity) || 0;
+            const saleUnit = item.saleUnit || "PACK";
+            const price = Number(item.saleUnitPrice ?? item.price ?? item.unitPrice ?? item.mrp) || 0;
             const discount = Math.min(100, Math.max(0, Number(item.discount) || 0));
             const amount = Number(item.lineTotal);
 
@@ -208,10 +209,10 @@ export const generateInvoicePdf = ({
                 item.name || "-",
                 item.batchNumber || "-",
                 item.expiryDate ? String(item.expiryDate).slice(0, 10) : "-",
-                qty,
+                `${saleQuantity} ${saleUnit}`,
                 money(price),
                 discount > 0 ? `${discount}%` : "-",
-                money(Number.isFinite(amount) ? amount : price * qty * (1 - discount / 100))
+                money(Number.isFinite(amount) ? amount : price * saleQuantity * (1 - discount / 100))
             ];
         }),
         styles: {
@@ -233,10 +234,10 @@ export const generateInvoicePdf = ({
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
             0: { cellWidth: 8, halign: "center" },
-            1: { cellWidth: 50 },
-            2: { cellWidth: 32 },
-            3: { cellWidth: 22 },
-            4: { cellWidth: 10, halign: "center" },
+            1: { cellWidth: 46 },
+            2: { cellWidth: 30 },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 18, halign: "center" },
             5: { cellWidth: 20, halign: "right" },
             6: { cellWidth: 14, halign: "right" },
             7: { cellWidth: 26, halign: "right" }

@@ -75,7 +75,27 @@ const itemDiscount = (item) => {
   return Math.min(100, Math.max(0, value));
 };
 
-const lineSubtotal = (item) => itemPrice(item) * (Number(item.qty) || 0);
+const PACK_UNIT_PATTERN = /^(PACK|PACKS|STRIP|STRIPS|BOX|BOXES|BOTTLE|BOTTLES|PIECE|PIECES|UNIT|UNITS)$/i;
+
+const itemUnitsPerPack = (item) => Math.max(1, Number(item.unitsPerPack) || 1);
+
+const itemSaleUnit = (item) => String(item.saleUnit || 'PACK').toUpperCase();
+
+const itemIsLooseSale = (item) =>
+  itemUnitsPerPack(item) > 1 && !PACK_UNIT_PATTERN.test(itemSaleUnit(item));
+
+const itemPackQty = (item) => {
+  const qty = Number(item.qty) || 0;
+  const unitsPerPack = itemUnitsPerPack(item);
+  return itemIsLooseSale(item) ? qty / unitsPerPack : qty;
+};
+
+const itemSaleUnitPrice = (item) => {
+  const unitsPerPack = itemUnitsPerPack(item);
+  return itemIsLooseSale(item) ? itemPrice(item) / unitsPerPack : itemPrice(item);
+};
+
+const lineSubtotal = (item) => itemPrice(item) * itemPackQty(item);
 
 const lineDiscountAmount = (item) => lineSubtotal(item) * (itemDiscount(item) / 100);
 
@@ -337,7 +357,7 @@ function Home() {
   const cartQtyByItemId = useMemo(() => {
     const map = new Map();
     cart.forEach((item) => {
-      map.set(String(item.id), Number(item.qty) || 0);
+      map.set(String(item.id), itemPackQty(item));
     });
     return map;
   }, [cart]);
@@ -352,45 +372,47 @@ function Home() {
     const totalStock = Math.max(0, Number(med?.stock) || 0);
     const reserved = cartQtyByItemId.get(String(med?.id)) || 0;
     const available = Math.max(0, totalStock - reserved);
+    const unitsPerPack = itemUnitsPerPack(med);
+    const unitLabel = String(med.unitLabel || 'UNIT').toUpperCase();
 
-    // One "Add" reserves a whole unit, so fractional leftovers below 1 cannot
-    // be added to the bill.
+    // One "Add" reserves a whole pack/strip. Loose units are entered in the
+    // current bill line after adding the medicine.
     if (available < 1) {
       if (totalStock <= 0) {
         alert(`${med.name} is out of stock.`);
       } else if (reserved > 0) {
         alert(
-          `Only ${formatQty(totalStock)} unit${totalStock === 1 ? '' : 's'} of ${med.name} in stock; ${formatQty(reserved)} ${reserved === 1 ? 'is' : 'are'} already in the bill.`
+          `Only ${formatQty(totalStock)} pack${totalStock === 1 ? '' : 's'} of ${med.name} in stock; ${formatQty(reserved)} ${reserved === 1 ? 'is' : 'are'} already in the bill.`
         );
       } else {
         alert(
-          `Only ${formatQty(available)} unit${available === 1 ? '' : 's'} of ${med.name} available in stock.`
+          `Only ${formatQty(available)} pack${available === 1 ? '' : 's'} of ${med.name} available in stock.`
         );
       }
       return;
     }
 
     setCart((prevCart) => {
-
       const existingMed = prevCart.find(
         (item) => String(item.id) === String(med.id)
       );
 
       if (existingMed) {
+        const currentPackQty = itemPackQty(existingMed);
 
-        if ((Number(existingMed.qty) || 0) + 1 > totalStock) {
+        if (currentPackQty + 1 > totalStock) {
           return prevCart;
         }
 
         return prevCart.map((item) =>
-
           String(item.id) === String(med.id)
-
             ? {
               ...item,
-              qty: (Number(item.qty) || 0) + 1
+              qty: round2(currentPackQty + 1),
+              saleUnit: 'PACK',
+              unitsPerPack,
+              unitLabel
             }
-
             : item
         );
       }
@@ -400,6 +422,9 @@ function Home() {
         {
           ...med,
           qty: 1,
+          saleUnit: 'PACK',
+          unitsPerPack,
+          unitLabel,
           price: Number(med.mrp) || 0,
           discount: 0
         }
@@ -417,49 +442,92 @@ function Home() {
     );
   };
 
-  const increaseQty = (id) => {
+  const changeQty = (id, delta) => {
     const item = cart.find((entry) => String(entry.id) === String(id));
     if (!item) return;
 
     const totalStock = Math.max(0, Number(item.stock) || 0);
-    const currentQty = Number(item.qty) || 0;
+    const unitsPerPack = itemUnitsPerPack(item);
+    const unitLabel = String(item.unitLabel || 'UNIT').toUpperCase();
+    const nextQty = round2((Number(item.qty) || 0) + delta);
 
-    if (currentQty + 1 > totalStock) {
+    if (nextQty <= 0) {
+      setCart((prevCart) => prevCart.filter((entry) => String(entry.id) !== String(id)));
+      return;
+    }
+
+    const nextPackQty = itemIsLooseSale(item)
+      ? nextQty / unitsPerPack
+      : nextQty;
+
+    if (nextPackQty > totalStock + 1e-9) {
       alert(
         totalStock <= 0
           ? `${item.name} is out of stock.`
-          : `Only ${formatQty(totalStock)} unit${totalStock === 1 ? '' : 's'} of ${item.name} available in stock.`
+          : `Only ${formatQty(totalStock)} pack${totalStock === 1 ? '' : 's'} (${formatQty(totalStock * unitsPerPack)} ${unitLabel}) of ${item.name} available in stock.`
       );
       return;
     }
 
     setCart((prevCart) =>
       prevCart.map((entry) =>
-        String(entry.id) === String(id) && (Number(entry.qty) || 0) + 1 <= totalStock
-          ? { ...entry, qty: (Number(entry.qty) || 0) + 1 }
+        String(entry.id) === String(id)
+          ? { ...entry, qty: nextQty }
           : entry
       )
     );
   };
 
-  const decreaseQty = (id) => {
+  const increaseQty = (id) => changeQty(id, 1);
 
+  const decreaseQty = (id) => changeQty(id, -1);
+
+  const updateQty = (id, value) => {
+    const item = cart.find((entry) => String(entry.id) === String(id));
+    if (!item) return;
+
+    const nextQty = Number(value);
+    if (!Number.isFinite(nextQty) || nextQty <= 0) {
+      updateCartItem(id, 'qty', value);
+      return;
+    }
+
+    const totalStock = Math.max(0, Number(item.stock) || 0);
+    const unitsPerPack = itemUnitsPerPack(item);
+    const unitLabel = String(item.unitLabel || 'UNIT').toUpperCase();
+    const nextPackQty = itemIsLooseSale(item)
+      ? nextQty / unitsPerPack
+      : nextQty;
+
+    if (nextPackQty > totalStock + 1e-9) {
+      alert(
+        `Only ${formatQty(totalStock)} pack${totalStock === 1 ? '' : 's'} (${formatQty(totalStock * unitsPerPack)} ${unitLabel}) of ${item.name} available in stock.`
+      );
+      return;
+    }
+
+    updateCartItem(id, 'qty', value);
+  };
+
+  const updateSaleUnit = (id, nextUnit) => {
     setCart((prevCart) =>
+      prevCart.map((item) => {
+        if (String(item.id) !== String(id)) return item;
 
-      prevCart
-        .map((item) =>
+        const unitsPerPack = itemUnitsPerPack(item);
+        const packQty = itemPackQty(item);
+        const stock = Math.max(0, Number(item.stock) || 0);
+        const packSale = PACK_UNIT_PATTERN.test(nextUnit);
+        const maxQty = packSale ? stock : stock * unitsPerPack;
+        const nextQty = Math.min(packSale ? packQty : packQty * unitsPerPack, maxQty);
 
-          String(item.id) === String(id)
-
-            ? {
-              ...item,
-              qty: item.qty - 1
-            }
-
-            : item
-        )
-
-        .filter((item) => item.qty > 0)
+        return {
+          ...item,
+          saleUnit: String(nextUnit).toUpperCase(),
+          unitsPerPack,
+          qty: round2(Math.max(0.01, nextQty))
+        };
+      })
     );
   };
 
@@ -517,18 +585,30 @@ function Home() {
       return;
     }
 
+    const invalidQty = cart.find((item) => {
+      const qty = Number(item.qty);
+      return !Number.isFinite(qty) || qty <= 0;
+    });
+
+    if (invalidQty) {
+      alert(`Enter a quantity greater than 0 for ${invalidQty.name}.`);
+      return;
+    }
+
     // Final guard against stale stock: the catalogue may have changed since the
     // line was added (another till, a cancelled invoice, etc.).
     const overStockItem = cart.find((item) => {
       const stock = Number(item.stock);
-      const qty = Number(item.qty) || 0;
+      const qty = itemPackQty(item);
       return !Number.isFinite(stock) || qty > stock + 1e-9;
     });
 
     if (overStockItem) {
       const stock = Math.max(0, Number(overStockItem.stock) || 0);
+      const unitsPerPack = itemUnitsPerPack(overStockItem);
+      const unitLabel = String(overStockItem.unitLabel || 'UNIT').toUpperCase();
       alert(
-        `Only ${formatQty(stock)} unit${stock === 1 ? '' : 's'} of ${overStockItem.name} available in stock. Reduce the quantity before checkout.`
+        `Only ${formatQty(stock)} pack${stock === 1 ? '' : 's'} (${formatQty(stock * unitsPerPack)} ${unitLabel}) of ${overStockItem.name} available in stock. Reduce the quantity before checkout.`
       );
       return;
     }
@@ -546,6 +626,8 @@ function Home() {
       items: cart.map((item) => ({
         inventoryItemId: item.inventoryItemId ?? item.id,
         qty: Number(item.qty) || 0,
+        saleUnit: item.saleUnit || 'PACK',
+        unitsPerPack: itemUnitsPerPack(item),
         price: itemPrice(item),
         discount: itemDiscount(item)
       })),
@@ -581,9 +663,12 @@ function Home() {
       const pdfItems = (savedInvoice.items ?? savedInvoice.medicines ?? []).map((item) => ({
         id: item.id,
         name: item.name,
-        qty: Number(item.qty ?? item.quantity) || 0,
+        qty: Number(item.saleQuantity ?? item.qty ?? item.quantity) || 0,
+        saleQuantity: Number(item.saleQuantity ?? item.qty ?? item.quantity) || 0,
+        saleUnit: item.saleUnit || 'PACK',
+        unitsPerPack: Number(item.unitsPerPack) || 1,
         mrp: Number(item.mrp) || 0,
-        price: Number(item.price ?? item.unitPrice ?? item.mrp) || 0,
+        price: Number(item.saleUnitPrice ?? item.price ?? item.unitPrice ?? item.mrp) || 0,
         discount: Number(item.discount ?? item.discountPercent) || 0,
         discountAmount: Number(item.discountAmount) || 0,
         lineTotal: Number(item.lineTotal) || 0,
@@ -888,12 +973,25 @@ function Home() {
                           )}
                           <p className="mt-0.5 text-xs text-slate-500">
                             Batch {med.batchNumber || '—'} · Stock {formatQty(med.stock)}
+                            {Number(med.unitsPerPack) > 1 && (
+                              <span className="text-slate-400">
+                                {' '}({formatQty(Number(med.stock) * Number(med.unitsPerPack))} {String(med.unitLabel || 'UNIT').toUpperCase()})
+                              </span>
+                            )}
                             {Number(med.stock) > 0 && (
                               <span className="text-slate-400">
-                                {' '}· {formatQty(Math.max(0, (Number(med.stock) || 0) - (Number(med.qty) || 0)))} left after this bill
+                                {' '}· {formatQty(Math.max(0, (Number(med.stock) || 0) - itemPackQty(med)))} pack{(Number(med.stock) || 0) - itemPackQty(med) === 1 ? '' : 's'} left after this bill
                               </span>
                             )}
                           </p>
+                          {Number(med.unitsPerPack) <= 1 &&
+                            med.unitLabel &&
+                            !['UNIT', 'PACK'].includes(String(med.unitLabel).toUpperCase()) && (
+                              <p className="mt-1 text-[10px] font-medium text-amber-600">
+                                Set units per pack in Inventory to sell loose{' '}
+                                {String(med.unitLabel).toUpperCase()}.
+                              </p>
+                            )}
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-sm font-semibold text-slate-900">
@@ -912,36 +1010,48 @@ function Home() {
                           <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                             Qty
                           </span>
-                          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-                            <button
-                              type="button"
-                              onClick={() => decreaseQty(med.id)}
-                              aria-label={`Decrease quantity for ${med.name}`}
-                              className="flex h-6 w-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-                            >
-                              <Minus className="h-3.5 w-3.5" />
-                            </button>
-                            <span className="w-7 text-center text-sm font-semibold text-slate-900">
-                              {med.qty}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => increaseQty(med.id)}
-                              aria-disabled={(Number(med.qty) || 0) + 1 > (Number(med.stock) || 0)}
-                              title={
-                                (Number(med.qty) || 0) + 1 > (Number(med.stock) || 0)
-                                  ? 'Stock limit reached'
-                                  : undefined
-                              }
-                              aria-label={`Increase quantity for ${med.name}`}
-                              className={`flex h-6 w-6 items-center justify-center rounded-md transition ${
-                                (Number(med.qty) || 0) + 1 > (Number(med.stock) || 0)
-                                  ? 'cursor-not-allowed text-slate-300'
-                                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                              }`}
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </button>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                              <button
+                                type="button"
+                                onClick={() => decreaseQty(med.id)}
+                                aria-label={`Decrease quantity for ${med.name}`}
+                                className="flex h-6 w-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                              >
+                                <Minus className="h-3.5 w-3.5" />
+                              </button>
+                              <Input
+                                type="number"
+                                min="0.01"
+                                step={itemIsLooseSale(med) ? '1' : '0.01'}
+                                value={med.qty ?? ''}
+                                onChange={(event) => updateQty(med.id, event.target.value)}
+                                aria-label={`Quantity for ${med.name}`}
+                                className="h-6 w-14 border-0 bg-transparent px-0 text-center text-sm font-semibold text-slate-900 shadow-none focus-visible:ring-0"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => increaseQty(med.id)}
+                                aria-label={`Increase quantity for ${med.name}`}
+                                className="flex h-6 w-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+
+                            {Number(med.unitsPerPack) > 1 && med.unitLabel && (
+                              <select
+                                value={itemSaleUnit(med)}
+                                onChange={(event) => updateSaleUnit(med.id, event.target.value)}
+                                aria-label={`Selling unit for ${med.name}`}
+                                className="h-8 rounded-lg border border-slate-200 bg-white px-1.5 text-xs font-medium text-slate-700 shadow-none outline-none focus:border-blue-500"
+                              >
+                                <option value="PACK">PACK</option>
+                                <option value={String(med.unitLabel).toUpperCase()}>
+                                  {String(med.unitLabel).toUpperCase()}
+                                </option>
+                              </select>
+                            )}
                           </div>
                         </div>
 
@@ -950,7 +1060,7 @@ function Home() {
                             htmlFor={`price-${med.id}`}
                             className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-400"
                           >
-                            Price ₹
+                            Pack price ₹
                           </label>
                           <Input
                             id={`price-${med.id}`}
@@ -961,6 +1071,11 @@ function Home() {
                             onChange={(e) => updateCartItem(med.id, 'price', e.target.value)}
                             className="h-8 rounded-lg border-slate-200 bg-white px-2 text-right text-sm shadow-none"
                           />
+                          {itemIsLooseSale(med) && (
+                            <p className="mt-1 text-[10px] text-slate-400">
+                              ₹ {itemSaleUnitPrice(med).toFixed(2)} / {itemSaleUnit(med)}
+                            </p>
+                          )}
                         </div>
 
                         <div className="min-w-[74px] flex-1">
@@ -1328,9 +1443,11 @@ function Home() {
                                 {item.name}
                               </TableCell>
                               <TableCell className="text-slate-500">{item.batchNumber}</TableCell>
-                              <TableCell className="text-slate-500">{item.qty}</TableCell>
+                              <TableCell className="text-slate-500">
+                                {formatQty(item.qty)} {itemSaleUnit(item)}
+                              </TableCell>
                               <TableCell className="text-right text-slate-600">
-                                ₹ {itemPrice(item).toFixed(2)}
+                                ₹ {itemSaleUnitPrice(item).toFixed(2)}
                               </TableCell>
                               <TableCell className="text-right text-slate-600">
                                 {itemDiscount(item) > 0 ? `${itemDiscount(item)}%` : '—'}
