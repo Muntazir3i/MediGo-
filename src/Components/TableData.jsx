@@ -403,15 +403,14 @@ function TableData({
                   name="stock"
                   type="number"
                   min="0"
-                  step="1"
+                  step="0.01"
                   value={formData.stock ?? ''}
-                  readOnly
-                  disabled
+                  onChange={handleChange}
                   placeholder="0"
-                  className={`${inputClass} bg-slate-50 text-slate-500`}
+                  className={inputClass}
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Use “Adjust stock” to change quantity with an audit trail.
+                  Changing stock here records an audited adjustment in the stock movement ledger.
                 </p>
               </Field>
 

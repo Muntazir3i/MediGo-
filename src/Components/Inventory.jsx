@@ -430,9 +430,12 @@ function Inventory() {
       return;
     }
 
-    // Quantity is intentionally not sent here. Stock changes go through the
-    // audited "Adjust stock" action so they can never be confused with a
-    // purchase-history edit.
+    const stockValue = Number(formData.stock);
+    if (!Number.isFinite(stockValue) || stockValue < 0) {
+      setUpdateError('Stock quantity must be zero or greater.');
+      return;
+    }
+
     const payload = {
       name: String(formData.name ?? '').trim(),
       category: String(formData.category ?? '').trim(),
@@ -442,6 +445,7 @@ function Inventory() {
       billNumber: String(formData.billNumber ?? '').trim(),
       unitsPerPack: Number(formData.unitsPerPack) || 1,
       unitLabel: String(formData.unitLabel ?? '').trim().toUpperCase(),
+      stock: stockValue,
       unitPrice: Number(formData.unitPrice) || 0,
       mrp: Number(formData.mrp) || 0,
       discount: Number(formData.discount) || 0,
