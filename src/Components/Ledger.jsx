@@ -3,6 +3,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { BookOpen, CalendarClock, FileText, Landmark, Loader2, Pencil, Wallet } from 'lucide-react';
 import { findSupplierExpiry, getsupplierSql, getBillPaymentSql, getLedgerSummary, getLedgerTransactions, deletePaymentSql, updatePaymentSql, getAllPaymentsSql, loadMorePaymentsSql, deleteExpiryRecord } from '@/services/medicineService.js';
 import { generateSupplierStatementPdf } from '@/utils/supplierStatementPdf.js';
+import { useShopSettings } from '@/context/SettingsContext.jsx';
 import { focusWhenPaletteClosed } from '@/utils/focusWhenPaletteClosed.js';
 import { TabContentGeneralLedger, TabContentExpiryLedger, TabContentShowAllPayments, TabContentCreditNotes } from './Tabs/index.js';
 import { Button } from './ui/button.jsx';
@@ -52,6 +53,7 @@ const getPaymentQuickRange = (range) => {
 
 
 const Ledger = () => {
+  const { settings: shopSettings } = useShopSettings();
   const [allSupplier, setAllSupplier] = useState([]);
   const [suppliersLoading, setSuppliersLoading] = useState(true);
   const [allPayments, setAllPayments] = useState([]);
@@ -425,7 +427,8 @@ const Ledger = () => {
         from: statementFrom,
         to: statementTo,
         transactions: response.transactions || [],
-        summary: response.summary || {}
+        summary: response.summary || {},
+        shop: shopSettings
       });
     } catch (error) {
       console.error('Error generating supplier statement:', error);

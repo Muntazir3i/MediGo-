@@ -10,7 +10,9 @@ import {createBrowserRouter, createRoutesFromElements ,RouterProvider,Route} fro
 import DashBoard from './Components/DashBoard.jsx'
 import Ledger from './Components/Ledger.jsx'
 import Insights from './Components/Insights.jsx'
+import Settings from './Components/Settings.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
+import { SettingsProvider } from './context/SettingsContext.jsx'
 
 let router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,6 +23,7 @@ let router = createBrowserRouter(
       <Route path = 'inventory' element = {<Inventory/>}/>
       <Route path = 'ledger' element = {<Ledger/>}/>
       <Route path = 'insights' element = {<Insights/>}/>
+      <Route path = 'settings' element = {<Settings/>}/>
     </Route>
   )
 );
@@ -29,7 +32,9 @@ let router = createBrowserRouter(
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
-      <RouterProvider router= {router} />
+      <SettingsProvider>
+        <RouterProvider router= {router} />
+      </SettingsProvider>
     </ThemeProvider>
   </StrictMode>,
 )

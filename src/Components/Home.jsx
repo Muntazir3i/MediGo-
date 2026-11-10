@@ -31,6 +31,7 @@ import {
 
 import { generateInvoicePdf } from '../utils/invoicePdf.js';
 import { focusWhenPaletteClosed } from '../utils/focusWhenPaletteClosed.js';
+import { useShopSettings } from '../context/SettingsContext.jsx';
 
 import {
   Dialog,
@@ -164,6 +165,7 @@ const preparePrescriptionImage = (file) =>
 function Home() {
 
   const location = useLocation();
+  const { settings: shopSettings } = useShopSettings();
   const [open, setOpen] = useState(false);
 
   const [medicines, setMedicines] = useState([]);
@@ -685,7 +687,8 @@ function Home() {
         totalDiscount: savedInvoice.totalDiscount ?? totalDiscount,
         total: savedInvoice.total ?? totalAmount,
         status: savedInvoice.status ?? status,
-        prescription: savedInvoice.prescription ?? prescription
+        prescription: savedInvoice.prescription ?? prescription,
+        shop: shopSettings
       });
 
       // RESET
@@ -1384,10 +1387,20 @@ function Home() {
                           </div>
                           <div>
                             <DialogTitle className="text-lg font-semibold tracking-tight text-white">
-                              SAABIT PHARMACY
+                              {shopSettings.shopName || 'SAABIT PHARMACY'}
                             </DialogTitle>
                             <DialogDescription className="mt-1 text-xs text-slate-300">
                               Review the invoice before saving and generating the PDF.
+                              {(shopSettings.drugLicenceNumber || shopSettings.phone || shopSettings.address) && (
+                                <span className="mt-1 block text-[11px] text-slate-400">
+                                  {shopSettings.drugLicenceNumber
+                                    ? `Drug Licence No: ${shopSettings.drugLicenceNumber}`
+                                    : ''}
+                                  {shopSettings.drugLicenceNumber && shopSettings.phone ? '  |  ' : ''}
+                                  {shopSettings.phone ? `Phone: ${shopSettings.phone}` : ''}
+                                  {shopSettings.address ? `  ·  ${shopSettings.address}` : ''}
+                                </span>
+                              )}
                             </DialogDescription>
                           </div>
                         </div>

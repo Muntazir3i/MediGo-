@@ -99,9 +99,19 @@ export const generateInvoicePdf = ({
     totalDiscount = 0,
     total = 0,
     status = "completed",
-    prescription = null
+    prescription = null,
+    shop = {}
 }) => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    const shopName = shop.shopName || "SAABIT PHARMACY";
+    const drugLicenceNumber = shop.drugLicenceNumber || "";
+    const shopPhone = shop.phone || "";
+    const shopAddress = shop.address || "";
+    const shopGstin = shop.gstin || "";
+    const shopEmail = shop.email || "";
+    const pharmacistName = shop.pharmacistName || "Authorised Signature";
+    const invoiceFooter = shop.invoiceFooter || "Thank you for choosing Saabit Pharmacy. Get well soon!";
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -115,12 +125,19 @@ export const generateInvoicePdf = ({
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
-    doc.text("SAABIT PHARMACY", margin, 14);
+    doc.text(shopName, margin, 14);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text("Drug Licence No: 13351/52  |  Phone: +91 9797027047", margin, 21);
-    doc.text("Kak Sarai, Karan Nagar, Opp HDFC Bank, Srinagar", margin, 26);
+
+    const contactBits = [];
+    if (drugLicenceNumber) contactBits.push(`Drug Licence No: ${drugLicenceNumber}`);
+    if (shopPhone) contactBits.push(`Phone: ${shopPhone}`);
+    if (shopGstin) contactBits.push(`GSTIN: ${shopGstin}`);
+    if (contactBits.length > 0) doc.text(contactBits.join("  |  "), margin, 21);
+
+    const addressLine = [shopAddress, shopEmail].filter(Boolean).join("  |  ");
+    if (addressLine) doc.text(addressLine, margin, 26);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -383,10 +400,15 @@ export const generateInvoicePdf = ({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(107, 114, 128);
-    doc.text("Thank you for choosing Saabit Pharmacy. Get well soon!", margin, footerY + 6);
-    doc.text("This is a computer-generated invoice.", margin, footerY + 11);
+    const footerLines = doc.splitTextToSize(invoiceFooter, 118);
+    doc.text(footerLines, margin, footerY + 6);
+    doc.text(
+        "This is a computer-generated invoice.",
+        margin,
+        footerY + 6 + footerLines.length * 4.5
+    );
 
-    doc.text("Authorised Signature", right, footerY + 6, { align: "right" });
+    doc.text(pharmacistName, right, footerY + 6, { align: "right" });
     doc.setDrawColor(156, 163, 175);
     doc.line(right - 38, footerY + 1, right, footerY + 1);
 

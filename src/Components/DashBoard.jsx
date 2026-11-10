@@ -10,6 +10,7 @@ import {
   getExpiry,
   searchInvoices
 } from '../services/medicineService.js';
+import { useShopSettings } from '../context/SettingsContext.jsx';
 
 
 
@@ -58,6 +59,7 @@ import {
 
 function DashBoard() {
 
+  const { settings: shopSettings } = useShopSettings();
   const today = new Date().toISOString().split('T')[0];
 
   const [date, setDate] = useState(today);
@@ -536,29 +538,40 @@ function DashBoard() {
                               <DialogHeader>
 
                                 <DialogTitle className='text-2xl'>
-                                  Saabit Pharmacy
+                                  {shopSettings.shopName || 'Saabit Pharmacy'}
                                 </DialogTitle>
 
                                 <DialogDescription>
 
                                   <span className='font-bold'>
                                     Drug Licence No:
-                                  </span> 13351/52
+                                  </span> {shopSettings.drugLicenceNumber || '—'}
 
                                   <br />
 
                                   <span className='font-bold'>
                                     Contact:
-                                  </span> +91 9797027047
+                                  </span> {shopSettings.phone || '—'}
 
                                   <br />
 
                                   <span className='font-bold'>
                                     Address:
-                                  </span> Kak Sarai,
-                                  Karan Nagar,
-                                  Srinagar,
-                                  Jammu & Kashmir
+                                  </span> {shopSettings.address || '—'}
+
+                                  {shopSettings.gstin && (
+                                    <>
+                                      <br />
+                                      <span className='font-bold'>GSTIN:</span> {shopSettings.gstin}
+                                    </>
+                                  )}
+
+                                  {shopSettings.email && (
+                                    <>
+                                      <br />
+                                      <span className='font-bold'>Email:</span> {shopSettings.email}
+                                    </>
+                                  )}
 
                                 </DialogDescription>
 

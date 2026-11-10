@@ -18,40 +18,73 @@ export const generateSupplierStatementPdf = ({
     from,
     to,
     transactions = [],
-    summary = {}
+    summary = {},
+    shop = {}
 }) => {
     const doc = new jsPDF();
 
+    const shopName = shop.shopName || "SAABIT PHARMACY";
+    const shopLicence = shop.drugLicenceNumber || "";
+    const shopPhone = shop.phone || "";
+    const shopAddress = shop.address || "";
+    const shopGstin = shop.gstin || "";
+    const shopEmail = shop.email || "";
+
     // ── Pharmacy header ─────────────────────────────────────────────────
     doc.setFontSize(22);
-    doc.text("SAABIT PHARMACY", 14, 18);
+    doc.text(shopName, 14, 18);
 
     doc.setFontSize(10);
-    doc.text("Drug Licence No: 13351/52", 14, 26);
-    doc.text("Phone: +91 9797027047", 14, 32);
-    doc.text("Address: Kak Sarai, Karan Nagar, Opp HDFC Bank, Srinagar", 14, 38);
+    let headerY = 26;
 
+    const contactBits = [];
+    if (shopLicence) contactBits.push(`Drug Licence No: ${shopLicence}`);
+    if (shopPhone) contactBits.push(`Phone: ${shopPhone}`);
+    if (shopGstin) contactBits.push(`GSTIN: ${shopGstin}`);
+    if (contactBits.length > 0) {
+        doc.text(contactBits.join("  |  "), 14, headerY);
+        headerY += 6;
+    }
+    if (shopAddress) {
+        doc.text(`Address: ${shopAddress}`, 14, headerY);
+        headerY += 6;
+    }
+    if (shopEmail) {
+        doc.text(`Email: ${shopEmail}`, 14, headerY);
+        headerY += 6;
+    }
+
+    const ruleY = headerY + 5;
     doc.setDrawColor(180);
-    doc.line(14, 43, 196, 43);
+    doc.line(14, ruleY, 196, ruleY);
 
     // ── Statement details ───────────────────────────────────────────────
+    const statementY = ruleY + 10;
     doc.setFontSize(16);
-    doc.text("SUPPLIER STATEMENT", 14, 53);
+    doc.text("SUPPLIER STATEMENT", 14, statementY);
 
     doc.setFontSize(10);
-    doc.text(`Supplier: ${supplierName || "-"}`, 14, 63);
-    if (supplierDrugLn) doc.text(`Drug L/N: ${supplierDrugLn}`, 14, 69);
-    if (phone) doc.text(`Phone: ${phone}`, 14, 75);
-    doc.text(`Statement Period: ${from} to ${to}`, 14, supplierDrugLn || phone ? 81 : 69);
+    const supplierY = statementY + 10;
+    doc.text(`Supplier: ${supplierName || "-"}`, 14, supplierY);
 
-    const detailY = supplierDrugLn || phone ? 81 : 69;
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 130, 63);
+    let periodY = supplierY + 6;
+    if (supplierDrugLn) {
+        doc.text(`Drug L/N: ${supplierDrugLn}`, 14, periodY);
+        periodY += 6;
+    }
+    if (phone) {
+        doc.text(`Phone: ${phone}`, 14, periodY);
+        periodY += 6;
+    }
+    doc.text(`Statement Period: ${from} to ${to}`, 14, periodY);
+
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 130, supplierY);
     doc.setFontSize(11);
-    doc.text(`Opening Balance: Rs ${money(summary.openingBalance)}`, 14, detailY + 8);
+    doc.text(`Opening Balance: Rs ${money(summary.openingBalance)}`, 14, periodY + 8);
 
     // ── Transactions ────────────────────────────────────────────────────
     autoTable(doc, {
-        startY: detailY + 15,
+        startY: periodY + 15,
         head: [["Date", "Type", "Invoice", "Bill (Rs)", "Payment (Rs)", "Credit Note (Rs)", "Balance (Rs)"]],
         body: transactions.map((transaction) => [
             displayDate(transaction.date),

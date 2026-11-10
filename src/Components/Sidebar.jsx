@@ -8,6 +8,7 @@ import {
     PlusCircle,
     Receipt,
     Search,
+    Settings2,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle.jsx';
 
@@ -29,6 +30,10 @@ const navGroups = [
     {
         label: 'Finance',
         items: [{ to: '/ledger', label: 'Ledger', icon: BookOpen }],
+    },
+    {
+        label: 'System',
+        items: [{ to: '/settings', label: 'Settings', icon: Settings2 }],
     },
 ];
 
@@ -146,7 +151,7 @@ const Sidebar = ({ onOpenPalette }) => {
             </button>
 
             <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,0.06)] backdrop-blur lg:hidden">
-                <div className="grid grid-cols-5">
+                <div className="grid grid-cols-6">
                     {mobileItems.map((item) => {
                         const Icon = item.icon;
 
@@ -157,7 +162,7 @@ const Sidebar = ({ onOpenPalette }) => {
                                 end={item.end}
                                 state={item.focus ? { focusPrimary: Date.now(), focusTarget: item.focus } : undefined}
                                 className={({ isActive }) =>
-                                    `flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition ${
+                                    `flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-medium transition sm:text-[10px] ${
                                         isActive ? 'text-blue-700' : 'text-slate-500 hover:text-slate-800'
                                     }`
                                 }

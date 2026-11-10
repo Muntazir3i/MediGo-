@@ -16,6 +16,7 @@ import {
     PlusCircle,
     Receipt,
     Search,
+    Settings2,
     Sparkles,
     Users,
 } from 'lucide-react';
@@ -66,6 +67,14 @@ const navigateCommands = [
         to: '/billing',
         focus: 'billing-search',
         icon: Receipt,
+    },
+    {
+        id: 'settings',
+        title: 'Shop settings',
+        description: 'Shop name, drug licence, phone and invoice details',
+        keywords: 'settings shop name pharmacy drug licence phone address gstin email invoice footer profile',
+        to: '/settings',
+        icon: Settings2,
     },
 ];
 

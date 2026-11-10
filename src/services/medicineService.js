@@ -5,6 +5,7 @@ const API_BASE_URL = 'http://localhost:8008/api/medicines';
 const API_BASE_URL_EXPIRY = 'http://localhost:8008/api/expiry';
 const API_BASE_URL_CREDIT_NOTES = 'http://localhost:8008/api/credit-notes';
 const API_BASE_URL_INSIGHTS = 'http://localhost:8008/api/insights';
+const API_BASE_URL_SETTINGS = 'http://localhost:8008/api/settings';
 const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier';
 const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills';
 const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment';
@@ -648,3 +649,26 @@ export const getMedicinePurchaseStats = async (search = '') => {
     );
   }
 };
+
+// ─── Shop settings ───────────────────────────────────────────────────────────
+
+export const getShopSettings = async () => {
+  try {
+    const response = await axios.get(API_BASE_URL_SETTINGS);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching shop settings:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to load shop settings.'));
+  }
+};
+
+export const updateShopSettings = async (settings) => {
+  try {
+    const response = await axios.put(API_BASE_URL_SETTINGS, settings);
+    return response.data;
+  } catch (error) {
+    console.error('Error saving shop settings:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to save shop settings.'));
+  }
+};
+
