@@ -650,6 +650,23 @@ export const getMedicinePurchaseStats = async (search = '') => {
   }
 };
 
+export const getMedicinePriceHistory = async ({ search = '', productId = null, name = '' } = {}) => {
+  try {
+    const params = {};
+    if (search) params.search = search;
+    if (productId) params.productId = productId;
+    if (name) params.name = name;
+
+    const response = await axios.get(`${API_BASE_URL_INSIGHTS}/price-history`, { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching medicine price history:', error.message);
+    throw new Error(
+      getApiErrorMessage(error, 'Failed to load medicine price history. Please try again.'),
+    );
+  }
+};
+
 // ─── Shop settings ───────────────────────────────────────────────────────────
 
 export const getShopSettings = async () => {

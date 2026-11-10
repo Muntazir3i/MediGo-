@@ -5,6 +5,7 @@ import {
   Brain,
   Building2,
   CalendarClock,
+  ChevronDown,
   CircleDollarSign,
   Flame,
   Loader2,
@@ -20,7 +21,8 @@ import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Input } from './ui/input.jsx';
 import { formatCurrency, formatLedgerDate } from '../utils/ledgerFormat.js';
-import { getInsights, getMedicinePurchaseStats } from '../services/medicineService.js';
+import { getInsights, getMedicinePurchaseStats, getMedicinePriceHistory } from '../services/medicineService.js';
+import MedicinePriceChart from './MedicinePriceChart.jsx';
 
 const StatCard = ({ label, value, hint, icon, tone = 'blue' }) => {
   const tones = {
@@ -61,6 +63,15 @@ const Insights = () => {
   const [medicineResults, setMedicineResults] = useState([]);
   const [medicineLoading, setMedicineLoading] = useState(true);
   const [medicineError, setMedicineError] = useState('');
+
+  const [priceQuery, setPriceQuery] = useState('');
+  const [priceMatches, setPriceMatches] = useState([]);
+  const [priceMatchesLoading, setPriceMatchesLoading] = useState(false);
+  const [priceHistory, setPriceHistory] = useState(null);
+  const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
+  const [priceError, setPriceError] = useState('');
+  const [selectedPriceMedicine, setSelectedPriceMedicine] = useState(null);
+  const [priceVisibleCount, setPriceVisibleCount] = useState(10);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +127,94 @@ const Insights = () => {
       clearTimeout(timer);
     };
   }, [medicineQuery]);
+
+  // Search matches for the price-history section. The endpoint returns a short
+  // picker when several medicines share the search text.
+  useEffect(() => {
+    let cancelled = false;
+    const term = priceQuery.trim();
+
+    if (term.length < 2) {
+      setPriceMatches([]);
+      setPriceMatchesLoading(false);
+      setSelectedPriceMedicine(null);
+      setPriceHistory(null);
+      setPriceError('');
+      return undefined;
+    }
+
+    setPriceMatchesLoading(true);
+    setPriceError('');
+
+    const timer = setTimeout(() => {
+      getMedicinePriceHistory({ search: term })
+        .then((response) => {
+          if (cancelled) return;
+
+          const matches = response?.matches ?? [];
+          setPriceMatches(matches);
+
+          if (matches.length === 1) {
+            setSelectedPriceMedicine(matches[0]);
+          } else {
+            setSelectedPriceMedicine(null);
+            setPriceHistory(null);
+          }
+        })
+        .catch((requestError) => {
+          if (cancelled) return;
+
+          console.error(requestError);
+          setPriceMatches([]);
+          setSelectedPriceMedicine(null);
+          setPriceHistory(null);
+          setPriceError(requestError.message || 'Could not search medicine price history.');
+        })
+        .finally(() => {
+          if (!cancelled) setPriceMatchesLoading(false);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [priceQuery]);
+
+  // Load the chart points for the selected medicine.
+  useEffect(() => {
+    if (!selectedPriceMedicine) {
+      setPriceHistory(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setPriceHistoryLoading(true);
+    setPriceError('');
+    setPriceVisibleCount(10);
+
+    getMedicinePriceHistory({
+      productId: selectedPriceMedicine.productId,
+      name: selectedPriceMedicine.name,
+    })
+      .then((response) => {
+        if (!cancelled) setPriceHistory(response);
+      })
+      .catch((requestError) => {
+        if (cancelled) return;
+
+        console.error(requestError);
+        setPriceHistory(null);
+        setPriceError(requestError.message || 'Could not load price history.');
+      })
+      .finally(() => {
+        if (!cancelled) setPriceHistoryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPriceMedicine]);
 
   const derived = useMemo(() => {
     if (!data) return null;
@@ -459,6 +558,252 @@ const Insights = () => {
               ? `Showing matches for “${medicineQuery.trim()}”.`
               : 'Showing the most frequently ordered medicines.'}{' '}
             Total amount includes discount and GST; free units are not charged.
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-xl border border-slate-300/80 bg-white shadow-sm">
+          <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">Medicine price history</h2>
+                <p className="mt-0.5 max-w-2xl text-xs text-slate-500">
+                  Search a medicine to compare its purchase unit price plus GST against MRP over
+                  time. Each point uses the GST recorded on that purchase bill.
+                </p>
+              </div>
+            </div>
+
+            <div className="relative w-full lg:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                aria-label="Search medicine price history"
+                placeholder="Search medicine, e.g. Dolo 650"
+                value={priceQuery}
+                onChange={(event) => setPriceQuery(event.target.value)}
+                className="bg-slate-50 pl-9 focus-visible:bg-white"
+              />
+              {priceMatchesLoading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+              )}
+            </div>
+          </div>
+
+          {priceError && (
+            <div className="flex items-start gap-2 border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+              <Brain className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{priceError}</span>
+            </div>
+          )}
+
+          {priceMatches.length > 1 && !selectedPriceMedicine && (
+            <div className="border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Choose a medicine
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {priceMatches.map((match) => (
+                  <button
+                    key={`${match.productId ?? 'name'}-${match.name}`}
+                    type="button"
+                    onClick={() => setSelectedPriceMedicine(match)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    {match.name}
+                    <span className="ml-1.5 text-[10px] text-slate-400">
+                      {match.lineCount}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedPriceMedicine && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Showing price history for{' '}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  {selectedPriceMedicine.name}
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPriceMedicine(null);
+                  setPriceHistory(null);
+                }}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {priceHistoryLoading ? (
+            <div className="flex items-center gap-2 px-5 py-10 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading price history…
+            </div>
+          ) : priceHistory?.points?.length ? (
+            <div className="p-5">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                  label="Latest unit price + GST"
+                  value={formatCurrency(priceHistory.summary?.latestUnitPriceWithGst)}
+                  hint={`Unit ${formatCurrency(priceHistory.summary?.latestUnitPrice)} + ${Number(priceHistory.summary?.latestGstPercentage || 0).toFixed(2)}% GST`}
+                  icon={CircleDollarSign}
+                  tone="blue"
+                />
+                <StatCard
+                  label="Latest MRP"
+                  value={formatCurrency(priceHistory.summary?.latestMrp)}
+                  hint={`Last purchased ${formatLedgerDate(priceHistory.summary?.lastDate)}`}
+                  icon={ReceiptText}
+                  tone="violet"
+                />
+                <StatCard
+                  label="Change vs previous"
+                  value={
+                    priceHistory.summary?.unitPriceChangePercent === null ||
+                    priceHistory.summary?.unitPriceChangePercent === undefined
+                      ? '—'
+                      : `${priceHistory.summary.unitPriceChangePercent > 0 ? '+' : ''}${Number(priceHistory.summary.unitPriceChangePercent).toFixed(2)}%`
+                  }
+                  hint={
+                    priceHistory.summary?.previousUnitPriceWithGst === null ||
+                    priceHistory.summary?.previousUnitPriceWithGst === undefined
+                      ? 'Needs at least two purchases'
+                      : `Previous ${formatCurrency(priceHistory.summary.previousUnitPriceWithGst)}`
+                  }
+                  icon={
+                    Number(priceHistory.summary?.unitPriceChangePercent) > 0
+                      ? ArrowUpRight
+                      : ArrowDownRight
+                  }
+                  tone={
+                    Number(priceHistory.summary?.unitPriceChangePercent) > 0
+                      ? 'rose'
+                      : Number(priceHistory.summary?.unitPriceChangePercent) < 0
+                        ? 'emerald'
+                        : 'blue'
+                  }
+                />
+                <StatCard
+                  label="Unit price range"
+                  value={`${formatCurrency(priceHistory.summary?.minUnitPriceWithGst)} – ${formatCurrency(priceHistory.summary?.maxUnitPriceWithGst)}`}
+                  hint="GST-inclusive across recorded purchases"
+                  icon={PackageSearch}
+                  tone="emerald"
+                />
+              </div>
+
+              <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50/40 p-4 dark:border-slate-700 dark:bg-slate-950/40">
+                <MedicinePriceChart points={priceHistory.points} />
+              </div>
+
+              <div className="mt-5 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    Recent purchase points
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Showing latest {Math.min(priceVisibleCount, priceHistory.points.length)} of{' '}
+                    {priceHistory.points.length}
+                  </p>
+                </div>
+
+                <div className="max-h-72 overflow-auto">
+                  <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+                    <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Date</th>
+                        <th className="px-4 py-3 font-semibold">Supplier</th>
+                        <th className="px-4 py-3 text-right font-semibold">Qty</th>
+                        <th className="px-4 py-3 text-right font-semibold">Unit price</th>
+                        <th className="px-4 py-3 text-right font-semibold">GST</th>
+                        <th className="px-4 py-3 text-right font-semibold">Unit price + GST</th>
+                        <th className="px-4 py-3 text-right font-semibold">MRP</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {[...priceHistory.points].reverse().slice(0, priceVisibleCount).map((point, index) => (
+                        <tr
+                          key={`${point.date}-${index}`}
+                          className="transition hover:bg-slate-50/80"
+                        >
+                          <td className="px-4 py-3 text-slate-600">
+                            {formatLedgerDate(point.date)}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">
+                            {point.supplierName || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600">
+                            {formatQuantity(point.quantity)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600">
+                            {formatCurrency(point.unitPrice)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600">
+                            {Number(point.gstPercentage || 0).toFixed(2)}%
+                          </td>
+                          <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                            {formatCurrency(point.unitPriceWithGst)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600">
+                            {formatCurrency(point.mrp)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-2.5 dark:border-slate-800">
+                  <p className="text-[11px] text-slate-400">
+                    {priceVisibleCount >= priceHistory.points.length
+                      ? `All ${priceHistory.points.length} purchase point${priceHistory.points.length === 1 ? '' : 's'} shown.`
+                      : `${priceHistory.points.length - priceVisibleCount} more purchase point${priceHistory.points.length - priceVisibleCount === 1 ? '' : 's'} available.`}
+                  </p>
+
+                  {priceVisibleCount < priceHistory.points.length && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPriceVisibleCount((count) =>
+                          Math.min(count + 10, priceHistory.points.length),
+                        )
+                      }
+                      className="h-8 gap-1.5 border-slate-200 bg-white px-3 text-xs text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                      Load more
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="px-5 py-10 text-center text-sm text-slate-500">
+              {priceMatchesLoading
+                ? 'Searching medicines…'
+                : priceQuery.trim().length < 2
+                  ? 'Type at least two characters to search a medicine.'
+                  : selectedPriceMedicine
+                    ? 'No price history found for this medicine.'
+                    : priceMatches.length > 1
+                      ? 'Choose a medicine above to see its price history.'
+                      : 'Search and choose a medicine to see its price history.'}
+            </div>
+          )}
+
+          <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-2.5 text-[11px] text-slate-500">
+            Unit price + GST uses the purchase rate and GST recorded on each bill. MRP is the
+            printed maximum retail price from the same purchase line.
           </div>
         </section>
 

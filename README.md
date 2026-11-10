@@ -200,6 +200,7 @@ The extracted product fields include:
 
 - Purchase trends and monthly summaries.
 - Medicine order lookup with order count, total quantity, average rate and total purchase value.
+- Medicine price history with a searchable chart of GST-inclusive unit price versus MRP over time.
 - Top products and supplier activity.
 - Outstanding payables and business metrics.
 
