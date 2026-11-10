@@ -196,8 +196,8 @@ const TabContentAddPurchase = ({
                         icon={Plus}
                         title={isCreditNote ? 'Credit note items' : 'Product details'}
                         description={isCreditNote
-                            ? 'Add the returned or expired medicine, batch, quantity, rate, MRP, discount and GST.'
-                            : 'Add each medicine with its batch, expiry, quantity, free quantity, rate, MRP, discount and GST.'}
+                            ? 'Add the returned or expired medicine, batch, quantity, MRP, rate, discount and GST.'
+                            : 'Add each medicine with its batch, expiry, quantity, free quantity, MRP, rate, discount and GST.'}
                         tone="emerald"
                     />
                     <Badge variant="secondary" className="mb-4 bg-slate-100 text-slate-600">
@@ -216,8 +216,8 @@ const TabContentAddPurchase = ({
                                     <th className="px-2 py-2.5 font-semibold">Expiry</th>
                                     <th className="px-2 py-2.5 font-semibold">Qty</th>
                                     {!isCreditNote && <th className="px-2 py-2.5 font-semibold">Free</th>}
-                                    <th className="px-2 py-2.5 font-semibold">Rate</th>
                                     <th className="px-2 py-2.5 font-semibold">MRP</th>
+                                    <th className="px-2 py-2.5 font-semibold">Rate</th>
                                     <th className="px-2 py-2.5 font-semibold">Disc %</th>
                                     <th className="px-2 py-2.5 font-semibold">GST %</th>
                                     <th className="px-3 py-2.5 text-right font-semibold">Action</th>
@@ -342,6 +342,19 @@ const TabContentAddPurchase = ({
                                         <td className="px-2 py-2">
                                             <Input
                                                 type="number"
+                                                aria-label={`MRP for line ${index + 1}`}
+                                                data-product-input
+                                                data-product-field="mrp"
+                                                className={`${inputClass} min-w-[85px]`}
+                                                value={item.mrp}
+                                                min="0"
+                                                onChange={(e) => handleInputChange(item.id, 'mrp', e.target.value)}
+                                            />
+                                        </td>
+
+                                        <td className="px-2 py-2">
+                                            <Input
+                                                type="number"
                                                 aria-label={`Unit price for line ${index + 1}`}
                                                 data-product-input
                                                 data-product-field="unitPrice"
@@ -351,19 +364,6 @@ const TabContentAddPurchase = ({
                                                 onChange={(e) =>
                                                     handleInputChange(item.id, 'unitPrice', e.target.value)
                                                 }
-                                            />
-                                        </td>
-
-                                        <td className="px-2 py-2">
-                                            <Input
-                                                type="number"
-                                                aria-label={`MRP for line ${index + 1}`}
-                                                data-product-input
-                                                data-product-field="mrp"
-                                                className={`${inputClass} min-w-[85px]`}
-                                                value={item.mrp}
-                                                min="0"
-                                                onChange={(e) => handleInputChange(item.id, 'mrp', e.target.value)}
                                             />
                                         </td>
 
