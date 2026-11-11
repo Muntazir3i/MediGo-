@@ -4,8 +4,24 @@ import autoTable from "jspdf-autotable";
 const money = (value) => Number(value || 0).toFixed(2);
 
 const displayDate = (value) => {
-    const text = String(value || "");
-    return text.length >= 10 ? text.slice(0, 10) : text;
+    const text = String(value || "").trim();
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+
+    if (!match) return text || "-";
+
+    const date = new Date(
+        Number(match[1]),
+        Number(match[2]) - 1,
+        Number(match[3])
+    );
+
+    if (Number.isNaN(date.getTime())) return text;
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
 };
 
 /**
@@ -76,7 +92,7 @@ export const generateSupplierStatementPdf = ({
         doc.text(`Phone: ${phone}`, 14, periodY);
         periodY += 6;
     }
-    doc.text(`Statement Period: ${from} to ${to}`, 14, periodY);
+    doc.text(`Statement Period: ${displayDate(from)} to ${displayDate(to)}`, 14, periodY);
 
     doc.text(`Generated: ${new Date().toLocaleString()}`, 130, supplierY);
     doc.setFontSize(11);

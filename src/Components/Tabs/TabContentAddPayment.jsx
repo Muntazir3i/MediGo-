@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CreditCard, Receipt, Save, Wallet } from 'lucide-react';
 import { Label } from '../ui/label.jsx';
 import { Input } from '../ui/input.jsx';
@@ -25,6 +25,8 @@ const TabContentAddPayment = ({
   allSuppliersSql,
   addNewPayment,
 }) => {
+  const receiptInputRef = useRef(null);
+
   // Auto-fill today's date on mount (only if empty, so it doesn't
   // overwrite a date the user already picked or one loaded for editing)
   useEffect(() => {
@@ -41,8 +43,9 @@ const TabContentAddPayment = ({
   const handleSave = async (e) => {
     e.preventDefault();
 
-    // Call the parent's save handler (it may or may not return a value)
-    await addNewPayment(e, newPaymentDetails, setNewPaymentDetails);
+    const saved = await addNewPayment(e, newPaymentDetails, setNewPaymentDetails);
+
+    if (!saved) return;
 
     // Reset for the next entry — date defaults back to today, still editable
     setNewPaymentDetails({
@@ -51,6 +54,12 @@ const TabContentAddPayment = ({
       supplierName: '',
       drugLicenseNumber: '',
       total: '',
+    });
+
+    // Put the cursor back on the receipt number for the next payment.
+    requestAnimationFrame(() => {
+      receiptInputRef.current?.focus();
+      receiptInputRef.current?.select?.();
     });
   };
 
@@ -98,6 +107,7 @@ const TabContentAddPayment = ({
             </Label>
             <Input
               id="payment-invoice"
+              ref={receiptInputRef}
               className={inputClass}
               type="text"
               name="invoice"
