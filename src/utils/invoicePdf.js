@@ -88,6 +88,45 @@ const formatTime = (value) => {
 };
 
 /**
+ * Convert a saved invoice (API shape) into the arguments expected by
+ * `generateInvoicePdf`. Shared by the dashboard and any future screens.
+ */
+export const buildInvoicePdfPayload = (invoice = {}, shop = {}) => {
+    const items = (invoice.items ?? invoice.medicines ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        qty: Number(item.saleQuantity ?? item.qty ?? item.quantity) || 0,
+        saleQuantity: Number(item.saleQuantity ?? item.qty ?? item.quantity) || 0,
+        saleUnit: item.saleUnit || "PACK",
+        unitsPerPack: Number(item.unitsPerPack) || 1,
+        mrp: Number(item.mrp) || 0,
+        price: Number(item.saleUnitPrice ?? item.price ?? item.unitPrice ?? item.mrp) || 0,
+        discount: Number(item.discount ?? item.discountPercent) || 0,
+        discountAmount: Number(item.discountAmount) || 0,
+        lineTotal: Number(item.lineTotal) || 0,
+        batchNumber: item.batchNumber ?? item.batchNumberSnapshot,
+        expiryDate: item.expiryDate ?? item.expiryDateSnapshot
+    }));
+
+    return {
+        invoiceNumber: invoice.invoiceNumber || "",
+        date: invoice.date ?? invoice.createdAt ?? new Date().toISOString(),
+        customer: invoice.customer ?? {
+            name: invoice.customerName || "Walk-in Customer",
+            phone: invoice.customerPhone || "",
+            address: invoice.customerAddress || ""
+        },
+        items,
+        subtotal: Number(invoice.subtotal) || 0,
+        totalDiscount: Number(invoice.totalDiscount) || 0,
+        total: Number(invoice.total) || 0,
+        status: invoice.status || "completed",
+        prescription: invoice.prescription ?? null,
+        shop
+    };
+};
+
+/**
  * Generates a clean, professional sales invoice PDF.
  */
 export const generateInvoicePdf = ({

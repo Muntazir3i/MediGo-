@@ -10,7 +10,7 @@ The interface is optimized for fast keyboard-driven data entry, local-first oper
 ## Highlights
 
 - Dashboard with stock, expiry, and business summaries
-- Sales billing with invoice search, PDF output, deletion, and voiding
+- Sales billing with invoice search by invoice, customer or medicine, editing with stock reconciliation, PDF output, deletion, and voiding
 - Purchase entry with batch details, free quantity, salts, and bill image upload
 - Inventory catalogue with batch-level editing, stock adjustment, and purchase history
 - Supplier ledger with general ledger, payments, expiry ledger, and credit notes

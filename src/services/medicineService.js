@@ -69,8 +69,30 @@ export const getSaleInvoice = async (invoiceId) => {
   }
 };
 
+/** Edit a finalized sale. Stock is reconciled by the backend. */
+export const updateSaleInvoice = async (invoiceId, invoiceData) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL_SALES}/invoices/${invoiceId}`,
+      invoiceData
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating invoice:', error.response?.data?.message || error.message);
+    throw error;
+  }
+};
+
 // SEARCH INVOICE
-export const searchInvoices = async (date, customer) => {
+export const searchInvoices = async ({
+  date = '',
+  customer = '',
+  invoice = '',
+  q = '',
+  medicine = '',
+  from = '',
+  to = ''
+} = {}) => {
 
   try {
 
@@ -79,7 +101,12 @@ export const searchInvoices = async (date, customer) => {
       {
         params: {
           date,
-          customer
+          customer,
+          invoice,
+          q,
+          medicine,
+          from,
+          to
         }
       }
     );
