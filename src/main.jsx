@@ -11,6 +11,7 @@ import DashBoard from './Components/DashBoard.jsx'
 import Ledger from './Components/Ledger.jsx'
 import Insights from './Components/Insights.jsx'
 import Settings from './Components/Settings.jsx'
+import Registers from './Components/Registers.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { SettingsProvider } from './context/SettingsContext.jsx'
 
@@ -24,6 +25,7 @@ let router = createBrowserRouter(
       <Route path = 'ledger' element = {<Ledger/>}/>
       <Route path = 'insights' element = {<Insights/>}/>
       <Route path = 'settings' element = {<Settings/>}/>
+      <Route path = 'registers' element = {<Registers/>}/>
     </Route>
   )
 );

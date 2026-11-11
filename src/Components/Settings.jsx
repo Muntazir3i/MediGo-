@@ -1,12 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
+  Database,
+  Download,
   Loader2,
   Mail,
   MapPin,
   Phone,
   ReceiptText,
+  RefreshCw,
   RotateCcw,
   Save,
   ShieldCheck,
@@ -17,6 +20,12 @@ import { Button } from './ui/button.jsx';
 import { Input } from './ui/input.jsx';
 import { Label } from './ui/label.jsx';
 import { useShopSettings } from '../context/SettingsContext.jsx';
+import {
+  backupDownloadUrl,
+  createBackup,
+  getBackups,
+  restoreBackup,
+} from '../services/medicineService.js';
 
 const FIELD_CLASS =
   'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100';
@@ -41,6 +50,81 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState(null);
+  const [backupData, setBackupData] = useState(null);
+  const [backupLoading, setBackupLoading] = useState(true);
+  const [backupCreating, setBackupCreating] = useState(false);
+  const [backupRestoring, setBackupRestoring] = useState(null);
+  const [backupMessage, setBackupMessage] = useState(null);
+
+  const loadBackups = useCallback(async () => {
+    setBackupLoading(true);
+
+    try {
+      const response = await getBackups();
+      setBackupData(response);
+    } catch (error) {
+      setBackupMessage({ type: 'error', text: error.message || 'Could not load backups.' });
+    } finally {
+      setBackupLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBackups();
+  }, [loadBackups]);
+
+  const handleCreateBackup = async () => {
+    if (backupCreating) return;
+
+    setBackupCreating(true);
+    setBackupMessage(null);
+
+    try {
+      const response = await createBackup();
+      setBackupMessage({
+        type: 'success',
+        text: response?.message || 'Backup created successfully.',
+      });
+      await loadBackups();
+    } catch (error) {
+      setBackupMessage({ type: 'error', text: error.message || 'Could not create a backup.' });
+    } finally {
+      setBackupCreating(false);
+    }
+  };
+
+  const handleRestoreBackup = async (backup) => {
+    if (backupRestoring) return;
+
+    const confirmed = window.confirm(
+      `Restore ${backup.name}?\n\n` +
+      'A safety backup of the current database will be created first. ' +
+      'After preparing the restore, restart the backend to apply it.',
+    );
+
+    if (!confirmed) return;
+
+    setBackupRestoring(backup.name);
+    setBackupMessage(null);
+
+    try {
+      const response = await restoreBackup(backup.name);
+      setBackupMessage({
+        type: 'success',
+        text:
+          response?.message
+          || 'Restore prepared. Restart the backend to apply it.',
+      });
+      await loadBackups();
+    } catch (error) {
+      setBackupMessage({
+        type: 'error',
+        text: error.message || 'Could not prepare the restore.',
+      });
+    } finally {
+      setBackupRestoring(null);
+    }
+  };
 
   useEffect(() => {
     setForm(settings);
@@ -429,6 +513,181 @@ const Settings = () => {
             </section>
           </aside>
         </div>
+
+        <section className="rounded-2xl border border-slate-300/80 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 dark:border-slate-800 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <Database className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Backup & restore
+                </h2>
+                <p className="mt-0.5 max-w-2xl text-xs text-slate-500 dark:text-slate-400">
+                  Create a consistent database backup at any time. Automatic backups run daily
+                  after 21:00 and keep the latest 30 copies.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={loadBackups}
+                disabled={backupLoading}
+                className="gap-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <RefreshCw className={`h-4 w-4 ${backupLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCreateBackup}
+                disabled={backupCreating}
+                className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500"
+              >
+                {backupCreating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4" />
+                )}
+                {backupCreating ? 'Creating backup…' : 'Create backup now'}
+              </Button>
+            </div>
+          </div>
+
+          {backupMessage && (
+            <div
+              className={`mt-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${
+                backupMessage.type === 'success'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200'
+                  : 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200'
+              }`}
+            >
+              {backupMessage.type === 'success' ? (
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              ) : (
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              )}
+              <span>{backupMessage.text}</span>
+            </div>
+          )}
+
+          {backupData?.pendingRestore && (
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="font-semibold">Restore pending</p>
+                <p className="mt-0.5 text-xs">
+                  Backup {backupData.pendingRestore.backupName || 'selected backup'} is ready.
+                  Restart the backend to apply it.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <p>
+              {backupData?.lastBackup
+                ? `Last backup: ${new Date(backupData.lastBackup.createdAt).toLocaleString('en-IN')}`
+                : 'No backups yet.'}
+            </p>
+            <p>
+              Automatic schedule: {backupData?.autoBackup?.schedule || 'Daily after 21:00'}
+            </p>
+          </div>
+
+          <div className="mt-3 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
+            <table className="w-full min-w-[680px] border-collapse text-left text-sm">
+              <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500 dark:bg-slate-950">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Created</th>
+                  <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold">Size</th>
+                  <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {backupLoading ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-10">
+                      <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading backups…
+                      </div>
+                    </td>
+                  </tr>
+                ) : (backupData?.backups ?? []).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">
+                      No backups yet. Create one now.
+                    </td>
+                  </tr>
+                ) : (
+                  backupData.backups.map((backup) => (
+                    <tr key={backup.name} className="transition hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                        <p className="font-medium text-slate-800 dark:text-slate-200">
+                          {new Date(backup.createdAt).toLocaleString('en-IN')}
+                        </p>
+                        <p className="mt-0.5 font-mono text-[10px] text-slate-400">{backup.name}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                            backup.type === 'auto'
+                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
+                              : backup.type === 'pre-restore'
+                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                          }`}
+                        >
+                          {backup.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                        {backup.sizeLabel}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <a
+                            href={backupDownloadUrl(backup.name)}
+                            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Download
+                          </a>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRestoreBackup(backup)}
+                            disabled={backupRestoring === backup.name}
+                            className="h-8 gap-1.5 border-slate-200 bg-white px-3 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                          >
+                            {backupRestoring === backup.name ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-3.5 w-3.5" />
+                            )}
+                            Restore
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-3 text-[11px] text-slate-400">
+            Restore is applied on the next backend start. The current database is backed up
+            automatically before a restore is prepared.
+          </p>
+        </section>
       </div>
     </main>
   );

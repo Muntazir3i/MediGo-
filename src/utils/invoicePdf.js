@@ -122,6 +122,8 @@ export const buildInvoicePdfPayload = (invoice = {}, shop = {}) => {
         total: Number(invoice.total) || 0,
         status: invoice.status || "completed",
         prescription: invoice.prescription ?? null,
+        prescriberName: invoice.prescriberName || "",
+        prescriptionReference: invoice.prescriptionReference || "",
         shop
     };
 };
@@ -139,6 +141,8 @@ export const generateInvoicePdf = ({
     total = 0,
     status = "completed",
     prescription = null,
+    prescriberName = "",
+    prescriptionReference = "",
     shop = {}
 }) => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -236,7 +240,20 @@ export const generateInvoicePdf = ({
     doc.setTextColor(17, 24, 39);
     doc.setFont("helvetica", "normal");
 
-    const detailsBottom = Math.max(leftY, y + 24);
+    const prescriberLine = [
+        prescriberName ? `Prescriber: ${prescriberName}` : "",
+        prescriptionReference ? `Rx: ${prescriptionReference}` : ""
+    ].filter(Boolean).join("  |  ");
+
+    if (prescriberLine) {
+        doc.setFontSize(8);
+        doc.setTextColor(107, 114, 128);
+        doc.text(doc.splitTextToSize(prescriberLine, 80), detailsX, y + 26);
+        doc.setFontSize(9);
+        doc.setTextColor(55, 65, 81);
+    }
+
+    const detailsBottom = Math.max(leftY, y + (prescriberLine ? 31 : 24));
     doc.setDrawColor(229, 231, 235);
     doc.line(margin, detailsBottom + 4, right, detailsBottom + 4);
 

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
     BookOpen,
     Boxes,
+    ClipboardList,
     LayoutDashboard,
     Pill,
     PlusCircle,
@@ -32,12 +33,18 @@ const navGroups = [
         items: [{ to: '/ledger', label: 'Ledger', icon: BookOpen }],
     },
     {
+        label: 'Compliance',
+        items: [{ to: '/registers', label: 'Registers', icon: ClipboardList }],
+    },
+    {
         label: 'System',
         items: [{ to: '/settings', label: 'Settings', icon: Settings2 }],
     },
 ];
 
-const mobileItems = navGroups.flatMap((group) => group.items);
+const mobileItems = navGroups
+    .flatMap((group) => group.items)
+    .filter((item) => item.to !== '/registers');
 
 const Sidebar = ({ onOpenPalette }) => {
     return (

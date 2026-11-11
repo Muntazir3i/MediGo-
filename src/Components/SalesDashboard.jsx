@@ -807,6 +807,14 @@ const SalesDashboard = () => {
               <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
                 Time: <span className="font-semibold">{invoiceTime(viewInvoice?.date ?? viewInvoice?.createdAt) || '—'}</span>
               </p>
+              {viewInvoice?.prescriberName && (
+                <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
+                  Prescriber: <span className="font-semibold">{viewInvoice.prescriberName}</span>
+                  {viewInvoice.prescriptionReference
+                    ? ` · Rx: ${viewInvoice.prescriptionReference}`
+                    : ''}
+                </p>
+              )}
             </div>
           </div>
 

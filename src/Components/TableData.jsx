@@ -142,7 +142,18 @@ function TableData({
                   return (
                     <tr key={med.id} className="transition hover:bg-slate-50/70">
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-900">{med.name}</div>
+                        <div className="font-semibold text-slate-900">
+                          {med.name}
+                          {med.drugSchedule && (
+                            <span className="ml-2 inline-flex rounded bg-rose-50 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-rose-600 dark:bg-rose-950/50 dark:text-rose-300">
+                              {med.drugSchedule === 'H1'
+                                ? 'Schedule H1'
+                                : med.drugSchedule === 'X'
+                                  ? 'Schedule X'
+                                  : 'Schedule H'}
+                            </span>
+                          )}
+                        </div>
                         {med.saltSummary && (
                           <div className="mt-0.5 text-[11px] font-medium text-blue-600">
                             {med.saltSummary}
@@ -319,6 +330,24 @@ function TableData({
                     <option key={category} value={category} />
                   ))}
                 </datalist>
+              </Field>
+
+              <Field label="Drug schedule" htmlFor="edit-drug-schedule">
+                <select
+                  id="edit-drug-schedule"
+                  name="drugSchedule"
+                  value={formData.drugSchedule ?? ''}
+                  onChange={handleChange}
+                  className={`${inputClass} w-full px-3`}
+                >
+                  <option value="">Not scheduled</option>
+                  <option value="H">Schedule H</option>
+                  <option value="H1">Schedule H1</option>
+                  <option value="X">Schedule X</option>
+                </select>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Scheduled medicines require a prescriber and prescription verification at billing.
+                </p>
               </Field>
 
               <Field label="Supplier" htmlFor="edit-supplier">

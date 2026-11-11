@@ -64,6 +64,9 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [prescriberName, setPrescriberName] = useState('');
+  const [prescriptionReference, setPrescriptionReference] = useState('');
+  const [prescriptionVerified, setPrescriptionVerified] = useState(false);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -102,6 +105,7 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
         discount: Number(item.discount ?? item.discountPercent) || 0,
         gstPercentage: Number(item.gstPercentage ?? item.gstPercent) || 0,
         mrp: Number(item.mrp) || 0,
+        drugSchedule: item.liveDrugSchedule || item.drugSchedule || '',
         availablePack: Math.max(0, liveStock + soldPack),
       };
     });
@@ -113,6 +117,9 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
       address: invoice.customer?.address ?? invoice.customerAddress ?? '',
     });
     setStatus(invoice.status === 'pending' ? 'pending' : 'completed');
+    setPrescriberName(invoice.prescriberName || '');
+    setPrescriptionReference(invoice.prescriptionReference || '');
+    setPrescriptionVerified(Boolean(invoice.prescriptionVerified));
     setItems(nextItems);
     setSearch('');
     setSearchResults([]);
@@ -173,6 +180,17 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
       total: round2(subtotal - discount + gst),
     };
   }, [items]);
+
+  const scheduledSchemes = [
+    ...new Set(
+      items
+        .map((item) => String(item.drugSchedule || '').toUpperCase())
+        .filter((schedule) => ['H', 'H1', 'X'].includes(schedule)),
+    ),
+  ];
+  const hasScheduledMedicines = scheduledSchemes.length > 0;
+  const requiresPrescriptionReference =
+    scheduledSchemes.includes('H1') || scheduledSchemes.includes('X');
 
   const updateItem = (key, field, value) => {
     setItems((prev) =>
@@ -263,6 +281,7 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
           discount: 0,
           gstPercentage: Number(medicine.gstPercentage) || 0,
           mrp: Number(medicine.mrp) || 0,
+          drugSchedule: medicine.drugSchedule || '',
           availablePack,
         },
       ];
@@ -316,6 +335,31 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
       return;
     }
 
+    if (hasScheduledMedicines) {
+      if (!prescriberName.trim()) {
+        setError('Prescriber name is required for scheduled medicines.');
+        return;
+      }
+      if (!prescriptionVerified) {
+        setError('Confirm that the prescription was verified before saving.');
+        return;
+      }
+      if (scheduledSchemes.includes('X') && !prescriptionReference.trim()) {
+        setError('Prescription reference is required for Schedule X medicines.');
+        return;
+      }
+      if (
+        scheduledSchemes.includes('H1')
+        && !prescriptionReference.trim()
+        && !invoice?.prescription
+      ) {
+        setError(
+          'Enter a prescription reference for Schedule H1 medicines, or keep the attached prescription.',
+        );
+        return;
+      }
+    }
+
     setSaving(true);
     setError('');
 
@@ -327,6 +371,9 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
           address: String(customer.address ?? '').trim(),
         },
         status,
+        prescriberName: prescriberName.trim(),
+        prescriptionReference: prescriptionReference.trim(),
+        prescriptionVerified,
         items: items.map((item) => ({
           inventoryItemId: item.inventoryItemId,
           qty: Number(item.qty),
@@ -419,6 +466,68 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
           </div>
         </div>
 
+        {hasScheduledMedicines && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div>
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                  Prescription compliance
+                </p>
+                <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
+                  This invoice contains {scheduledSchemes.join(', ')} medicine
+                  {scheduledSchemes.length === 1 ? '' : 's'}. Prescriber details are required for
+                  the statutory register.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label
+                  htmlFor="edit-prescriber-name"
+                  className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300"
+                >
+                  Prescriber name
+                </Label>
+                <Input
+                  id="edit-prescriber-name"
+                  value={prescriberName}
+                  onChange={(event) => setPrescriberName(event.target.value)}
+                  placeholder="Doctor name"
+                  className={fieldClass}
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="edit-prescription-reference"
+                  className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300"
+                >
+                  Prescription reference
+                </Label>
+                <Input
+                  id="edit-prescription-reference"
+                  value={prescriptionReference}
+                  onChange={(event) => setPrescriptionReference(event.target.value)}
+                  placeholder={requiresPrescriptionReference ? 'Required for H1 / X' : 'Rx number or date'}
+                  className={fieldClass}
+                />
+              </div>
+            </div>
+
+            <label className="mt-3 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+              <input
+                type="checkbox"
+                checked={prescriptionVerified}
+                onChange={(event) => setPrescriptionVerified(event.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+              />
+              <span>I verified the prescription for these medicines.</span>
+            </label>
+          </div>
+        )}
+
         <section className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
             <div>
@@ -465,6 +574,15 @@ const InvoiceEditDialog = ({ invoice, open, onOpenChange, onSaved }) => {
                         <td className="px-3 py-2.5">
                           <p className="font-semibold text-slate-900 dark:text-slate-100">
                             {item.name}
+                            {item.drugSchedule && (
+                              <span className="ml-2 inline-flex rounded bg-rose-50 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-rose-600 dark:bg-rose-950/50 dark:text-rose-300">
+                                {item.drugSchedule === 'H1'
+                                  ? 'Schedule H1'
+                                  : item.drugSchedule === 'X'
+                                    ? 'Schedule X'
+                                    : 'Schedule H'}
+                              </span>
+                            )}
                           </p>
                           <p className="mt-0.5 text-[10px] text-slate-400">
                             Batch {item.batchNumber || '—'}

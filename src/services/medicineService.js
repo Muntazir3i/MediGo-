@@ -716,3 +716,58 @@ export const updateShopSettings = async (settings) => {
   }
 };
 
+// ─── Backups ─────────────────────────────────────────────────────────────────
+
+const API_BASE_URL_BACKUPS = 'http://localhost:8008/api/backups';
+
+export const getBackups = async () => {
+  try {
+    const response = await axios.get(API_BASE_URL_BACKUPS);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching backups:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to load backups.'));
+  }
+};
+
+export const createBackup = async () => {
+  try {
+    const response = await axios.post(API_BASE_URL_BACKUPS);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating backup:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to create a backup.'));
+  }
+};
+
+export const restoreBackup = async (name) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL_BACKUPS}/${encodeURIComponent(name)}/restore`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error restoring backup:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to prepare the restore.'));
+  }
+};
+
+export const backupDownloadUrl = (name) =>
+  `${API_BASE_URL_BACKUPS}/${encodeURIComponent(name)}/download`;
+
+// ─── Statutory registers ─────────────────────────────────────────────────────
+
+export const getPrescriptionRegister = async ({ schedule = 'H1', from = '', to = '' } = {}) => {
+  try {
+    const response = await axios.get('http://localhost:8008/api/registers/prescriptions', {
+      params: { schedule, from, to },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching prescription register:', error.message);
+    throw new Error(
+      getApiErrorMessage(error, 'Failed to load the prescription register.'),
+    );
+  }
+};
+

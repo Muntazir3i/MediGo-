@@ -11,6 +11,7 @@ import {
   Plus,
   Receipt,
   Search,
+  ShieldAlert,
   ShoppingCart,
   Trash2,
   UploadCloud,
@@ -62,6 +63,14 @@ const formatQty = (value) => {
   const num = Number(value) || 0;
   if (Number.isInteger(num)) return String(num);
   return num.toFixed(2).replace(/\.?0+$/, '');
+};
+
+const scheduleLabel = (value) => {
+  const schedule = String(value || '').toUpperCase();
+  if (schedule === 'H') return 'Schedule H';
+  if (schedule === 'H1') return 'Schedule H1';
+  if (schedule === 'X') return 'Schedule X';
+  return '';
 };
 
 const itemPrice = (item) => {
@@ -190,6 +199,9 @@ function Home() {
   const [prescriptionError, setPrescriptionError] = useState('');
   const [prescriptionLoading, setPrescriptionLoading] = useState(false);
   const [prescriptionDragging, setPrescriptionDragging] = useState(false);
+  const [prescriberName, setPrescriberName] = useState('');
+  const [prescriptionReference, setPrescriptionReference] = useState('');
+  const [prescriptionVerified, setPrescriptionVerified] = useState(false);
 
   const [invoiceNumber, setInvoiceNumber] = useState(createInvoiceNumber);
 
@@ -546,6 +558,9 @@ function Home() {
   const clearCart = () => {
     setCart([]);
     removePrescription();
+    setPrescriberName('');
+    setPrescriptionReference('');
+    setPrescriptionVerified(false);
   };
 
   const subtotal = round2(
@@ -557,6 +572,29 @@ function Home() {
   );
 
   const totalAmount = round2(subtotal - totalDiscount);
+
+  const scheduledSchemes = [
+    ...new Set(
+      cart
+        .map((item) => String(item.drugSchedule || '').toUpperCase())
+        .filter((schedule) => ['H', 'H1', 'X'].includes(schedule)),
+    ),
+  ];
+  const hasScheduledMedicines = scheduledSchemes.length > 0;
+  const requiresPrescriptionReference =
+    scheduledSchemes.includes('H1') || scheduledSchemes.includes('X');
+  const complianceReady =
+    !hasScheduledMedicines
+    || (
+      Boolean(prescriberName.trim())
+      && prescriptionVerified
+      && !(scheduledSchemes.includes('X') && !prescriptionReference.trim())
+      && !(
+        scheduledSchemes.includes('H1')
+        && !prescriptionReference.trim()
+        && !prescription
+      )
+    );
 
   const addBillFn = async () => {
 
@@ -615,6 +653,32 @@ function Home() {
       return;
     }
 
+    if (hasScheduledMedicines) {
+      if (!prescriberName.trim()) {
+        alert('Prescriber name is required for scheduled medicines.');
+        return;
+      }
+
+      if (!prescriptionVerified) {
+        alert('Please confirm that the prescription was verified before checkout.');
+        return;
+      }
+
+      if (scheduledSchemes.includes('X') && !prescriptionReference.trim()) {
+        alert('Prescription reference is required for Schedule X medicines.');
+        return;
+      }
+
+      if (
+        scheduledSchemes.includes('H1')
+        && !prescriptionReference.trim()
+        && !prescription
+      ) {
+        alert('Enter a prescription reference or attach a prescription image for Schedule H1 medicines.');
+        return;
+      }
+    }
+
     const invoiceDate = new Date().toISOString();
 
     const invoicePayload = {
@@ -638,6 +702,9 @@ function Home() {
       total: totalAmount,
       status,
       date: invoiceDate,
+      prescriberName: prescriberName.trim(),
+      prescriptionReference: prescriptionReference.trim(),
+      prescriptionVerified,
       prescription: prescription
         ? {
             name: prescription.name,
@@ -688,6 +755,8 @@ function Home() {
         total: savedInvoice.total ?? totalAmount,
         status: savedInvoice.status ?? status,
         prescription: savedInvoice.prescription ?? prescription,
+        prescriberName: savedInvoice.prescriberName ?? prescriberName,
+        prescriptionReference: savedInvoice.prescriptionReference ?? prescriptionReference,
         shop: shopSettings
       });
 
@@ -705,6 +774,10 @@ function Home() {
       setSearch('');
 
       removePrescription();
+
+      setPrescriberName('');
+      setPrescriptionReference('');
+      setPrescriptionVerified(false);
 
       setOpen(false);
 
@@ -848,7 +921,14 @@ function Home() {
                         return (
                           <tr key={med.id} className="transition hover:bg-slate-50/70">
                             <td className="px-3 py-3 sm:px-4">
-                              <div className="font-semibold text-slate-900">{med.name}</div>
+                              <div className="font-semibold text-slate-900">
+                                {med.name}
+                                {scheduleLabel(med.drugSchedule) && (
+                                  <span className="ml-2 inline-flex rounded bg-rose-50 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-rose-600 dark:bg-rose-950/50 dark:text-rose-300">
+                                    {scheduleLabel(med.drugSchedule)}
+                                  </span>
+                                )}
+                              </div>
                               {med.saltSummary && (
                                 <div className="mt-0.5 text-[11px] font-medium text-blue-600">
                                   {med.saltSummary}
@@ -968,7 +1048,14 @@ function Home() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">{med.name}</p>
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {med.name}
+                            {scheduleLabel(med.drugSchedule) && (
+                              <span className="ml-2 inline-flex rounded bg-rose-50 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-rose-600 dark:bg-rose-950/50 dark:text-rose-300">
+                                {scheduleLabel(med.drugSchedule)}
+                              </span>
+                            )}
+                          </p>
                           {med.saltSummary && (
                             <p className="mt-0.5 text-[11px] font-medium text-blue-600">
                               {med.saltSummary}
@@ -1224,6 +1311,80 @@ function Home() {
                   </div>
                 </div>
 
+                {hasScheduledMedicines && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+                    <div className="flex items-start gap-2">
+                      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <div>
+                        <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                          Prescription required
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
+                          This bill contains {scheduledSchemes.map(scheduleLabel).join(', ')}{' '}
+                          medicine{scheduledSchemes.length === 1 ? '' : 's'}. Enter the
+                          prescriber details and confirm the prescription was checked.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label
+                          htmlFor="prescriber-name"
+                          className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300"
+                        >
+                          Prescriber name
+                        </Label>
+                        <Input
+                          id="prescriber-name"
+                          value={prescriberName}
+                          onChange={(event) => setPrescriberName(event.target.value)}
+                          placeholder="Doctor name"
+                          className="h-9 border-slate-200 bg-white text-sm shadow-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </div>
+
+                      <div>
+                        <Label
+                          htmlFor="prescription-reference"
+                          className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300"
+                        >
+                          Prescription reference
+                        </Label>
+                        <Input
+                          id="prescription-reference"
+                          value={prescriptionReference}
+                          onChange={(event) => setPrescriptionReference(event.target.value)}
+                          placeholder={
+                            requiresPrescriptionReference
+                              ? 'Required for H1 / X'
+                              : 'Rx number or date'
+                          }
+                          className="h-9 border-slate-200 bg-white text-sm shadow-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </div>
+                    </div>
+
+                    <label className="mt-3 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+                      <input
+                        type="checkbox"
+                        checked={prescriptionVerified}
+                        onChange={(event) => setPrescriptionVerified(event.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                      />
+                      <span>I verified the prescription for these medicines.</span>
+                    </label>
+
+                    {requiresPrescriptionReference
+                      && !prescriptionReference.trim()
+                      && !prescription && (
+                        <p className="mt-2 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                          Attach a prescription image or enter a reference before checkout.
+                        </p>
+                      )}
+                  </div>
+                )}
+
                 <div className="mt-4 border-t border-slate-100 pt-4">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -1370,7 +1531,12 @@ function Home() {
                   <DialogTrigger asChild>
                     <Button
                       type="button"
-                      disabled={cart.length === 0 || customer.name.trim() === '' || saving}
+                      disabled={
+                        cart.length === 0
+                        || customer.name.trim() === ''
+                        || !complianceReady
+                        || saving
+                      }
                       className="mt-4 w-full gap-2 bg-white text-slate-900 shadow-sm hover:bg-slate-100"
                     >
                       <Receipt className="h-4 w-4" />
@@ -1529,7 +1695,9 @@ function Home() {
                   <p className="text-[11px] text-slate-400">
                     {customer.name.trim() === ''
                       ? 'Add a customer name to enable checkout.'
-                      : 'Ready to save and generate the PDF.'}
+                      : !complianceReady
+                        ? 'Complete the prescription compliance details to enable checkout.'
+                        : 'Ready to save and generate the PDF.'}
                   </p>
                   <Button
                     type="button"

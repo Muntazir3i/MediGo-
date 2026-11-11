@@ -15,6 +15,8 @@ The interface is optimized for fast keyboard-driven data entry, local-first oper
 - Inventory catalogue with batch-level editing, stock adjustment, and purchase history
 - Supplier ledger with general ledger, payments, expiry ledger, and credit notes
 - Supplier statement PDF generation
+- Prescription compliance for Schedule H / H1 / X medicines with statutory registers
+- Automated daily backups with download and restore
 - Expiry register and expiry ledger
 - Credit note creation and management
 - Insights dashboard for purchase trends, top products, and outstanding payables
@@ -45,6 +47,7 @@ The interface is optimized for fast keyboard-driven data entry, local-first oper
 | `/add` | Purchase entry, supplier, payment, expiry, and credit note tabs |
 | `/inventory` | Medicine catalogue and purchase history |
 | `/ledger` | General ledger, payments, expiry ledger, and credit notes |
+| `/registers` | Schedule H, H1 and X prescription registers |
 | `/insights` | Business insights |
 
 ## Project structure
@@ -203,6 +206,20 @@ The extracted product fields include:
 - Medicine price history with a searchable chart of GST-inclusive unit price versus MRP over time.
 - Top products and supplier activity.
 - Outstanding payables and business metrics.
+
+### Prescription compliance
+
+- Set **Drug schedule** to H, H1 or X from **Inventory → Edit medicine**.
+- Scheduled medicines require a prescriber name and prescription verification at billing.
+- Schedule H1 and X also require a prescription reference or attached prescription.
+- View and export the statutory registers from **Compliance → Registers**.
+
+### Backups
+
+- **Settings → Backup & restore** can create, download and restore database backups.
+- Automatic backups run daily after 21:00 and keep the latest 30 copies.
+- A restore is prepared immediately and applied when the backend is restarted.
+- A safety backup of the current database is created before every restore.
 
 ## Keyboard shortcuts
 

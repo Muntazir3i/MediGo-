@@ -7,6 +7,7 @@ import {
     BookOpen,
     Boxes,
     CalendarClock,
+    ClipboardList,
     CornerDownLeft,
     CreditCard,
     FilePlus2,
@@ -75,6 +76,14 @@ const navigateCommands = [
         keywords: 'settings shop name pharmacy drug licence phone address gstin email invoice footer profile',
         to: '/settings',
         icon: Settings2,
+    },
+    {
+        id: 'registers',
+        title: 'Prescription registers',
+        description: 'Schedule H1, Schedule X and prescription sales register',
+        keywords: 'register schedule h h1 x prescription narcotic statutory compliance drug inspector',
+        to: '/registers',
+        icon: ClipboardList,
     },
 ];
 
