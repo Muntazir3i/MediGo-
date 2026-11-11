@@ -183,10 +183,72 @@ The extracted product fields include:
 - Purchase bills can be edited later; stock changes are applied as audited deltas.
 - Purchase bills can be voided only while all received units remain in stock.
 
+### Billing
+
+- Search by medicine, salt or batch number.
+- Review the current cart, discounts and totals before checkout.
+- Generate an invoice PDF from the saved sale snapshot.
+
+### Phone / LAN access
+
+The laptop can act as the server for a phone or another computer on the same Wi-Fi.
+
+1. Build the frontend:
+
+```bash
+cd MediGo
+npm run build
+```
+
+2. Start the backend:
+
+```bash
+cd shopbackend
+npm start
+```
+
+3. Find the laptop IP:
+
+```bash
+hostname -I
+```
+
+4. On the phone, open:
+
+```text
+http://<laptop-ip>:8008
+```
+
+The backend serves the built frontend and the API from the same port.
+
+### Optional HTTPS access for phone
+
+The HTTP address above is enough for normal phone use. If you want an encrypted connection, use the optional HTTPS listener.
+
+1. Generate a local certificate for the laptop IP:
+
+```bash
+cd shopbackend
+./scripts/create-local-cert.sh 192.168.0.104
+```
+
+2. Start the backend.
+3. On the phone, open:
+
+```text
+https://<laptop-ip>:8443
+```
+
+4. Accept the self-signed certificate warning once.
+
+For development, `npm run dev` binds to all interfaces, so `http://<laptop-ip>:5173` also works on the LAN.
+
+> This app has no login screen. Only expose it on a trusted home/office Wi-Fi network. If you need access outside the shop, put it behind a VPN or an authenticated reverse proxy.
+
 ### Inventory
 
 - Browse batch-level medicine stock.
-- Edit medicine and batch metadata, including supplier and bill number.
+- Edit medicine and batch metadata, including supplier, bill number and drug schedule.
 - Use **Adjust stock** for audited quantity changes.
 - Review low-stock, out-of-stock, and expiring medicines.
 - Open purchase history and edit or void purchase bills.

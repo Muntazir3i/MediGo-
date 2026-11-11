@@ -1,19 +1,33 @@
 import axios from "axios";
 
+// When the app is served by Vite on 5173, the API runs on port 8008 on the
+// same host. When the built app is served by the backend (HTTP or HTTPS), use
+// the current origin so the same build works from a phone on the LAN.
+const API_ORIGIN = (() => {
+  if (typeof window === 'undefined') return 'http://localhost:8008';
+  const { hostname, port, origin } = window.location;
+
+  // When the built app is served by the backend, API calls are same-origin.
+  if (port === '8008' || port === '8443') return origin;
+
+  // Vite dev/preview runs on another port; the API stays on 8008.
+  return `http://${hostname}:8008`;
+})();
+
 // ─── Base URLs ────────────────────────────────────────────────────────────────
-const API_BASE_URL = 'http://localhost:8008/api/medicines';
-const API_BASE_URL_EXPIRY = 'http://localhost:8008/api/expiry';
-const API_BASE_URL_CREDIT_NOTES = 'http://localhost:8008/api/credit-notes';
-const API_BASE_URL_INSIGHTS = 'http://localhost:8008/api/insights';
-const API_BASE_URL_SETTINGS = 'http://localhost:8008/api/settings';
-const API_BASE_URL_SUPPLIER_SQL = 'http://localhost:8008/api/supplier';
-const API_BASE_URL_BILL_SQL = 'http://localhost:8008/api/sqlbills';
-const API_BASE_URL_PAYMENT_SQL = 'http://localhost:8008/api/sqlpayment';
-const API_BASE_URL_BILL_PAYMENT_SQL = 'http://localhost:8008/api/sqlbillpayment';
-const API_BASE_URL_MEDICINES_SQL = 'http://localhost:8008/api/sqlmedicines';
-const API_BASE_URL_SEARCH_MEDICINE = 'http://localhost:8008/api/searchMedicine';
-const API_BASE_URL_INVOICE = "http://localhost:8008/api/invoice";
-const API_BASE_URL_SALES = "http://localhost:8008/api/sales";
+const API_BASE_URL = `${API_ORIGIN}/api/medicines`;
+const API_BASE_URL_EXPIRY = `${API_ORIGIN}/api/expiry`;
+const API_BASE_URL_CREDIT_NOTES = `${API_ORIGIN}/api/credit-notes`;
+const API_BASE_URL_INSIGHTS = `${API_ORIGIN}/api/insights`;
+const API_BASE_URL_SETTINGS = `${API_ORIGIN}/api/settings`;
+const API_BASE_URL_SUPPLIER_SQL = `${API_ORIGIN}/api/supplier`;
+const API_BASE_URL_BILL_SQL = `${API_ORIGIN}/api/sqlbills`;
+const API_BASE_URL_PAYMENT_SQL = `${API_ORIGIN}/api/sqlpayment`;
+const API_BASE_URL_BILL_PAYMENT_SQL = `${API_ORIGIN}/api/sqlbillpayment`;
+const API_BASE_URL_MEDICINES_SQL = `${API_ORIGIN}/api/sqlmedicines`;
+const API_BASE_URL_SEARCH_MEDICINE = `${API_ORIGIN}/api/searchMedicine`;
+const API_BASE_URL_INVOICE = `${API_ORIGIN}/api/invoice`;
+const API_BASE_URL_SALES = `${API_ORIGIN}/api/sales`;
 
 
 
@@ -718,7 +732,7 @@ export const updateShopSettings = async (settings) => {
 
 // ─── Backups ─────────────────────────────────────────────────────────────────
 
-const API_BASE_URL_BACKUPS = 'http://localhost:8008/api/backups';
+const API_BASE_URL_BACKUPS = `${API_ORIGIN}/api/backups`;
 
 export const getBackups = async () => {
   try {
@@ -759,7 +773,7 @@ export const backupDownloadUrl = (name) =>
 
 export const getPrescriptionRegister = async ({ schedule = 'H1', from = '', to = '' } = {}) => {
   try {
-    const response = await axios.get('http://localhost:8008/api/registers/prescriptions', {
+    const response = await axios.get(`${API_ORIGIN}/api/registers/prescriptions`, {
       params: { schedule, from, to },
     });
     return response.data;
