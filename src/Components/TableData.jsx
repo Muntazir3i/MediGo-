@@ -118,6 +118,7 @@ function TableData({
               <tr>
                 <th className="px-4 py-3 font-semibold sm:px-4">Name</th>
                 <th className="hidden px-3 py-3 font-semibold md:table-cell">Category</th>
+                <th className="hidden px-3 py-3 font-semibold lg:table-cell">Company</th>
                 <th className="hidden px-3 py-3 font-semibold lg:table-cell">Supplier</th>
                 <th className="hidden px-3 py-3 font-semibold xl:table-cell">Batch</th>
                 <th className="hidden px-3 py-3 font-semibold md:table-cell">Expiry</th>
@@ -160,6 +161,7 @@ function TableData({
                           </div>
                         )}
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 sm:hidden">
+                          {med.manufacturer && <span>{med.manufacturer}</span>}
                           {med.batchNumber && <span>Batch {med.batchNumber}</span>}
                           {med.expiryDate && (
                             <span className={expired ? 'font-medium text-rose-600' : ''}>
@@ -179,6 +181,10 @@ function TableData({
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
+                      </td>
+
+                      <td className="hidden px-3 py-3 text-slate-600 lg:table-cell">
+                        {med.manufacturer || '—'}
                       </td>
 
                       <td className="hidden px-3 py-3 text-slate-600 lg:table-cell">
@@ -256,7 +262,7 @@ function TableData({
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-14 text-center">
+                  <td colSpan={9} className="px-6 py-14 text-center">
                     <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                       <PackageSearch className="h-5 w-5" />
                     </div>
@@ -330,6 +336,20 @@ function TableData({
                     <option key={category} value={category} />
                   ))}
                 </datalist>
+              </Field>
+
+              <Field label="Company" htmlFor="edit-manufacturer">
+                <Input
+                  id="edit-manufacturer"
+                  name="manufacturer"
+                  value={formData.manufacturer ?? ''}
+                  onChange={handleChange}
+                  placeholder="Manufacturer / company"
+                  className={inputClass}
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Searchable from the Inventory page.
+                </p>
               </Field>
 
               <Field label="Drug schedule" htmlFor="edit-drug-schedule">

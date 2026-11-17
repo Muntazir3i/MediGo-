@@ -207,10 +207,11 @@ const TabContentAddPurchase = ({
 
                 <div className="mx-5 mb-0 overflow-hidden rounded-lg border border-slate-200">
                     <div className="max-h-[52vh] overflow-auto">
-                        <table className={`w-full ${isCreditNote ? 'min-w-[980px]' : 'min-w-[1040px]'} border-collapse text-left text-sm`}>
+                        <table className={`w-full ${isCreditNote ? 'min-w-[1100px]' : 'min-w-[1160px]'} border-collapse text-left text-sm`}>
                             <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                                 <tr>
                                     <th className="px-2 py-2.5 font-semibold">Product name</th>
+                                    <th className="px-2 py-2.5 font-semibold">Company</th>
                                     <th className="px-2 py-2.5 font-semibold">Category</th>
                                     <th className="px-2 py-2.5 font-semibold">Batch</th>
                                     <th className="px-2 py-2.5 font-semibold">Expiry</th>
@@ -256,6 +257,25 @@ const TabContentAddPurchase = ({
                                                     handleInputChangeSearch(
                                                         item.id,
                                                         'name',
+                                                        e.target.value.toUpperCase()
+                                                    )
+                                                }
+                                            />
+                                        </td>
+
+                                        <td className="px-2 py-2">
+                                            <Input
+                                                type="text"
+                                                aria-label={`Company for line ${index + 1}`}
+                                                data-product-input
+                                                data-product-field="manufacturer"
+                                                className={`${inputClass} min-w-[130px]`}
+                                                value={(item.manufacturer || item.company || '').toUpperCase()}
+                                                placeholder="Company"
+                                                onChange={(e) =>
+                                                    handleInputChange(
+                                                        item.id,
+                                                        'manufacturer',
                                                         e.target.value.toUpperCase()
                                                     )
                                                 }
@@ -415,7 +435,7 @@ const TabContentAddPurchase = ({
 
                                     {!isCreditNote && String(item.name ?? '').trim() !== '' && (
                                         <tr className="bg-slate-50/40">
-                                            <td colSpan={isCreditNote ? 10 : 11} className="px-3 pb-3 pt-1">
+                                            <td colSpan={isCreditNote ? 11 : 12} className="px-3 pb-3 pt-1">
                                                 <SaltEditor
                                                     id={`purchase-salts-${item.id}`}
                                                     value={item.salts ?? []}

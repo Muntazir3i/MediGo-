@@ -151,6 +151,7 @@ function Add() {
     {
       id: Date.now(),
       name: "",
+      manufacturer: "",
       batchNumber: "",
       expiryDate: "",
       stock: 0,
@@ -378,6 +379,7 @@ function Add() {
               gstPercentage: "",
               free: 0,
               category: "",
+              manufacturer: "",
               salts: undefined,
             }
             : product
@@ -403,6 +405,7 @@ function Add() {
               gstPercentage: selectedMed.gstPercentage,
               free: 0,
               category: selectedMed.category,
+              manufacturer: selectedMed.manufacturer || '',
               [field]: value,
               supplier: formData.supplierName,
               // Prefill the medicine's existing composition. undefined keeps it
@@ -655,6 +658,7 @@ function Add() {
   (bill.products || []).map((product, index) => ({
     id: Date.now() + index, // numeric ID for SQLite INTEGER PRIMARY KEY
     name: product.name || '',
+    manufacturer: product.manufacturer || product.company || '',
     batchNumber: product.batchNumber || '',
     expiryDate: product.expiryDate || '',
     stock: toNumber(product.stock ?? product.quantity),

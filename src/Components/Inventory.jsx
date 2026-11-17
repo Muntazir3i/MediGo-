@@ -397,6 +397,7 @@ function Inventory() {
     setFormData({
       name: medicine?.name ?? '',
       category: medicine?.category ?? '',
+      manufacturer: medicine?.manufacturer ?? '',
       supplier: medicine?.supplier ?? '',
       batchNumber: medicine?.batchNumber ?? '',
       expiryDate: medicine?.expiryDate ?? '',
@@ -440,6 +441,7 @@ function Inventory() {
     const payload = {
       name: String(formData.name ?? '').trim(),
       category: String(formData.category ?? '').trim(),
+      manufacturer: String(formData.manufacturer ?? '').trim(),
       supplier: String(formData.supplier ?? '').trim(),
       batchNumber: String(formData.batchNumber ?? '').trim(),
       expiryDate: String(formData.expiryDate ?? '').trim(),
@@ -599,7 +601,7 @@ function Inventory() {
                     id="inventory-product-search"
                     aria-label="Search medicines"
                     className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
-                    placeholder="Search medicine name or batch number…"
+                    placeholder="Search medicine, company or batch number…"
                     value={medicineSearch}
                     onChange={(e) => setMedicineSearch(e.target.value)}
                   />

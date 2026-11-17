@@ -46,6 +46,7 @@ export const addNewBill = async (formData,products,setFormData,setProducts,total
         {
           id: Date.now(),
           name: "",
+          manufacturer: "",
           batchNumber: "",
           expiryDate: "",
           stock: 0,

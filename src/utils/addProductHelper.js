@@ -5,6 +5,7 @@ export const handleAddProduct = (setProducts) => {
         {
             id: Date.now(),
             name: "",
+            manufacturer: "",
             batchNumber: "",
             expiryDate: "",
             stock: 0,

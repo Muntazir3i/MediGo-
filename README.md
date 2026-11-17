@@ -177,7 +177,7 @@ The extracted product fields include:
 
 ### Purchase entry
 
-- Add medicine lines with batch, expiry, quantity, free quantity, MRP, rate, discount, and GST.
+- Add medicine lines with company, batch, expiry, quantity, free quantity, MRP, rate, discount, and GST.
 - Free quantity is optional and defaults to `0`; free units are added to stock but not charged.
 - Salt composition can be attached to the medicine.
 - Purchase bills can be edited later; stock changes are applied as audited deltas.
@@ -248,7 +248,8 @@ For development, `npm run dev` binds to all interfaces, so `http://<laptop-ip>:5
 ### Inventory
 
 - Browse batch-level medicine stock.
-- Edit medicine and batch metadata, including supplier, bill number and drug schedule.
+- Search by medicine name, company, batch number or salt.
+- Edit medicine and batch metadata, including company, supplier, bill number and drug schedule.
 - Use **Adjust stock** for audited quantity changes.
 - Review low-stock, out-of-stock, and expiring medicines.
 - Open purchase history and edit or void purchase bills.
