@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Command } from 'cmdk';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -97,6 +97,7 @@ const actionCommands = [
         focus: 'purchase-invoice',
         icon: PackagePlus,
         group: 'add',
+        shortcut: 'ai',
     },
     {
         id: 'add-payment',
@@ -107,6 +108,7 @@ const actionCommands = [
         focus: 'payment-invoice',
         icon: CreditCard,
         group: 'add',
+        shortcut: 'ap',
     },
     {
         id: 'add-supplier',
@@ -117,6 +119,7 @@ const actionCommands = [
         focus: 'new-supplier-name',
         icon: Users,
         group: 'add',
+        shortcut: 'as',
     },
     {
         id: 'add-expiry',
@@ -127,6 +130,7 @@ const actionCommands = [
         focus: 'expiry-supplier',
         icon: CalendarClock,
         group: 'add',
+        shortcut: 'ae',
     },
     {
         id: 'add-credit-note',
@@ -137,6 +141,7 @@ const actionCommands = [
         focus: 'credit-note-number',
         icon: FileText,
         group: 'add',
+        shortcut: 'ac',
     },
     {
         id: 'view-expiry-ledger',
@@ -190,8 +195,15 @@ const actionCommands = [
         to: '/ledger?tab=all-payment',
         focus: 'payment-invoice-search',
         icon: FilePlus2,
+        shortcut: 'allp',
     },
 ];
+
+const normalizeShortcut = (value) =>
+    String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
 
 const CommandRow = ({ item, onSelect }) => {
     const Icon = item.icon;
@@ -214,6 +226,10 @@ const CommandRow = ({ item, onSelect }) => {
                     {item.description}
                 </span>
             </span>
+
+            {item.shortcut && (
+                <kbd className={`${kbdClass} shrink-0`}>{item.shortcut.toUpperCase()}</kbd>
+            )}
 
             <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/50 opacity-0 transition group-data-[selected=true]:text-primary group-data-[selected=true]:opacity-100" />
         </Command.Item>
@@ -299,6 +315,33 @@ const CommandPalette = ({ open, onOpenChange }) => {
         [close, navigate]
     );
 
+    const lastShortcutRef = useRef('');
+    const shortcutMap = useMemo(() => {
+        const map = new Map();
+        [...navigateCommands, ...actionCommands].forEach((item) => {
+            if (item.shortcut) map.set(item.shortcut, item);
+        });
+        return map;
+    }, []);
+
+    // Typing an exact shortcut (ai, ae, ap, ac, as, allp) opens it immediately.
+    // Parentheses, spaces and capitalisation are ignored.
+    useEffect(() => {
+        if (!open) {
+            lastShortcutRef.current = '';
+            return;
+        }
+
+        const normalized = normalizeShortcut(query);
+        if (!normalized || normalized === lastShortcutRef.current) return;
+
+        const command = shortcutMap.get(normalized);
+        if (!command) return;
+
+        lastShortcutRef.current = normalized;
+        handleSelect(command);
+    }, [open, query, shortcutMap, handleSelect]);
+
     const quickActionsLabel = useMemo(
         () => (typeof navigator !== 'undefined' && /mac/i.test(navigator.platform) ? '⌘K' : 'Ctrl K'),
         []
@@ -339,7 +382,7 @@ const CommandPalette = ({ open, onOpenChange }) => {
                                 autoFocus
                                 value={query}
                                 onValueChange={setQuery}
-                                placeholder="Search pages and actions…"
+                                placeholder="Search pages and actions… or type ai, ae, ap, ac, as, allp"
                                 className="h-14 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                             />
                             <button

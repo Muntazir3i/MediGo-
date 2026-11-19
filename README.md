@@ -296,6 +296,21 @@ For development, `npm run dev` binds to all interfaces, so `http://<laptop-ip>:5
 | `Ctrl/Cmd + Shift + Backspace` | Delete the focused product line |
 | `Ctrl/Cmd + Shift + S` | Save the purchase bill |
 
+### Command palette shortcuts
+
+Open the palette with `Ctrl/Cmd + K`, then type:
+
+| Type | Opens |
+| --- | --- |
+| `ai` or `(AI)` | Add Item / purchase invoice |
+| `ae` or `(AE)` | Add Expiry |
+| `ap` or `(AP)` | Add Payment |
+| `ac` or `(AC)` | Add Credit Note |
+| `as` or `(AS)` | Add Supplier |
+| `allp` | All Payments |
+
+The shortcut opens the section immediately — no Enter needed.
+
 ## Theming
 
 The app supports light and dark themes through a theme context and a toggle in the sidebar/header. Dark-mode compatibility styles are defined in `src/index.css`.
