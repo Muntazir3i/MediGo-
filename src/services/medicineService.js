@@ -708,6 +708,16 @@ export const getMedicinePriceHistory = async ({ search = '', productId = null, n
   }
 };
 
+export const getMarginDashboard = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_INSIGHTS}/margins`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching margin dashboard:', error.message);
+    throw new Error(getApiErrorMessage(error, 'Failed to load the margin dashboard.'));
+  }
+};
+
 // ─── Shop settings ───────────────────────────────────────────────────────────
 
 export const getShopSettings = async () => {

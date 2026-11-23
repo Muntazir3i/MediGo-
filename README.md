@@ -280,6 +280,17 @@ Open the command palette and choose **Discount advisor**. Search a medicine to s
 
 The page is intentionally hidden from the sidebar.
 
+The top of the page also includes a **margin dashboard** for the whole inventory:
+
+- Stock-weighted average margin and simple average margin
+- Potential profit on current stock
+- Stock value at MRP and cost value
+- Products below the 10% margin target
+- Loss-making products
+- Margin distribution by band
+- Highest and lowest margin medicines
+- Top categories by retail stock value
+
 ### Ledger
 
 - General ledger with supplier search and transaction history.

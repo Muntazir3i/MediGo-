@@ -2,19 +2,24 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   BadgePercent,
+  BarChart3,
   CheckCircle2,
   Info,
   Loader2,
   PackageSearch,
+  RefreshCw,
   Search,
   ShieldCheck,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
   X,
 } from 'lucide-react';
 import { Input } from './ui/input.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Button } from './ui/button.jsx';
-import { findmedicineByName } from '../services/medicineService.js';
+import { findmedicineByName, getMarginDashboard } from '../services/medicineService.js';
 import { formatCurrency, formatLedgerDate } from '../utils/ledgerFormat.js';
 import {
   calculateDiscountRange,
@@ -26,6 +31,14 @@ const formatQty = (value) =>
   Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
 const formatDiscount = (value) => `${Number(value || 0).toFixed(2)}%`;
+
+const bandColor = (label) => {
+  if (label === 'Loss') return 'bg-rose-500';
+  if (label === '0–5%' || label === '5–10%') return 'bg-amber-400';
+  if (label === '10–15%') return 'bg-emerald-400';
+  if (label === '15–20%' || label === '20–30%' || label === '30%+') return 'bg-emerald-500';
+  return 'bg-slate-400';
+};
 
 const MetricCard = ({ label, value, hint, tone = 'blue' }) => {
   const tones = {
@@ -61,6 +74,34 @@ const DiscountAdvisor = () => {
   const [targetMargin, setTargetMargin] = useState(10);
   const [competitorDiscount, setCompetitorDiscount] = useState(18);
   const competitorPercent = Math.min(100, Math.max(0, Number(competitorDiscount) || 0));
+  const [marginData, setMarginData] = useState(null);
+  const [marginLoading, setMarginLoading] = useState(true);
+  const [marginError, setMarginError] = useState('');
+  const [marginReloadKey, setMarginReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMarginLoading(true);
+    setMarginError('');
+
+    getMarginDashboard()
+      .then((data) => {
+        if (!cancelled) setMarginData(data);
+      })
+      .catch((requestError) => {
+        if (cancelled) return;
+        console.error(requestError);
+        setMarginData(null);
+        setMarginError(requestError.message || 'Could not load the margin dashboard.');
+      })
+      .finally(() => {
+        if (!cancelled) setMarginLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [marginReloadKey]);
 
   useEffect(() => {
     const term = query.trim();
@@ -133,6 +174,11 @@ const DiscountAdvisor = () => {
       discountPercent: range.recommendedDiscountPercent,
     });
   }, [selected, range]);
+
+  const maxBandValue = useMemo(
+    () => Math.max(1, ...(marginData?.bands ?? []).map((band) => Number(band.stockValue) || 0)),
+    [marginData],
+  );
 
   const scenarios = useMemo(() => {
     if (!selected || !range) return [];
@@ -262,6 +308,325 @@ const DiscountAdvisor = () => {
             </div>
           </div>
         </header>
+
+        <section className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Portfolio overview
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+                Margin dashboard
+              </h2>
+              <p className="mt-0.5 max-w-2xl text-xs text-slate-500 dark:text-slate-400">
+                Average margin across all active stock, weighted by current retail stock value.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setMarginReloadKey((key) => key + 1)}
+              disabled={marginLoading}
+              className="gap-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <RefreshCw className={`h-4 w-4 ${marginLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
+
+          {marginLoading ? (
+            <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white py-12 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading margin dashboard…
+            </div>
+          ) : marginError ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{marginError}</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMarginReloadKey((key) => key + 1)}
+                className="h-8 border-rose-200 bg-white text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : marginData ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <MetricCard
+                  label="Average margin · stock-weighted"
+                  value={formatMarginPercent(marginData.averageMarginPercent)}
+                  hint={`${marginData.stockedProductCount} stocked products`}
+                  tone={marginData.averageMarginPercent < 0 ? 'rose' : 'emerald'}
+                />
+                <MetricCard
+                  label="Simple average margin"
+                  value={formatMarginPercent(marginData.simpleAverageMarginPercent)}
+                  hint="Equal weight per product"
+                  tone={marginData.simpleAverageMarginPercent < 0 ? 'rose' : 'blue'}
+                />
+                <MetricCard
+                  label="Potential profit on stock"
+                  value={formatCurrency(marginData.totalProfit)}
+                  hint={`${marginData.inStockBatchCount} batches in stock`}
+                  tone={marginData.totalProfit < 0 ? 'rose' : 'violet'}
+                />
+                <MetricCard
+                  label="Stock value at MRP"
+                  value={formatCurrency(marginData.totalMrpValue)}
+                  hint={`Cost value ${formatCurrency(marginData.totalCostValue)}`}
+                  tone="blue"
+                />
+                <MetricCard
+                  label={`Below ${formatDiscount(marginData.targetMarginPercent)} margin`}
+                  value={marginData.belowTargetProductCount}
+                  hint={`of ${marginData.stockedProductCount} stocked products`}
+                  tone="amber"
+                />
+                <MetricCard
+                  label="Loss-making products"
+                  value={marginData.lossProductCount}
+                  hint="MRP is below cost + GST"
+                  tone="rose"
+                />
+              </div>
+
+              {(marginData.missingCostProductCount > 0 || marginData.missingMrpProductCount > 0) && (
+                <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>
+                    {marginData.missingCostProductCount > 0
+                      ? `${marginData.missingCostProductCount} stocked products have no purchase rate. `
+                      : ''}
+                    {marginData.missingMrpProductCount > 0
+                      ? `${marginData.missingMrpProductCount} stocked products have no MRP. `
+                      : ''}
+                    Their margins may look higher or lower than reality. Update them in Inventory
+                    for accurate averages.
+                  </p>
+                </div>
+              )}
+
+              <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      <BarChart3 className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Margin distribution
+                      </h3>
+                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        Products grouped by margin at MRP, with retail stock value.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {marginData.bands.map((band) => {
+                      const width = Math.max(
+                        2,
+                        (Number(band.stockValue) / maxBandValue) * 100,
+                      );
+
+                      return (
+                        <div key={band.label}>
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">
+                              {band.label}
+                            </span>
+                            <span className="text-slate-400">
+                              {band.count} products · {formatCurrency(band.stockValue)}
+                            </span>
+                          </div>
+                          <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div
+                              className={`h-full rounded-full ${bandColor(band.label)}`}
+                              style={{ width: `${width}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      <PackageSearch className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Top categories
+                      </h3>
+                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        By current retail stock value.
+                      </p>
+                    </div>
+                  </div>
+
+                  {marginData.categories.length === 0 ? (
+                    <p className="mt-4 text-xs text-slate-500">No category data is available.</p>
+                  ) : (
+                    <div className="mt-3 overflow-auto">
+                      <table className="w-full min-w-[340px] border-collapse text-left text-sm">
+                        <thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500 dark:bg-slate-950">
+                          <tr>
+                            <th className="px-3 py-2.5 font-semibold">Category</th>
+                            <th className="px-3 py-2.5 text-right font-semibold">Margin</th>
+                            <th className="px-3 py-2.5 text-right font-semibold">Stock value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {marginData.categories.map((category) => (
+                            <tr key={category.name}>
+                              <td className="px-3 py-2.5">
+                                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                                  {category.name}
+                                </p>
+                                <p className="mt-0.5 text-[10px] text-slate-400">
+                                  {category.productCount} products
+                                </p>
+                              </td>
+                              <td
+                                className={`px-3 py-2.5 text-right font-semibold ${
+                                  category.marginPercent < 0
+                                    ? 'text-rose-600 dark:text-rose-300'
+                                    : 'text-emerald-700 dark:text-emerald-300'
+                                }`}
+                              >
+                                {formatMarginPercent(category.marginPercent)}
+                              </td>
+                              <td className="px-3 py-2.5 text-right text-slate-600 dark:text-slate-300">
+                                {formatCurrency(category.stockValue)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300">
+                      <TrendingUp className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Highest margin medicines
+                      </h3>
+                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        Best margin at MRP, with current stock value.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    {marginData.topProducts.length === 0 ? (
+                      <p className="text-xs text-slate-500">No stocked products yet.</p>
+                    ) : (
+                      marginData.topProducts.map((product, index) => (
+                        <div
+                          key={`${product.productId ?? product.name}-${index}`}
+                          className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                              {product.name}
+                            </p>
+                            <p className="mt-0.5 truncate text-[10px] text-slate-400">
+                              {product.manufacturer || product.category || '—'} · Stock{' '}
+                              {formatQty(product.stockQuantity)}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                              {formatMarginPercent(product.marginPercent)}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {formatCurrency(product.stockValue)}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300">
+                      <TrendingDown className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Lowest margin medicines
+                      </h3>
+                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        Weakest margin at MRP, with current stock value.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    {marginData.bottomProducts.length === 0 ? (
+                      <p className="text-xs text-slate-500">No stocked products yet.</p>
+                    ) : (
+                      marginData.bottomProducts.map((product, index) => (
+                        <div
+                          key={`${product.productId ?? product.name}-${index}`}
+                          className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                              {product.name}
+                            </p>
+                            <p className="mt-0.5 truncate text-[10px] text-slate-400">
+                              {product.manufacturer || product.category || '—'} · Stock{' '}
+                              {formatQty(product.stockQuantity)}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p
+                              className={`text-sm font-semibold ${
+                                product.marginPercent < 0
+                                  ? 'text-rose-600 dark:text-rose-300'
+                                  : 'text-amber-600 dark:text-amber-300'
+                              }`}
+                            >
+                              {formatMarginPercent(product.marginPercent)}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {formatCurrency(product.stockValue)}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-xs text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
+                <Wallet className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>
+                  Margin is calculated as <span className="font-semibold">(MRP value − cost after GST) ÷ MRP value</span>.
+                  Only active stock is included. Purchase discount is not included.
+                </p>
+              </div>
+            </>
+          ) : null}
+        </section>
 
         <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center gap-2">
