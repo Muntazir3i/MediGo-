@@ -23,6 +23,7 @@ import { Input } from './ui/input.jsx';
 import { Label } from './ui/label.jsx';
 import { Badge } from './ui/badge.jsx';
 import SaltEditor from './SaltEditor.jsx';
+import { calculateProfitMargin, formatMarginPercent } from '../utils/profitMargin.js';
 
 const inputClass =
   'h-9 border-slate-200 bg-white text-sm text-slate-900 shadow-none transition focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500';
@@ -91,6 +92,11 @@ function TableData({
   onSaltsChange,
 }) {
   const today = new Date().toISOString().slice(0, 10);
+  const formMargin = calculateProfitMargin({
+    rate: formData?.unitPrice,
+    gstPercentage: formData?.gstPercentage,
+    mrp: formData?.mrp,
+  });
 
   return (
     <>
@@ -124,6 +130,7 @@ function TableData({
                 <th className="hidden px-3 py-3 font-semibold md:table-cell">Expiry</th>
                 <th className="px-2 py-3 font-semibold sm:px-3">Stock</th>
                 <th className="hidden px-3 py-3 text-right font-semibold sm:table-cell">Price</th>
+                <th className="hidden px-3 py-3 text-right font-semibold xl:table-cell">Margin</th>
                 <th className="px-3 py-3 text-right font-semibold sm:px-4">Actions</th>
               </tr>
             </thead>
@@ -139,6 +146,11 @@ function TableData({
                       : stock < 5
                         ? 'bg-amber-50 text-amber-700'
                         : 'bg-emerald-50 text-emerald-700';
+                  const margin = calculateProfitMargin({
+                    rate: med.unitPrice,
+                    gstPercentage: med.gstPercentage,
+                    mrp: med.mrp,
+                  });
 
                   return (
                     <tr key={med.id} className="transition hover:bg-slate-50/70">
@@ -170,6 +182,15 @@ function TableData({
                           )}
                           <span className="whitespace-nowrap">
                             ₹ {toNumber(med.mrp).toFixed(2)}
+                          </span>
+                          <span
+                            className={
+                              margin.isLoss
+                                ? 'font-medium text-rose-600'
+                                : 'font-medium text-emerald-700'
+                            }
+                          >
+                            Margin {formatMarginPercent(margin.marginPercent)}
                           </span>
                         </div>
                       </td>
@@ -215,8 +236,32 @@ function TableData({
                         </span>
                       </td>
 
-                      <td className="hidden whitespace-nowrap px-3 py-3 text-right font-semibold text-slate-900 sm:table-cell">
-                        ₹ {toNumber(med.mrp).toFixed(2)}
+                      <td className="hidden whitespace-nowrap px-3 py-3 text-right sm:table-cell">
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">
+                          ₹ {toNumber(med.mrp).toFixed(2)}
+                        </p>
+                        <p
+                          className={`mt-0.5 text-[10px] font-semibold xl:hidden ${
+                            margin.isLoss
+                              ? 'text-rose-600'
+                              : 'text-emerald-700 dark:text-emerald-300'
+                          }`}
+                        >
+                          Margin {formatMarginPercent(margin.marginPercent)}
+                        </p>
+                      </td>
+
+                      <td className="hidden whitespace-nowrap px-3 py-3 text-right xl:table-cell">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            margin.isLoss
+                              ? 'bg-rose-50 text-rose-600'
+                              : 'bg-emerald-50 text-emerald-700'
+                          }`}
+                          title={`Cost + GST: ₹ ${margin.costWithGst.toFixed(2)}\nMRP: ₹ ${margin.mrp.toFixed(2)}\nProfit: ₹ ${margin.profit.toFixed(2)}\nMargin: ${formatMarginPercent(margin.marginPercent)}\nMarkup: ${formatMarginPercent(margin.markupPercent)}`}
+                        >
+                          {formatMarginPercent(margin.marginPercent)}
+                        </span>
                       </td>
 
                       <td className="px-3 py-3 sm:px-4">
@@ -262,7 +307,7 @@ function TableData({
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="px-6 py-14 text-center">
+                  <td colSpan={10} className="px-6 py-14 text-center">
                     <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                       <PackageSearch className="h-5 w-5" />
                     </div>
@@ -519,6 +564,60 @@ function TableData({
                   className={inputClass}
                 />
               </Field>
+
+              <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-950/40">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    Profit margin at MRP
+                  </p>
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      formMargin.isLoss
+                        ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300'
+                        : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                    }`}
+                  >
+                    {formatMarginPercent(formMargin.marginPercent)}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                  <div>
+                    <p className="text-slate-400">Rate + GST</p>
+                    <p className="mt-0.5 font-semibold text-slate-800 dark:text-slate-200">
+                      ₹ {formMargin.costWithGst.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400">MRP</p>
+                    <p className="mt-0.5 font-semibold text-slate-800 dark:text-slate-200">
+                      ₹ {formMargin.mrp.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400">Profit</p>
+                    <p
+                      className={`mt-0.5 font-semibold ${
+                        formMargin.isLoss
+                          ? 'text-rose-600 dark:text-rose-300'
+                          : 'text-emerald-700 dark:text-emerald-300'
+                      }`}
+                    >
+                      ₹ {formMargin.profit.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400">Markup on cost</p>
+                    <p className="mt-0.5 font-semibold text-slate-800 dark:text-slate-200">
+                      {formatMarginPercent(formMargin.markupPercent)}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-2 text-[10px] text-slate-400">
+                  Margin = profit ÷ MRP. Markup = profit ÷ (rate + GST). Purchase discount is not included.
+                </p>
+              </div>
 
               <div className="sm:col-span-2">
                 <SaltEditor

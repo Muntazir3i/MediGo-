@@ -4,6 +4,7 @@ import { Command } from 'cmdk';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
     ArrowRight,
+    BadgePercent,
     BookOpen,
     Boxes,
     CalendarClock,
@@ -167,6 +168,14 @@ const actionCommands = [
         keywords: 'hidden insights analytics statistics average monthly sales purchases payments suggestions reorder trends last year medicines',
         to: '/insights',
         icon: Sparkles,
+    },
+    {
+        id: 'discount-advisor',
+        title: 'Discount advisor',
+        description: 'Find a safe discount and protect your profit margin',
+        keywords: 'hidden discount margin profit ethical generic competitor offer price advisor negotiation',
+        to: '/discount-advisor',
+        icon: BadgePercent,
     },
     {
         id: 'new-invoice',

@@ -250,9 +250,35 @@ For development, `npm run dev` binds to all interfaces, so `http://<laptop-ip>:5
 - Browse batch-level medicine stock.
 - Search by medicine name, company, batch number or salt.
 - Edit medicine and batch metadata, including company, supplier, bill number and drug schedule.
+- See profit margin at MRP in the inventory table, with a live rate + GST breakdown in the edit dialog.
 - Use **Adjust stock** for audited quantity changes.
 - Review low-stock, out-of-stock, and expiring medicines.
 - Open purchase history and edit or void purchase bills.
+
+### Profit margin
+
+The Inventory table shows the margin at MRP, and the medicine edit dialog shows the full breakdown:
+
+```text
+Cost + GST = purchase rate × (1 + GST%)
+Profit     = MRP - (cost + GST)
+Margin %   = profit ÷ MRP × 100
+Markup %   = profit ÷ (cost + GST) × 100
+```
+
+Purchase discount is not included in this calculation.
+
+### Discount advisor (command palette only)
+
+Open the command palette and choose **Discount advisor**. Search a medicine to see:
+
+- Cost + GST versus MRP
+- Profit and margin at full MRP
+- Maximum discount before break-even
+- Recommended discount for a target margin
+- Profit and margin at a competitor’s discount
+
+The page is intentionally hidden from the sidebar.
 
 ### Ledger
 
