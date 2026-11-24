@@ -37,6 +37,7 @@ const emptyItem = (offset = 0) => ({
 
 const TabContentAddCreditNote = ({
   allSuppliersSql = [],
+  companyOptions = [],
   editingCreditNoteId = null,
   onSaved,
 }) => {
@@ -331,6 +332,7 @@ const TabContentAddCreditNote = ({
         handleChange={handleChange}
         handleSupplierSelect={handleSupplierSelect}
         allSuppliersSql={allSuppliersSql}
+        companyOptions={companyOptions}
         setFormData={setFormData}
         products={items}
         handleInputChangeSearch={handleItemNameChange}

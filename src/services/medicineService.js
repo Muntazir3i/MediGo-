@@ -320,6 +320,17 @@ export const getAllMedicines = async () => {
   }
 };
 
+/** Distinct company names used for purchase-entry suggestions. */
+export const getCompanyNames = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL_MEDICINES_SQL}/medicines/companies`);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching company names:', error.message);
+    return [];
+  }
+};
+
 /** Search the salt catalogue. */
 export const searchSalts = async (term = '') => {
   try {

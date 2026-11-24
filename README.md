@@ -178,6 +178,7 @@ The extracted product fields include:
 ### Purchase entry
 
 - Add medicine lines with company, batch, expiry, quantity, free quantity, MRP, rate, discount, and GST.
+- Company names are suggested from products already in the catalogue.
 - Free quantity is optional and defaults to `0`; free units are added to stock but not charged.
 - Salt composition can be attached to the medicine.
 - Purchase bills can be edited later; stock changes are applied as audited deltas.

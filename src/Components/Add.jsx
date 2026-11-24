@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import './add.css';
 import { TabContentAddPurchase, TabContentAddSupplier, TabContentAddPayment, TabContentAddExpiry, TabContentAddCreditNote } from './Tabs/index.js'
-import { addNewExpiry } from '../services/medicineService.js';
+import { addNewExpiry, getCompanyNames } from '../services/medicineService.js';
 import { fetchAllSuppliers } from '@/hooks/useSupplier.js';
 import { addNewSupplier } from '@/hooks/useAddSupplier.js';
 import { addNewPayment } from '@/hooks/useAddPayment.js';
@@ -176,6 +176,7 @@ function Add() {
     supplierBalance: ''
   })
   const [allSuppliersSql, setAllSuppliersSqlite] = useState([])
+  const [companyOptions, setCompanyOptions] = useState([])
 
   const { totalAmount, totalDiscount, totalGst } = calculateBillTotals(products);
 
@@ -339,13 +340,21 @@ function Add() {
     };
   }, [activeTab]);
 
-  // Fetch and load all suppliers from the custom hook on component mount
+  // Fetch and load all suppliers and company suggestions on mount
   useEffect(() => {
-    const fetchingSuppliers = async () => {
-      const data = await fetchAllSuppliers();
-      setAllSuppliersSqlite(data);
-    }
-    fetchingSuppliers()
+    const loadOptions = async () => {
+      try {
+        const [suppliers, companies] = await Promise.all([
+          fetchAllSuppliers(),
+          getCompanyNames(),
+        ]);
+        setAllSuppliersSqlite(Array.isArray(suppliers) ? suppliers : []);
+        setCompanyOptions(Array.isArray(companies) ? companies : []);
+      } catch (error) {
+        console.error('Error loading supplier/company options:', error);
+      }
+    };
+    loadOptions();
   }, []);
 
   const searchedMed = useDebouncedSearch(searchedMedTxt);
@@ -747,6 +756,7 @@ function Add() {
                 handleChange={handleChange}
                 handleSupplierSelect={handleSupplierSelect}
                 allSuppliersSql={allSuppliersSql}
+                companyOptions={companyOptions}
                 setFormData={setFormData}
                 products={products}
                 handleInputChangeSearch={handleInputChangeSearch}
@@ -804,6 +814,7 @@ function Add() {
           <TabsContent value='add-credit-note' className="mt-1">
             <TabContentAddCreditNote
               allSuppliersSql={allSuppliersSql}
+              companyOptions={companyOptions}
               editingCreditNoteId={searchParams.get('creditNoteId')}
               onSaved={() => setSearchParams({ tab: 'add-credit-note' }, { replace: true })}
             />

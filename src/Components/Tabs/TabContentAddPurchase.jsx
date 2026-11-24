@@ -50,6 +50,7 @@ const TabContentAddPurchase = ({
     handleChange,
     handleSupplierSelect,
     allSuppliersSql,
+    companyOptions = [],
     setFormData,
     products,
     handleInputChangeSearch,
@@ -271,6 +272,7 @@ const TabContentAddPurchase = ({
                                                 data-product-field="manufacturer"
                                                 className={`${inputClass} min-w-[130px]`}
                                                 value={(item.manufacturer || item.company || '').toUpperCase()}
+                                                list="companyOptions"
                                                 placeholder="Company"
                                                 onChange={(e) =>
                                                     handleInputChange(
@@ -455,6 +457,12 @@ const TabContentAddPurchase = ({
                     <datalist id="searchedMedList">
                         {searchedMed.map((s, index) => (
                             <option key={index} value={s.name} />
+                        ))}
+                    </datalist>
+
+                    <datalist id="companyOptions">
+                        {companyOptions.map((company) => (
+                            <option key={company} value={company} />
                         ))}
                     </datalist>
                 </div>
