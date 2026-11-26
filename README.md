@@ -255,6 +255,7 @@ For development, `npm run dev` binds to all interfaces, so `http://<laptop-ip>:5
 - Use **Adjust stock** for audited quantity changes.
 - Review low-stock, out-of-stock, and expiring medicines.
 - Open purchase history and edit or void purchase bills.
+- Search purchase bills by supplier, invoice number, batch number or date.
 
 ### Profit margin
 

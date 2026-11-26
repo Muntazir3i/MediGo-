@@ -9,6 +9,7 @@ import {
   Search,
   FileText,
   CalendarDays,
+  Hash,
   Loader2,
   Truck,
   Eye,
@@ -73,6 +74,7 @@ function Inventory() {
   const [suppliersError, setSuppliersError] = useState('');
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [batchSearch, setBatchSearch] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [openSupplier, setOpenSupplier] = useState('');
   const [deletingBillId, setDeletingBillId] = useState(null);
@@ -166,6 +168,7 @@ function Inventory() {
         search: purchaseSearch.trim(),
         date: purchaseDate,
         invoice: invoiceSearch.trim(),
+        batch: batchSearch.trim(),
       });
       const list = Array.isArray(response)
         ? response
@@ -182,7 +185,7 @@ function Inventory() {
     } finally {
       setSuppliersLoading(false);
     }
-  }, [purchaseSearch, purchaseDate, invoiceSearch]);
+  }, [purchaseSearch, purchaseDate, invoiceSearch, batchSearch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -197,6 +200,7 @@ function Inventory() {
   const clearPurchaseFilters = () => {
     setPurchaseSearch('');
     setInvoiceSearch('');
+    setBatchSearch('');
     setPurchaseDate('');
   };
 
@@ -229,6 +233,7 @@ function Inventory() {
         offset,
         date: purchaseDate,
         invoice: invoiceSearch.trim(),
+        batch: batchSearch.trim(),
       });
 
       const list = Array.isArray(response?.bills)
@@ -536,6 +541,7 @@ function Inventory() {
   const hasPurchaseFilters =
     purchaseSearch.trim() !== '' ||
     invoiceSearch.trim() !== '' ||
+    batchSearch.trim() !== '' ||
     purchaseDate !== '';
 
   return (
@@ -642,7 +648,7 @@ function Inventory() {
               </div>
 
               <section className="rounded-xl border border-slate-300/80 bg-white p-4 shadow-sm">
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
@@ -662,6 +668,17 @@ function Inventory() {
                       placeholder="Search invoice / bill no.…"
                       value={invoiceSearch}
                       onChange={(e) => setInvoiceSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <Hash className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      aria-label="Search bills by batch number"
+                      className="h-10 rounded-xl border-slate-300/80 bg-white pl-10 text-sm shadow-sm"
+                      placeholder="Search batch number…"
+                      value={batchSearch}
+                      onChange={(e) => setBatchSearch(e.target.value)}
                     />
                   </div>
 

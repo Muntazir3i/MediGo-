@@ -242,7 +242,7 @@ export const deleteBillSql = async (billId) => {
  * Defaults to 5 bills. Filters: supplierName (exact), supplierSearch (partial),
  * date, invoice.
  */
-export const fetchBillsProductsSql = async ({ limit = 5, offset = 0, supplierName = '', supplierSearch = '', date = '', invoice = '' } = {}) => {
+export const fetchBillsProductsSql = async ({ limit = 5, offset = 0, supplierName = '', supplierSearch = '', date = '', invoice = '', batch = '' } = {}) => {
   try {
     const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills`, {
       params: {
@@ -251,7 +251,8 @@ export const fetchBillsProductsSql = async ({ limit = 5, offset = 0, supplierNam
         ...(supplierName ? { supplierName } : {}),
         ...(supplierSearch ? { supplierSearch } : {}),
         ...(date ? { date } : {}),
-        ...(invoice ? { invoice } : {})
+        ...(invoice ? { invoice } : {}),
+        ...(batch ? { batch } : {})
       }
     });
     return response.data;
@@ -274,6 +275,7 @@ export const getBillSuppliers = async (options = {}) => {
     if (opts.search) params.search = opts.search;
     if (opts.date) params.date = opts.date;
     if (opts.invoice) params.invoice = opts.invoice;
+    if (opts.batch) params.batch = opts.batch;
 
     const response = await axios.get(`${API_BASE_URL_BILL_SQL}/bills/suppliers`, { params });
     return response.data;
